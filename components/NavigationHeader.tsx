@@ -13,12 +13,13 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
-import { Link, useNavigate } from "react-router-dom";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 export const NavigationHeader = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { user, signOut } = useAuth();
   const { toast } = useToast();
 

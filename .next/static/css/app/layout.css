@@ -701,6 +701,24 @@ video {
 
   /* Typography Hierarchy */
 
+  .inforia-h2 {
+    font-family: 'Lora', serif;
+    font-family: Lora, serif;
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 500;
+    color: hsl(var(--primary));
+  }
+
+  .inforia-body {
+    font-family: 'Nunito Sans', sans-serif;
+    font-family: Nunito Sans, sans-serif;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 400;
+    color: hsl(var(--foreground));
+  }
+
   /* Module title styling */
   .module-title {
     font-family: 'Lora', serif;
@@ -934,6 +952,10 @@ video {
 .my-1 {
   margin-top: 0.25rem;
   margin-bottom: 0.25rem;
+}
+.my-6 {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 .-ml-4 {
   margin-left: -1rem;
@@ -1691,14 +1713,15 @@ video {
   --tw-border-opacity: 1;
   border-color: rgb(187 247 208 / var(--tw-border-opacity, 1));
 }
+.border-green-300 {
+  --tw-border-opacity: 1;
+  border-color: rgb(134 239 172 / var(--tw-border-opacity, 1));
+}
 .border-input {
   border-color: hsl(var(--input));
 }
 .border-primary {
   border-color: hsl(var(--primary));
-}
-.border-primary\/20 {
-  border-color: hsl(var(--primary) / 0.2);
 }
 .border-purple-200 {
   --tw-border-opacity: 1;
@@ -1828,9 +1851,6 @@ video {
 }
 .bg-primary\/10 {
   background-color: hsl(var(--primary) / 0.1);
-}
-.bg-primary\/5 {
-  background-color: hsl(var(--primary) / 0.05);
 }
 .bg-purple-100 {
   --tw-bg-opacity: 1;
@@ -2089,6 +2109,9 @@ video {
 }
 .font-semibold {
   font-weight: 600;
+}
+.uppercase {
+  text-transform: uppercase;
 }
 .capitalize {
   text-transform: capitalize;

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Plus, Users, FileText, Search } from "lucide-react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 const QuickActions = () => {
   const actions = [

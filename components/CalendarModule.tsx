@@ -4,7 +4,7 @@ import { Button } from "./ui/button";
 import { Calendar } from "./ui/calendar";
 import { Badge } from "./ui/badge";
 import { CalendarIcon, Plus, ChevronLeft, ChevronRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
