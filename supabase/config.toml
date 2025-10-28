@@ -1,0 +1,62 @@
+project_id = "dufziwaiyhozchsvuftl"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[db.pooler]
+pool_mode = "transaction"
+default_pool_size = 20
+max_client_conn = 100
+
+[db.migrations]
+enabled = true
+schema_paths = ["./supabase/migrations"]
+
+[db.seed]
+enabled = true
+sql_paths = ["./supabase/seed.sql"]
+
+[realtime]
+enabled = true
+ip_version = "IPv4"
+
+[studio]
+enabled = true
+port = 54324
+api_url = "http://127.0.0.1:54321"
+openai_api_key = "env(OPENAI_API_KEY)"
+
+[inbucket]
+enabled = true
+port = 54325
+smtp_port = 54326
+pop3_port = 54328
+
+[storage]
+enabled = true
+file_size_limit = 52428800  # 50 MB en bytes
+
+[storage.image_transformation]
+# estructura vacía, opcionalmente configurables
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["https://127.0.0.1:3000"]
+jwt_expiry = 3600
+enable_signup = true
+
+[functions.generate-report]
+verify_jwt = true
+
+[functions.transcribe-audio]
+verify_jwt = true
