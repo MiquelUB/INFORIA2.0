@@ -1,3 +1,4 @@
+'use client';
 import { NavigationHeader } from "@/components/NavigationHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader,} from "@/components/ui/card";
@@ -7,7 +8,7 @@ import { Avatar, AvatarFallback,} from "@/components/ui/avatar";
 import { Search, Plus, Eye, Edit, MoreVertical, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { usePatients } from "@/hooks/usePatients";
+import { usePatients } from "@/lib/hooks/usePatients";
 import { useState } from "react";
 const PatientList = () => {
   const { data: patients, isLoading, error } = usePatients();
@@ -71,7 +72,7 @@ const PatientList = () => {
             </p>
           </div>
           
-          <Link to="/new-patient">
+          <Link href="/new-patient">
             <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-sans">
               <Plus className="mr-2 h-4 w-4" />
               Nuevo Paciente
@@ -145,7 +146,7 @@ const PatientList = () => {
                   {searchQuery ? 'No se encontraron pacientes con ese criterio' : 'No hay pacientes registrados'}
                 </p>
                 {!searchQuery && (
-                  <Link to="/new-patient">
+                  <Link href="/new-patient">
                     <Button className="mt-4 bg-primary hover:bg-primary/90">
                       <Plus className="mr-2 h-4 w-4" />
                       Crear primer paciente
@@ -167,7 +168,7 @@ const PatientList = () => {
                         
                         <div className="space-y-1">
                           <Link 
-                            to={`/patient-detailed-profile?id=${patient.id}`} 
+                            href={`/patient-detailed-profile?id=${patient.id}`} 
                             className="font-serif text-lg font-medium text-foreground hover:text-primary transition-calm"
                           >
                             {patient.name}
@@ -203,13 +204,13 @@ const PatientList = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem>
-                              <Link to={`/patient-detailed-profile?id=${patient.id}`} className="w-full flex items-center">
+                              <Link href={`/patient-detailed-profile?id=${patient.id}`} className="w-full flex items-center">
                                 <Eye className="mr-2 h-4 w-4" />
                                 Ver Ficha
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                              <Link to={`/session-workspace?patientId=${patient.id}`} className="w-full flex items-center">
+                              <Link href={`/session-workspace?patientId=${patient.id}`} className="w-full flex items-center">
                                 <Edit className="mr-2 h-4 w-4" />
                                 Nueva Sesión
                               </Link>

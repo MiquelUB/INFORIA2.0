@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { useRouter } from "next/navigation"; // <-- CAMBIO: Importar de next/navigation
 import { useState, useEffect } from "react";
-import { usePatients } from "@/hooks/usePatients";
+import { usePatients } from '@/lib/hooks/usePatients';
 
 interface Appointment {
   patientUuid: string;

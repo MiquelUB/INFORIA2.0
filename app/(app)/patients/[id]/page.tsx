@@ -1,3 +1,4 @@
+'use client';
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,8 +11,8 @@ import DashboardHeader from "@/components/DashboardHeader";
 import { ArrowLeft, Edit, Plus, FileText, Calendar, Trash2, User, Tag, FileSignature,CreditCard, FileCheck, X, Loader2, Mail, Phone, MapPin, UserCheck, AlertTriangle, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { usePatient, useUpdatePatient, useDeletePatient } from "@/hooks/usePatients";
-import { useToast } from "@/hooks/use-toast";
+import { usePatient, useUpdatePatient, useDeletePatient } from "@/lib/hooks/usePatients";
+import { useToast } from "@/lib/hooks/use-toast";
 
 const PatientDetailedProfile = () => {
   const [searchParams] = useSearchParams();
@@ -326,7 +327,7 @@ const PatientDetailedProfile = () => {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <Link to={`/session-workspace?patientId=${patientId}`}>
+              <Link href={`/session-workspace?patientId=${patientId}`}>
                 <Button variant="outline">
                   <FileText className="mr-2 h-4 w-4" />
                   Iniciar Sesión

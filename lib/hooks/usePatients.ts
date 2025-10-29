@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { patientsService, type PatientInsert, type PatientUpdate } from '@/services/database';
-import { useToast } from '@/hooks/use-toast';
+import { patientsService, type PatientInsert, type PatientUpdate } from '@/lib/services/database';
+import { useToast } from '@/lib/hooks/use-toast';
 
 export const usePatients = () => {
   return useQuery({

@@ -1,3 +1,4 @@
+'use client';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,14 +9,14 @@ import { Play, Square, Trash2, Save, Wand2, FileText, AlertTriangle, Calendar, E
 import { toast } from 'sonner';
 import DashboardHeader from '@/components/DashboardHeader';
 import FileUploadZone from '@/components/FileUploadZone';
-import { useFileUpload } from '@/hooks/useFileUpload';
-import { useAudioRecording } from '@/hooks/useAudioRecording';
+import { useFileUpload } from '@/lib/hooks/useFileUpload';
+import { useAudioRecording } from '@/lib/hooks/useAudioRecording';
 import { useAuth } from '@/contexts/AuthContext';
-import { patientsService, reportsService } from '@/services/database';
-import { googleDriveService } from '@/services/googleDrive';
-import { googleSheetsPatientCRM } from '@/services/googleSheetsPatientCRM';
-import { openRouterService } from '@/services/openrouter';
-import type { Patient } from '@/services/database';
+import { patientsService, reportsService } from '@/lib/services/database';
+import { googleDriveService } from '@/lib/services/googleDrive';
+import { googleSheetsPatientCRM } from '@/lib/services/googleSheetsPatientCRM';
+import { openRouterService } from '@/lib/services/openrouter';
+import type { Patient } from '@/lib/services/database';
 
 export default function SessionWorkspace() {
   const router = useRouter();

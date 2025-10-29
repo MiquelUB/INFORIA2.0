@@ -1,6 +1,10 @@
+'use client';
 // src/pages/MyAccount.tsx
-import { useState, useEffect } from "react"; // Eliminada la importación de React
-import { Save, X } from "lucide-react"; // Eliminado ExternalLink, CreditCard
+
+import { useUserProfile } from "@/lib/hooks/useUserProfile";
+import { UserProfile } from "@/lib/types";
+import { useState, useEffect } from "react";
+import { Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,13 +16,14 @@ import { CreditsStatus } from '@/components/CreditsStatus';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { createClient } from "@/lib/supabase/client"; // ✅ CORREGIDO: Importación por defecto
 
 // Definiciones de tipos para los datos del perfil
 interface ProfileData {
   full_name: string | undefined;
   professional_license: string | undefined;
   clinic_name: string | undefined;
-  password: string; // Nuevo campo para la contraseña
+  password: string; // Campo local para la contraseña
 }
 
 export default function MyAccount() {
@@ -78,21 +83,44 @@ const availableCredits = profile?.credits_limit != null && profile?.credits_used
   const handleSaveProfile = async () => {
     setIsSavingProfile(true);
     try {
-      // Preparar los datos para enviar al backend
-      // Solo enviar los campos que se pueden actualizar
-      const updates: Partial<UserProfile> = {
+      // 1. Lógica de Perfil (Base de Datos - Tipado correcto)
+      // Solo enviar los campos que pertenecen a la tabla 'profiles' (UserProfile)
+      const dbUpdates: Partial<UserProfile> = {
         full_name: profileData.full_name,
         professional_license: profileData.professional_license,
         clinic_name: profileData.clinic_name,
       };
       
-      // Si se proporciona una nueva contraseña, incluirla
-      if (profileData.password) {
-        updates.password = profileData.password;
+      // Ejecutar actualización de la Base de Datos (perfil)
+      await updateProfile(dbUpdates);
+
+      // 2. Lógica de Contraseña (Servicio de Autenticación)
+      if (profileData.password && profileData.password.length > 0) {
+        if (profileData.password.length < 6) {
+          toast.error('La contraseña debe tener al menos 6 caracteres.');
+          setIsSavingProfile(false);
+          return;
+        }
+
+        const supabase = createClient();
+        
+        // Ejecutar actualización de la Autenticación (contraseña)
+        const { error: authError } = await supabase.auth.updateUser({
+          password: profileData.password,
+        });
+
+        if (authError) {
+          console.error("Error al actualizar la contraseña:", authError);
+          toast.error('Error al actualizar la contraseña: ' + authError.message);
+        } else {
+          // Limpiar el campo y notificar éxito
+          setProfileData(prev => ({ ...prev, password: "" }));
+          toast.success('Contraseña actualizada con éxito.');
+        }
       }
 
-      await updateProfile(updates);
       toast.success('Perfil actualizado correctamente.');
+
     } catch (error: any) {
       console.error("Error al guardar el perfil:", error);
       toast.error(error.message || 'Error al actualizar el perfil.');
@@ -188,10 +216,9 @@ const availableCredits = profile?.credits_limit != null && profile?.credits_used
       <main className="flex-1 px-4 py-8 lg:px-8">
         <div className="grid gap-6">
           <Tabs defaultValue="professional">
-            <TabsList className="grid w-full grid-cols-2"> {/* Cambiado a 2 columnas */}
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="professional">Mis Datos Profesionales</TabsTrigger>
               <TabsTrigger value="subscription">Suscripción y Facturación</TabsTrigger>
-              {/* <TabsTrigger value="drive">Drive</TabsTrigger> --> Eliminado */}
             </TabsList>
 
             {/* Pestaña: Mis Datos Profesionales */}
@@ -313,7 +340,7 @@ const availableCredits = profile?.credits_limit != null && profile?.credits_used
                         size="sm"
                         variant="destructive"
                         onClick={handleCancelSubscription}
-                        disabled={isCancelling} // Deshabilitado solo durante la operación
+                        disabled={isCancelling}
                       >
                         <X className="mr-2 h-4 w-4" />
                         {isCancelling ? 'Cancelando...' : 'Cancelar Suscripción'}
@@ -333,7 +360,7 @@ const availableCredits = profile?.credits_limit != null && profile?.credits_used
                 </CardHeader>
                 <CardContent>
                   {/* Contenedor con scroll */}
-                  <div className="max-h-60 overflow-y-auto pr-2"> {/* Ajusta max-h-60 según tus necesidades */}
+                  <div className="max-h-60 overflow-y-auto pr-2">
                     <div className="space-y-3">
                       {[
                         // Aquí irían tus facturas reales

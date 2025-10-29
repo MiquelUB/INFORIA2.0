@@ -189,3 +189,9 @@ export type Tables<
       ? R
       : never
     : never
+
+// 🎯 CORRECCIÓN: Exportar tipos de las tablas que la app utiliza
+export type Profile = Tables<'profiles'>
+export type UserProfile = Profile // Usar UserProfile para alinearse con el código del frontend (app/(app)/account/page.tsx)
+export type Patient = Tables<'patients'>
+export type Report = Tables<'reports'>

@@ -1,5 +1,5 @@
 // Ruta: src/services/GoogleSheetsPatientCRMService.ts
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase/client';
 
 interface PatientCRMData {
   id: string;

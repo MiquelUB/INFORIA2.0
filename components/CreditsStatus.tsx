@@ -1,7 +1,7 @@
 // src/components/CreditsStatus.tsx
 // Eliminada la importación: import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { creditsService } from '@/services/credits';
+import { creditsService } from '@/lib/services/credits';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
