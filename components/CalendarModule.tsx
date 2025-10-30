@@ -45,7 +45,7 @@ const CalendarModule = () => {
             <CalendarIcon className="mr-2 h-4 w-4" />
             Calendario
           </CardTitle>
-          <Link to={`/new-patient?date=${selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''}`}>
+          <Link href={`/new-patient?date=${selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''}`}>
             <Button size="sm" variant="outline">
               <Plus className="h-3 w-3" />
             </Button>
@@ -91,9 +91,16 @@ const CalendarModule = () => {
               hasAppointments: "relative after:absolute after:bottom-0 after:left-1/2 after:transform after:-translate-x-1/2 after:w-1 after:h-1 after:bg-burgundy after:rounded-full"
             }}
             components={{
-              IconLeft: () => <ChevronLeft className="h-4 w-4" />,
-              IconRight: () => <ChevronRight className="h-4 w-4" />,
-            }}
+                            PreviousMonthButton: ({ children, ...props }) => (
+                              <button {...props}>
+                                <ChevronLeft className="h-4 w-4" />
+                              </button>
+                            ),
+                            NextMonthButton: ({ children, ...props }) => (
+                              <button {...props}>
+                                <ChevronRight className="h-4 w-4" />
+                              </button>
+                            ),            }}
           />
         </div>
 
@@ -137,7 +144,7 @@ const CalendarModule = () => {
                 <p className="text-xs text-muted-foreground">
                   No hay citas programadas
                 </p>
-                <Link to={`/new-patient?date=${format(selectedDate, 'yyyy-MM-dd')}`}>
+                <Link href={`/new-patient?date=${format(selectedDate, 'yyyy-MM-dd')}`}>
                   <Button size="sm" variant="outline" className="mt-2 text-xs">
                     <Plus className="mr-1 h-3 w-3" />
                     Agendar cita

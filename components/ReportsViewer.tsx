@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ExternalLink, FileText, Calendar, Table, FolderOpen } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { reportsService } from '@/services/database';
-import { googleSheetsPatientCRM } from '@/services/googleSheetsPatientCRM';
-import { googleDriveService } from '@/services/googleDrive';
-import type { Report } from '@/services/database';
+import { reportsService } from '@/lib/services/database';
+import { googleSheetsPatientCRM } from '@/lib/services/googleSheetsPatientCRM';
+import { googleDriveService } from '@/lib/services/googleDrive';
+import type { Report } from '@/lib/services/database';
 
 interface ReportsViewerProps {
   patientId?: string;

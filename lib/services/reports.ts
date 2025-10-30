@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 
 export interface GenerateReportRequest {
   patientId: string;
@@ -34,6 +34,7 @@ export class ReportsService {
    * Transcribe audio file to text using Whisper API
    */
   static async transcribeAudio(audioFile: File): Promise<TranscriptionResponse> {
+    const supabase = createClient();
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -66,6 +67,7 @@ export class ReportsService {
    * Generate a psychological report using AI
    */
   static async generateReport(request: GenerateReportRequest): Promise<ReportResponse> {
+    const supabase = createClient();
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -95,6 +97,7 @@ export class ReportsService {
    * Get all reports for the current user
    */
   static async getUserReports() {
+    const supabase = createClient();
     try {
       const { data, error } = await supabase
         .from('reports')
@@ -123,6 +126,7 @@ export class ReportsService {
    * Get a specific report by ID
    */
   static async getReport(reportId: string) {
+    const supabase = createClient();
     try {
       const { data, error } = await supabase
         .from('reports')
@@ -153,6 +157,7 @@ export class ReportsService {
    * Delete a report
    */
   static async deleteReport(reportId: string) {
+    const supabase = createClient();
     try {
       const { error } = await supabase
         .from('reports')

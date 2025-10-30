@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { FileText, AlertCircle, Crown, Building2, TestTube } from 'lucide-react';
-import { useUserProfile } from '@/hooks/useUserProfile';
+import { useUserProfile } from '@/lib/hooks/useUserProfile';
 import { useAuth } from '@/contexts/AuthContext';
 
 export function AccountHeader() {
@@ -26,8 +26,11 @@ export function AccountHeader() {
     );
   }
 
-  const usagePercentage = (profile.credits_used / profile.credits_limit) * 100;
-  const remainingCredits = profile.credits_limit - profile.credits_used;
+  const creditsUsed = profile.credits_used ?? 0;
+  const creditsLimit = profile.credits_limit ?? 0;
+
+  const usagePercentage = (creditsUsed / creditsLimit) * 100;
+  const remainingCredits = creditsLimit - creditsUsed;
 
   const getPlanInfo = (planType: string) => {
     switch (planType) {
@@ -51,7 +54,7 @@ export function AccountHeader() {
     }
   };
 
-  const planInfo = getPlanInfo(profile.plan_type);
+  const planInfo = getPlanInfo(profile.plan_type ?? 'unknown');
   const PlanIcon = planInfo.icon;
 
   return (
@@ -106,7 +109,7 @@ export function AccountHeader() {
             />
             
             <div className="flex items-center justify-between text-xs">
-              <span className={getStatusColor(profile.subscription_status)}>
+              <span className={getStatusColor(profile.subscription_status ?? 'unknown')}>
                 {usagePercentage.toFixed(1)}% utilizado
               </span>
               <span className="text-muted-foreground">

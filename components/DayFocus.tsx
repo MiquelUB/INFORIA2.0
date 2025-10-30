@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Calendar, Clock, MapPin, Plus, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { usePatients } from "@/hooks/usePatients";
+import { usePatients } from "@/lib/hooks/usePatients";
 
 const DayFocus = () => {
   const { data: patients = [] } = usePatients();
@@ -63,7 +63,7 @@ const DayFocus = () => {
               {today}
             </p>
           </div>
-          <Link to="/new-patient?date=2025-08-22">
+          <Link href="/new-patient?date=2025-08-22">
             <Button size="sm" className="shrink-0">
               <Plus className="mr-2 h-4 w-4" />
               Nueva Cita
@@ -111,12 +111,12 @@ const DayFocus = () => {
                 </div>
                 
                 <div className="flex items-center space-x-2">
-                  <Link to={`/session-workspace?patientId=${appointment.patientId}`}>
+                  <Link href={`/session-workspace?patientId=${appointment.patientId}`}>
                     <Button size="sm" variant="outline">
                       Iniciar Sesión
                     </Button>
                   </Link>
-                  <Link to={`/patient-detailed-profile?id=${appointment.patientId}`}>
+                  <Link href={`/patient-detailed-profile?id=${appointment.patientId}`}>
                     <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors cursor-pointer" />
                   </Link>
                 </div>
@@ -124,7 +124,7 @@ const DayFocus = () => {
             ))}
             
             <div className="pt-4 border-t border-module-border">
-              <Link to="/patient-list">
+              <Link href="/patient-list">
                 <Button variant="ghost" className="w-full justify-between hover:bg-muted/50">
                   <span>Ver todos los pacientes</span>
                   <ChevronRight className="h-4 w-4" />
@@ -141,7 +141,7 @@ const DayFocus = () => {
             <p className="text-sm text-muted-foreground mb-4">
               Aprovecha para ponerte al día con informes pendientes
             </p>
-            <Link to="/new-patient">
+            <Link href="/new-patient">
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
                 Programar Cita

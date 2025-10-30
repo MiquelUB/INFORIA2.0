@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { googleDriveService } from '@/services/googleDrive';
+import { useToast } from '@/lib/hooks/use-toast';
+import { googleDriveService } from '@/lib/services/googleDrive';
 import { 
   HardDrive, 
   ExternalLink, 

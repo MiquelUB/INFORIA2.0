@@ -20,9 +20,9 @@ export class OpenRouterService {
   private baseUrl = 'https://openrouter.ai/api/v1';
 
   constructor() {
-    this.apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-    if (!this.apiKey) {
-      throw new Error('VITE_OPENROUTER_API_KEY no configurada en variables de entorno');
+  this.apiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || '';
+  if (!this.apiKey) {
+    console.warn('⚠️ OPENROUTER_API_KEY no configurada');
     }
   }
 

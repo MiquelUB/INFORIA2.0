@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { UserProfile } from '@/types';
 
 const mapSupabaseToUserProfile = (data: any): UserProfile => ({
@@ -7,6 +7,7 @@ const mapSupabaseToUserProfile = (data: any): UserProfile => ({
 });
 
 export function useUserProfile(userId: string | null) {
+  const supabase = createClient();
   return useQuery<UserProfile | null>({
     queryKey: ['user-profile', userId],
     queryFn: async () => {

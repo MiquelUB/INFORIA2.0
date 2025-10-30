@@ -1,0 +1,12 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/(app)/account/page": "app/(app)/account/page.js",
+  "/(app)/onboarding/page": "app/(app)/onboarding/page.js",
+  "/(app)/(auth)/auth-code-error/page": "app/(app)/(auth)/auth-code-error/page.js",
+  "/(app)/dashboard/page": "app/(app)/dashboard/page.js",
+  "/(app)/patients/[id]/page": "app/(app)/patients/[id]/page.js",
+  "/(app)/(auth)/callback/route": "app/(app)/(auth)/callback/route.js",
+  "/(app)/(auth)/login/page": "app/(app)/(auth)/login/page.js",
+  "/(app)/session/[patientId]/page": "app/(app)/session/[patientId]/page.js",
+  "/(app)/patients/page": "app/(app)/patients/page.js"
+}

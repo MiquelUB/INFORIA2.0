@@ -1,7 +1,8 @@
 'use client';
+
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation'; // ✅ IMPORTACIÓN CORRECTA
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -47,7 +48,7 @@ const STEPS = [
 
 export default function Onboarding() {
   const { profile, updateProfile } = useAuth();
-  const navigate = useRouter();
+  const router = useRouter(); // ✅ HOOK CORRECTO
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -106,7 +107,8 @@ export default function Onboarding() {
       setCurrentStep(STEPS.length - 1); // Ir al paso de completado
       
       setTimeout(() => {
-        navigate('/dashboard', { replace: true });
+        // ✅ CORRECCIÓN CRÍTICA: Usar router.replace() en lugar de navigate()
+        router.replace('/dashboard');
       }, 2000);
     } catch (error) {
       console.error('Error completing onboarding:', error);

@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Save, Loader2, User, FileText, Phone, Mail, MapPin } from 'lucide-react';
-import { useUserProfile } from '@/hooks/useUserProfile';
-import { supabase } from '@/integrations/supabase/client';
+import { useUserProfile } from '@/lib/hooks/useUserProfile';
+import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -24,7 +25,9 @@ interface BillingFormData {
 }
 
 export function ProfessionalDataSection() {
-  const { data: profile, isLoading, refreshProfile } = useUserProfile();
+  const supabase = createClient();
+  const { user } = useAuth();
+  const { data: profile, isLoading, refetch: refreshProfile } = useUserProfile(user?.id || null);
   const [formData, setFormData] = useState<BillingFormData>({
     full_name: '',
     professional_license: '',

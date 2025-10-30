@@ -1,6 +1,6 @@
 import { Card, CardContent } from "./ui/card";
 import { Users, FileText, TrendingUp, Calendar } from "lucide-react";
-import { useStats } from "@/hooks/useStats";
+import { useStats } from "@/lib/hooks/useStats";
 import { Skeleton } from "./ui/skeleton";
 
 const StatsOverview = () => {

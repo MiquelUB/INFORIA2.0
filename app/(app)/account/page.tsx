@@ -2,7 +2,7 @@
 // src/pages/MyAccount.tsx
 
 import { useUserProfile } from "@/lib/hooks/useUserProfile";
-import { UserProfile } from "@/lib/types";
+import { UserProfile } from "@/types";
 import { useState, useEffect } from "react";
 import { Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";

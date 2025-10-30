@@ -63,6 +63,13 @@ export type Database = {
           professional_license: string | null
           subscription_status: string | null
           updated_at: string | null
+          billing_name: string | null
+          billing_email: string | null
+          billing_address: string | null
+          billing_city: string | null
+          billing_postal_code: string | null
+          billing_country: string | null
+          nif_dni: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -78,6 +85,13 @@ export type Database = {
           professional_license?: string | null
           subscription_status?: string | null
           updated_at?: string | null
+          billing_name?: string | null
+          billing_email?: string | null
+          billing_address?: string | null
+          billing_city?: string | null
+          billing_postal_code?: string | null
+          billing_country?: string | null
+          nif_dni?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -93,6 +107,13 @@ export type Database = {
           professional_license?: string | null
           subscription_status?: string | null
           updated_at?: string | null
+          billing_name?: string | null
+          billing_email?: string | null
+          billing_address?: string | null
+          billing_city?: string | null
+          billing_postal_code?: string | null
+          billing_country?: string | null
+          nif_dni?: string | null
         }
         Relationships: []
       }
@@ -191,7 +212,5 @@ export type Tables<
     : never
 
 // 🎯 CORRECCIÓN: Exportar tipos de las tablas que la app utiliza
-export type Profile = Tables<'profiles'>
-export type UserProfile = Profile // Usar UserProfile para alinearse con el código del frontend (app/(app)/account/page.tsx)
 export type Patient = Tables<'patients'>
 export type Report = Tables<'reports'>

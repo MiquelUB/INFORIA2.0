@@ -1,5 +1,7 @@
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { UserProfile } from '@/types';
+
+const supabase = createClient();
 
 const mapSupabaseToUserProfile = (data: any): UserProfile => ({
   ...data,

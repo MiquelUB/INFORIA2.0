@@ -4,10 +4,10 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Search,User, FileText, ArrowUpRight } from "lucide-react";
 import { useState } from "react";
-import { useSearchPatients } from "@/hooks/usePatients";
-import { useReports } from "@/hooks/useReports";
+import { useSearchPatients } from "@/lib/hooks/usePatients";
+import { useReports } from "@/lib/hooks/useReports";
 import Link from "next/link";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useDebounce } from "@/lib/hooks/useDebounce";
 
 const SearchModule = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -104,7 +104,7 @@ const SearchModule = () => {
             {filteredPatients.map((patient) => (
               <Link
                 key={patient.id}
-                to={`/patient-detailed-profile?id=${patient.id}`}
+                href={`/patient-detailed-profile?id=${patient.id}`}
                 className="block p-3 rounded-md bg-muted/30 hover:bg-muted/50 transition-calm border border-transparent hover:border-primary/20"
               >
                 <div className="flex items-center justify-between">
@@ -173,7 +173,7 @@ const SearchModule = () => {
             </h3>
             <div className="space-y-2">
               <Link
-                to="/patient-list"
+                href="/patient-list"
                 className="flex items-center space-x-3 p-3 rounded-md bg-muted/30 hover:bg-muted/50 transition-calm"
               >
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">

@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { CreditCard, Download, Check, Crown, Building2, TestTube, FileText, Calendar } from 'lucide-react';
-import { useUserProfile } from '@/hooks/useUserProfile';
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/lib/hooks/useUserProfile";
 
 const plans = [
   {
@@ -100,7 +101,8 @@ const mockInvoices = [
 ];
 
 export function SubscriptionSection() {
-  const { data: profile } = useUserProfile();
+  const { user } = useAuth();
+  const { data: profile } = useUserProfile(user?.id || null);
 
   const currentPlan = plans.find(plan => plan.id === profile?.plan_type) || plans[0];
   

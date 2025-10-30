@@ -1,5 +1,7 @@
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/lib/types';
+
+const supabase = createClient();
 
 // Types
 export type Profile = Database['public']['Tables']['profiles']['Row'];

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ReportsService } from '@/services/reports';
+import { ReportsService } from '@/lib/services/reports';
 
 const processSupabaseReports = (rawData: any[]): Report[] => {
   return rawData.map(item => ({

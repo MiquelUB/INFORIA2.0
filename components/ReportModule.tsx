@@ -4,9 +4,10 @@ import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Mic, MicOff, FileText, Send, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { usePatients } from "@/hooks/usePatients";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { usePatients } from "@/lib/hooks/usePatients";
+import { createClient } from "@/lib/supabase/client";
+const supabase = createClient();
+import { useToast } from "@/lib/hooks/use-toast";
 
 export const ReportModule = () => {
   const [isRecording, setIsRecording] = useState(false);

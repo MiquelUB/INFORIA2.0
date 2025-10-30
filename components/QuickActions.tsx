@@ -50,7 +50,7 @@ const QuickActions = () => {
         {actions.map((action, index) => (
           <Link 
             key={action.title} 
-            to={action.href}
+            href={action.href}
             className="block animate-fade-in"
             style={{ animationDelay: `${index * 100}ms` }}
           >
