@@ -1,171 +1,72 @@
-import { Search, Menu, UserCircle, Calendar, Users, Plus, HelpCircle, LogOut, FileText } from "lucide-react";
+'use client';
+
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { LogOut, LayoutDashboard, User } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
+// 1. Importamos usePathname para leer la ruta
+import { useRouter, usePathname } from "next/navigation"; 
 import { useToast } from "@/lib/hooks/use-toast";
 
 export const NavigationHeader = () => {
-  const router = useRouter();
-  const { user, signOut } = useAuth();
+  const supabase = createClient();
   const { toast } = useToast();
+  const router = useRouter();
+  
+  // 2. Obtenemos la ruta actual
+  const pathname = usePathname();
+
+  // 3. LÓGICA DE OCULTACIÓN: Si estamos en /login, no renderizamos nada
+  // Esto elimina el header de la pantalla de inicio de sesión
+  if (pathname && pathname.includes('/login')) {
+    return null;
+  }
 
   const handleSignOut = async () => {
-    try {
-      await signOut();
-      toast({
-        title: "Sesión cerrada",
-        description: "Has cerrado sesión correctamente",
-      });
-      router.push("/auth");
-    } catch (error) {
-      console.error('Error signing out:', error);
-      toast({
-        title: "Error",
-        description: "Error al cerrar sesión",
-        variant: "destructive"
-      });
-    }
-  };
+    const { error } = await supabase.auth.signOut();
 
-  const getUserInitials = () => {
-    if (user?.user_metadata?.full_name) {
-      return user.user_metadata.full_name
-        .split(' ')
-        .map((name: string) => name[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
+    if (error) {
+      toast({ 
+        title: "Error al cerrar sesión", 
+        description: error.message, 
+        variant: "destructive" 
+      });
+    } else {
+      toast({
+        title: "Cierre de sesión exitoso",
+        description: "Has sido redirigido al login.",
+      });
+      router.push('/login');
+      router.refresh();
     }
-    return user?.email?.slice(0, 2).toUpperCase() || 'U';
   };
 
   return (
-    <header className="border-b border-module-border bg-background sticky top-0 z-50">
-      <div className="container mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center">
-            <Link href="/" className="hover:opacity-80 transition-calm">
-              <h1 className="font-serif text-2xl font-medium text-primary">iNFORiA</h1>
+    <header className="flex items-center justify-between p-4 border-b bg-background shadow-sm">
+      <div className="flex items-center gap-4">
+        <Link href="/dashboard" className="text-lg font-semibold">
+          INFORIA
+        </Link>
+        <nav className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/dashboard">
+              <LayoutDashboard className="mr-2 h-4 w-4" />
+              Dashboard
             </Link>
-          </div>
-
-          {/* Search Bar */}
-          <div className="flex-1 max-w-md mx-8">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Buscar paciente por nombre, etiqueta..."
-                className="pl-10 bg-background"
-              />
-            </div>
-          </div>
-
-          {/* Right Side - Menu and Avatar */}
-          <div className="flex items-center space-x-4">
-            {/* Dropdown Menu - TRES RAYAS HORIZONTALES */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="hover:bg-secondary">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem className="cursor-pointer">
-                  <Link href="/" className="w-full flex items-center">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                  <Link href="/patient-list" className="w-full flex items-center">
-                    <Users className="mr-2 h-4 w-4" />
-                    Pacientes
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                  <Link href="/new-patient" className="w-full flex items-center">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Crear Ficha de Paciente
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                  <Link href="/session-workspace" className="w-full flex items-center">
-                    <FileText className="mr-2 h-4 w-4" />
-                    Nueva Sesión
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer">
-                  <Link href="/faqs" className="w-full flex items-center">
-                    <HelpCircle className="mr-2 h-4 w-4" />
-                    FAQs
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Profile Avatar */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full hover:bg-secondary">
-                  <Avatar className="h-8 w-8">
-                    {user?.user_metadata?.avatar_url ? (
-                      <AvatarImage 
-                        src={user.user_metadata.avatar_url} 
-                        alt={user?.user_metadata?.full_name || "Usuario"} 
-                      />
-                    ) : (
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {getUserInitials()}
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                {/* User Info */}
-                <div className="px-3 py-2">
-                  <p className="text-sm font-medium text-foreground">
-                    {user?.user_metadata?.full_name || "Usuario"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {user?.email}
-                  </p>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer">
-                  <Link href="/my-account" className="w-full flex items-center">
-                    <UserCircle className="mr-2 h-4 w-4" />
-                    Mi Cuenta
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  className="cursor-pointer text-destructive focus:text-destructive"
-                  onClick={handleSignOut}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Cerrar Sesión
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
+          </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/account">
+              <User className="mr-2 h-4 w-4" />
+              Mi Cuenta
+            </Link>
+          </Button>
+        </nav>
+      </div>
+      <div className="flex items-center gap-4">
+        <Button onClick={handleSignOut} variant="ghost" size="sm">
+          <LogOut className="mr-2 h-4 w-4" />
+          Cerrar Sesión
+        </Button>
       </div>
     </header>
   );

@@ -1,14 +1,11 @@
 // lib/supabase/server.ts
-// D:\iNFORiA\SaaS\INFORIA2.0\lib\supabase\server.ts
 
-// Importar CookieOptions para tipado explícito
 import { createServerClient, type CookieOptions } from '@supabase/ssr' 
 import { cookies } from 'next/headers'
 
 export function createClient() {
   const cookieStore = cookies()
 
-  // Crea un cliente de Supabase para el LADO DEL SERVIDOR (Server Components, Route Handlers)
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -17,13 +14,21 @@ export function createClient() {
         get(name: string) {
           return cookieStore.get(name)?.value
         },
-        // Añadir tipado explícito a las opciones
         set(name: string, value: string, options: CookieOptions) { 
-          cookieStore.set({ name, value, ...options })
+          try {
+            cookieStore.set({ name, value, ...options })
+          } catch (error) {
+            // Los cookies pueden no ser editables en algunos contextos
+            console.error(`Error setting cookie ${name}:`, error)
+          }
         },
-        // CORRECCIÓN: Usar .delete() en lugar de .set() con valor vacío
         remove(name: string, options: CookieOptions) { 
-          cookieStore.delete({ name, ...options })
+          try {
+            cookieStore.delete({ name, ...options })
+          } catch (error) {
+            // Los cookies pueden no ser editables en algunos contextos
+            console.error(`Error removing cookie ${name}:`, error)
+          }
         },
       },
     }

@@ -21,6 +21,7 @@ const buttonVariants = cva(
         inforia: "bg-primary text-primary-foreground hover:bg-primary/90 font-sans font-medium transition-colors",
         burgundy: "bg-burgundy text-burgundy-foreground hover:bg-burgundy/90 font-sans font-medium transition-colors",
         gold: "bg-gold text-gold-foreground hover:bg-gold/90 font-sans font-medium transition-colors",
+        neumorphic: "shadow-neu-flat hover:shadow-neu-convex active:shadow-neu-pressed bg-background text-primary border border-transparent transition-all duration-300 active:scale-95",
       },
       size: {
         default: "h-10 px-4 py-2",

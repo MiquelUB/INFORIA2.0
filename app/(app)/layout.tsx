@@ -1,18 +1,40 @@
-// app/(app)/layout.tsx
-import DashboardHeader from "@/components/DashboardHeader"; // Esta ruta está bien aquí
-import QueryProvider from "@/components/QueryProvider"; // <-- 1. IMPORTAR EL PROVIDER
+<<<<<<< HEAD
+export const runtime = "nodejs";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return <section>{children}</section>;
+=======
+// app/(app)/layout.tsx
+'use client'; // Necesario para usar usePathname
+
+import { usePathname } from "next/navigation"; // Hook para leer la ruta
+import DashboardHeader from "@/components/DashboardHeader";
+import QueryProvider from "@/components/QueryProvider";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthGuard } from "@/components/auth/AuthGuard";
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  
+  // Lógica: Si la ruta contiene "/login" o está en (auth), no mostramos el header
+  const isAuthPage = pathname?.includes('/login') || pathname?.includes('/(auth)');
+
   return (
-    <QueryProvider> {/* <-- 2. ENVOLVER AQUÍ */}
-      {/* El <AuthGuard> se ha eliminado */} {/* <-- 3. COMENTARIO CORREGIDO */}
-      <div className="flex h-screen bg-background">
-        {/* ... (Sidebar, etc.) ... */}
-        <main className="flex-1 overflow-y-auto">
-          {children}
-        </main>
-      </div>
-      {/* El </AuthGuard> se ha eliminado */} {/* <-- 4. COMENTARIO CORREGIDO */}
+    <QueryProvider>
+      <AuthProvider>
+        <AuthGuard>
+          <div className="flex flex-col h-screen bg-background">
+            
+            {/* Renderizado Condicional: Header solo si NO es página de auth */}
+            {!isAuthPage && <DashboardHeader />}
+            
+            <main className="flex-1 overflow-y-auto">
+              {children}
+            </main>
+          </div>
+        </AuthGuard>
+      </AuthProvider>
     </QueryProvider>
   );
+>>>>>>> feature/stripe-integration
 }

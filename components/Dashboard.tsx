@@ -1,6 +1,7 @@
 "use client"; // CRÍTICO: Asegura que el componente se renderice en el cliente para usar cualquier hook de React.
 
 import { Header } from "./Header";
+import React, { useState } from "react";
 import CalendarModule from "./CalendarModule";
 import { ReportModule } from "./ReportModule";
 import { SearchModule } from "./SearchModule";
@@ -8,6 +9,9 @@ import { SearchModule } from "./SearchModule";
 // Nota: Se ha eliminado 'import { useSearchParams } from "next/navigation";' ya que no se utiliza en el cuerpo del componente Dashboard, manteniendo el código limpio.
 
 export const Dashboard = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const handleSearchChange = (query: string) => setSearchQuery(query);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -33,7 +37,10 @@ export const Dashboard = () => {
           
           {/* Bottom Sub-module - Search Module */}
           <div className="flex-1 min-h-[30vh] md:min-h-0">
-            <SearchModule />
+            <SearchModule
+              searchQuery={searchQuery}
+              onSearchChange={handleSearchChange}
+            />
           </div>
         </div>
       </div>

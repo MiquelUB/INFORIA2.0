@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 
 interface FileUploadZoneProps {
   files: File[];
-  onFilesSelected: (files: FileList) => void;
+  onFilesSelected: (files: File[]) => void;
   onFileRemove: (index: number) => void;
   acceptedTypes?: string;
   maxFiles?: number;
@@ -33,7 +33,7 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = event.target.files;
     if (selectedFiles && selectedFiles.length > 0) {
-      onFilesSelected(selectedFiles);
+      onFilesSelected(Array.from(selectedFiles));
     }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -48,7 +48,7 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
     event.preventDefault();
     const droppedFiles = event.dataTransfer.files;
     if (droppedFiles.length > 0) {
-      onFilesSelected(droppedFiles);
+      onFilesSelected(Array.from(droppedFiles));
     }
   };
 

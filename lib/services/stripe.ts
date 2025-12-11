@@ -1,6 +1,7 @@
 // Ruta: src/services/stripe.ts (código completo y funcional)
 import { Invoice, Subscription, EarlyRenewalResponse, SubscriptionPlan } from '@/types/billing';
 
+
 // Configuración de planes según documentación INFORIA
 const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
   professional: {
@@ -8,8 +9,10 @@ const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
     name: 'Plan Profesional',
     price: 99,
     reports: 100,
+    seats: 1, // [MODIFICADO]
     features: [
       '100 informes mensuales',
+      '1 Usuario (Seat)',
       'Transcripción automática de sesiones',
       'Generación de informes con IA',
       'Integración con Google Workspace',
@@ -24,8 +27,10 @@ const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
     name: 'Plan Clínica',
     price: 149,
     reports: 150,
+    seats: 4, // [MODIFICADO]
     features: [
       '150 informes mensuales',
+      'Hasta 4 Usuarios (Seats)',
       'Transcripción automática de sesiones',
       'Generación de informes con IA',
       'Integración con Google Workspace',

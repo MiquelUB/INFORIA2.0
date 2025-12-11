@@ -4,10 +4,22 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { FileText, AlertCircle, Crown, Building2, TestTube } from 'lucide-react';
 import { useUserProfile } from '@/lib/hooks/useUserProfile';
-import { useAuth } from '@/contexts/AuthContext';
+import { createClient } from '@/lib/supabase/client';
+import { User } from '@supabase/supabase-js';
+import { useState, useEffect } from 'react';
 
 export function AccountHeader() {
-  const { user } = useAuth();
+  const supabase = createClient();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, [supabase.auth]);
+
   const { data: profile, isLoading } = useUserProfile(user?.id || null);
 
   if (isLoading || !profile) {

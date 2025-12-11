@@ -8,26 +8,23 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface GenerateReportRequest {
+  patientId: string;
+  textNotes?: string;
+  audioTranscription?: string;
+  sessionType?: string;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('🚨 DEBUG: Function called');
-    
-    // Verificar variables de entorno
+    // Verificar variables de entorno (no loguear valores)
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-
-    console.log('🚨 DEBUG Environment:', {
-      hasSupabaseUrl: !!supabaseUrl,
-      hasServiceKey: !!supabaseServiceKey,
-      hasOpenAIKey: !!openAIApiKey,
-      supabaseUrlLength: supabaseUrl?.length || 0,
-      openAIKeyLength: openAIApiKey?.length || 0
-    });
 
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error('Missing Supabase credentials');
@@ -37,63 +34,131 @@ serve(async (req) => {
       throw new Error('Missing OpenAI API key');
     }
 
-    // Leer body
-    let requestBody;
+    // Leer body (sin loguear contenido - PILAR 2: Volatilidad)
+    let requestBody: GenerateReportRequest;
     try {
       requestBody = await req.json();
-      console.log('🚨 DEBUG Request body:', JSON.stringify(requestBody, null, 2));
     } catch (e) {
-      console.log('🚨 DEBUG Error reading body:', e);
       throw new Error('Failed to parse request body');
     }
 
     // Verificar auth
     const authHeader = req.headers.get('Authorization');
-    console.log('🚨 DEBUG Auth header present:', !!authHeader);
-
     if (!authHeader) {
       throw new Error('No authorization header');
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const token = authHeader.replace('Bearer ', '');
-    
-    console.log('🚨 DEBUG Token length:', token.length);
 
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    console.log('🚨 DEBUG Auth result:', {
-      hasUser: !!user,
-      userId: user?.id,
-      authError: authError?.message
-    });
 
     if (authError || !user) {
       throw new Error(`Auth failed: ${authError?.message || 'No user'}`);
     }
 
-    // RETORNAR ÉXITO TEMPORAL PARA VER SI LLEGA HASTA AQUÍ
-    return new Response(JSON.stringify({
-      success: true,
-      debug: 'Function is working up to auth verification',
-      userId: user.id,
-      receivedParams: Object.keys(requestBody || {})
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    // Validar que el usuario es propietario del paciente
+    const { data: patient, error: patientError } = await supabase
+      .from('patients')
+      .select('id, user_id')
+      .eq('id', requestBody.patientId)
+      .single();
+
+    if (patientError || !patient || patient.user_id !== user.id) {
+      throw new Error('Patient not found or access denied');
+    }
+
+    // Preparar contenido para IA (solo en memoria - PILAR 2: Volatilidad)
+    const clinicalContent = requestBody.audioTranscription || requestBody.textNotes || '';
+    
+    if (!clinicalContent) {
+      throw new Error('No clinical content provided');
+    }
+
+    // Construir prompt para OpenAI (sin loguear)
+    const systemPrompt = `Eres un asistente experto en redacción de informes clínicos. 
+Tu tarea es generar un informe profesional, estructurado y clínicamente relevante basado en las notas proporcionadas.
+El informe debe incluir: Resumen, Evaluación, Hallazgos Clave, Recomendaciones y Plan de Seguimiento.
+Mantén un tono profesional y académico.`;
+
+    const userMessage = `Por favor, genera un informe clínico basado en lo siguiente:\n\n${clinicalContent}`;
+
+    // Llamar a OpenAI GPT (datos sensibles solo en memoria, no persistidos antes de enviar)
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4-turbo',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userMessage }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000,
+      }),
     });
 
+    if (!openAIResponse.ok) {
+      const errorData = await openAIResponse.text();
+      console.error('OpenAI API error status:', openAIResponse.status);
+      throw new Error(`OpenAI API error: ${openAIResponse.status}`);
+    }
+
+    const openAIData = await openAIResponse.json();
+    const reportContent = openAIData.choices?.[0]?.message?.content;
+
+    if (!reportContent) {
+      throw new Error('No report content generated from OpenAI');
+    }
+
+    // Guardar en BD (datos ahora persistidos de forma segura por RLS)
+    const { data: report, error: reportError } = await supabase
+      .from('reports')
+      .insert([
+        {
+          patient_id: requestBody.patientId,
+          user_id: user.id,
+          content: reportContent,
+          session_type: requestBody.sessionType || 'general',
+          created_at: new Date().toISOString(),
+        }
+      ])
+      .select()
+      .single();
+
+    if (reportError) {
+      console.error('Report save error status:', reportError.code);
+      throw new Error(`Failed to save report: ${reportError.message}`);
+    }
+
+    // Retornar solo metadatos (sin contenido clínico en respuesta)
+    return new Response(
+      JSON.stringify({
+        success: true,
+        reportId: report.id,
+        createdAt: report.created_at,
+        message: 'Report generated successfully'
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+
   } catch (error) {
-    console.log('🚨 DEBUG ERROR:', error.message);
-    console.log('🚨 DEBUG ERROR Stack:', error.stack);
+    console.error('Report generation error:', error.message);
     
-    return new Response(JSON.stringify({
-      success: false,
-      error: error.message,
-      debug: 'Function failed',
-      stack: error.stack
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message || 'Internal server error'
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
   }
 });

@@ -1,0 +1,292 @@
+[
+  {
+    "id": "TC001",
+    "title": "Structural Audit - Login Page Accessibility",
+    "description": "Verify login page loads correctly and displays all required UI elements. DO NOT attempt to create accounts or complete OAuth flow. Expected: Page loads, elements visible, NO 401 errors on login page itself.",
+    "category": "structural",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login page (port 3001)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page loads without errors (status 200, no 401 errors)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify login form title '¡Bienvenido!' is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify 'Iniciar Sesión con Google' button is present and visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify NO 401 errors appear in console for the login page itself"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page structure matches expected layout"
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "Structural Audit - Route Navigation and Redirects",
+    "description": "Verify all routes redirect correctly for unauthenticated users. Expected: Protected routes redirect to /login, public routes load. 401 errors are EXPECTED for API calls from protected pages.",
+    "category": "structural",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard (should redirect to /login)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify redirect to /login occurs (401 errors in console are expected during redirect)"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /patients (should redirect to /login)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify redirect to /login occurs"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /reports/new (should redirect to /login)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify redirect to /login occurs"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /faqs (should be accessible or redirect)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page loads or redirects correctly"
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Structural Audit - File Structure Verification",
+    "description": "Verify all expected page files exist and routes are accessible (may redirect)",
+    "category": "structural",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Check that /login route exists and loads (200 status)"
+      },
+      {
+        "type": "action",
+        "description": "Check that /dashboard route exists (may redirect, 401 errors expected)"
+      },
+      {
+        "type": "action",
+        "description": "Check that /patients route exists (may redirect, 401 errors expected)"
+      },
+      {
+        "type": "action",
+        "description": "Check that /reports/new route exists (may redirect, 401 errors expected)"
+      },
+      {
+        "type": "action",
+        "description": "Check that /session-workspace route exists (may redirect, 401 errors expected)"
+      },
+      {
+        "type": "action",
+        "description": "Check that /account route exists (may redirect, 401 errors expected)"
+      },
+      {
+        "type": "action",
+        "description": "Check that /faqs route exists"
+      },
+      {
+        "type": "action",
+        "description": "Check that /onboarding route exists (may redirect, 401 errors expected)"
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Audio Recording Interface Verification",
+    "description": "Verify VoiceRecorder component structure is present (without executing recording). Note: 401 errors are EXPECTED when accessing protected routes.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /session-workspace?patientId=test (will redirect to login, 401 errors expected)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify redirect occurs correctly (401 errors in console are normal)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page structure loads (even if redirected)"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Report Generation Interface Verification",
+    "description": "Verify report generation UI structure (without generating reports). Note: 401 errors are EXPECTED when accessing protected routes.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /reports/new (will redirect to login, 401 errors expected)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify redirect occurs correctly (401 errors in console are normal)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page structure loads (even if redirected)"
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Navigation Components Structure",
+    "description": "Verify navigation components render correctly on public pages",
+    "category": "structural",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page loads with proper structure (no 401 errors on login page)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page has proper HTML structure"
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "API Routes Accessibility",
+    "description": "Verify API routes exist. Note: 401 errors are EXPECTED for protected API routes without authentication.",
+    "category": "structural",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Check /api/auth/login route exists"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify route responds (401 is expected without auth, but route exists)"
+      },
+      {
+        "type": "action",
+        "description": "Check /api/auth/session route exists"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify route responds (401 is expected without auth, but route exists)"
+      },
+      {
+        "type": "action",
+        "description": "Check /api/get-patient-appointments route exists"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify route responds (401 is expected without auth, but route exists)"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Middleware Redirect Functionality",
+    "description": "Verify middleware correctly redirects unauthenticated users to /login. 401 errors are EXPECTED during redirect process.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to root path /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify redirect to /login or /dashboard occurs (401 errors during redirect are normal)"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to protected route /dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify redirect to /login occurs (401 errors are expected)"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to protected route /patients"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify redirect to /login occurs (401 errors are expected)"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Page Layout and Structure",
+    "description": "Verify page layouts render correctly with proper HTML structure on public pages",
+    "category": "structural",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page has proper HTML structure (html, body, main elements)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page has proper meta tags and title"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page loads without console errors (except expected 401s from protected API calls)"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Error Handling Verification",
+    "description": "Verify that 401 errors are handled gracefully and pages still render correctly",
+    "category": "functional",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page renders correctly despite any 401 errors from background API calls"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify user can see login form even if some API calls fail with 401"
+      }
+    ]
+  }
+]

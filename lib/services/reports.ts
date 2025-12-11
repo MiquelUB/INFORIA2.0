@@ -36,8 +36,8 @@ export class ReportsService {
   static async transcribeAudio(audioFile: File): Promise<TranscriptionResponse> {
     const supabase = createClient();
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (!user || userError) {
         throw new Error('No hay sesión activa');
       }
 
@@ -69,8 +69,8 @@ export class ReportsService {
   static async generateReport(request: GenerateReportRequest): Promise<ReportResponse> {
     const supabase = createClient();
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (!user || userError) {
         throw new Error('No hay sesión activa');
       }
 

@@ -3,11 +3,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ExternalLink, FileText, Calendar, Table, FolderOpen } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
 import { reportsService } from '@/lib/services/database';
 import { googleSheetsPatientCRM } from '@/lib/services/googleSheetsPatientCRM';
 import { googleDriveService } from '@/lib/services/googleDrive';
 import type { Report } from '@/lib/services/database';
+import { createClient } from '@/lib/supabase/client';
+import { User } from '@supabase/supabase-js';
 
 interface ReportsViewerProps {
   patientId?: string;
@@ -22,11 +23,20 @@ const ReportsViewer: React.FC<ReportsViewerProps> = ({
   showAllReports = false,
   className = ""
 }) => {
-  const { user } = useAuth();
+  const supabase = createClient();
+  const [user, setUser] = useState<User | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [crmSheetId, setCrmSheetId] = useState<string | null>(null);
   const [patientFolderUrl, setPatientFolderUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, [supabase.auth]);
 
   useEffect(() => {
     const loadReports = async () => {
@@ -49,9 +59,15 @@ const ReportsViewer: React.FC<ReportsViewerProps> = ({
 
         setReports(reportsData);
 
-        // Obtener CRM Sheet ID
-        const sheetId = await googleSheetsPatientCRM.getOrCreateCRMSheet();
-        setCrmSheetId(sheetId);
+        // Obtener token de Google y luego el CRM Sheet ID
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          const token = session?.provider_token || null;
+          const sheetId = await googleSheetsPatientCRM.getOrCreateCRMSheet(token);
+          setCrmSheetId(sheetId);
+        } catch (crmError) {
+          console.warn('No se pudo obtener CRM Sheet ID:', crmError);
+        }
 
       } catch (error) {
         console.error('Error cargando informes:', error);
@@ -61,7 +77,7 @@ const ReportsViewer: React.FC<ReportsViewerProps> = ({
     };
 
     loadReports();
-  }, [user?.id, patientId, patientName, showAllReports]);
+  }, [user?.id, patientId, patientName, showAllReports, supabase]);
 
   // ✅ ÚNICA función formatDate
   const formatDate = (dateString: string) => {
@@ -141,7 +157,7 @@ const ReportsViewer: React.FC<ReportsViewerProps> = ({
               <div className="flex flex-wrap gap-2">
                 {patientFolderUrl && (
                   <Button 
-                    variant="outline" 
+                    className="btn-neumorphic"
                     size="sm"
                     onClick={() => window.open(patientFolderUrl, '_blank')}
                   >
@@ -152,7 +168,7 @@ const ReportsViewer: React.FC<ReportsViewerProps> = ({
                 
                 {crmSheetId && (
                   <Button 
-                    variant="outline" 
+                    className="btn-neumorphic"
                     size="sm"
                     onClick={() => window.open(
                       googleSheetsPatientCRM.getCRMViewUrl(crmSheetId), 
@@ -231,13 +247,12 @@ const ReportsViewer: React.FC<ReportsViewerProps> = ({
                   <div className="flex items-center gap-2 ml-4">
                     {report.google_drive_file_id && report.status === 'completed' && (
                       <Button 
-                        variant="outline" 
+                        className="btn-neumorphic shrink-0"
                         size="sm"
                         onClick={() => window.open(
                           `https://docs.google.com/document/d/${report.google_drive_file_id}/edit`, 
                           '_blank'
                         )}
-                        className="shrink-0"
                       >
                         <ExternalLink className="w-4 h-4 mr-2" />
                         Abrir Documento

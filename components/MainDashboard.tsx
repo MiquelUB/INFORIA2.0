@@ -1,13 +1,17 @@
 import { Header } from "@/components/Header";
 import DayFocus from "@/components/DayFocus";
 import CalendarModule from "@/components/CalendarModule";
+import React, { useState } from "react";
 import { ReportModule } from "@/components/ReportModule";
 import { SearchModule } from "@/components/SearchModule";
 import StatsOverview from "@/components/StatsOverview";
 import QuickActions from "@/components/QuickActions";
-import { CreditsStatus } from "@/components/CreditsStatus";
+
 
 const MainDashboard = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const handleSearchChange = (query: string) => setSearchQuery(query);
+
   return (
     <div className="min-h-screen bg-bone">
       {/* Header Principal con navegación e identidad de marca */}
@@ -37,10 +41,7 @@ const MainDashboard = () => {
           {/* Columna Secundaria - Módulos de Control (30% - 3/10 columns) */}
           <div className="lg:col-span-3 space-y-6">
             
-            {/* Estado de Créditos */}
-            <div className="animate-fade-in" style={{ animationDelay: '250ms' }}>
-              <CreditsStatus />
-            </div>
+
 
             {/* Calendario Compacto */}
             <div className="animate-fade-in" style={{ animationDelay: '300ms' }}>
@@ -59,7 +60,10 @@ const MainDashboard = () => {
 
             {/* Módulo de Búsqueda */}
             <div className="animate-fade-in" style={{ animationDelay: '600ms' }}>
-              <SearchModule />
+              <SearchModule
+                searchQuery={searchQuery}
+                onSearchChange={handleSearchChange}
+              />
             </div>
           </div>
         </div>

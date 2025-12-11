@@ -23,7 +23,7 @@ const QuickActions = () => {
       title: "Espacio de Sesión",
       description: "Registrar nueva sesión",
       icon: FileText,
-      href: "/session-workspace", 
+      href: "/session", 
       className: "bg-gold hover:bg-gold/90 text-gold-foreground"
     },
     {

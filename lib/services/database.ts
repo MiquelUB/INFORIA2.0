@@ -187,5 +187,57 @@ export const statsService = {
       totalReports: reportsCount.count || 0,
       recentReports: recentReports.data || []
     };
+  },
+
+  async getPatientStats(userId: string) {
+    if (!userId) {
+      return { totalPatients: 0, newThisMonth: 0, activeCases: 0 };
+    }
+
+    // First day of current month (e.g., 2025-11-01)
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
+    const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    // Query for total patients
+    const { count: totalPatients, error: totalError } = await supabase
+      .from('patients')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    if (totalError) {
+      console.error('Error fetching total patients stats:', totalError);
+    }
+
+    // Query for patients created THIS MONTH
+    // (created after or on the first day of the month)
+    const { count: newPatients, error: newError } = await supabase
+      .from('patients')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .gte('created_at', firstDayOfMonth); // gte = greater than or equal
+
+    if (newError) {
+      console.error('Error fetching new patients stats:', newError);
+    }
+
+    // Query for appointments TODAY
+    const { count: appointmentsToday, error: appointmentsError } = await supabase
+      .from('appointments')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('appointment_date', todayStr);
+
+    if (appointmentsError) {
+      console.error('Error fetching appointments stats:', appointmentsError);
+    }
+    
+    // Return real data
+    return {
+      totalPatients: totalPatients ?? 0,
+      newThisMonth: newPatients ?? 0,
+      activeCases: totalPatients ?? 0, // Assuming "active" is "total" for now
+      appointmentsToday: appointmentsToday ?? 0
+    };
   }
 };

@@ -1,0 +1,18 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3001",
+  "executionArgs": {
+    "projectName": "INFORIA2.0",
+    "projectPath": "D:\\iNFORiA\\SaaS\\INFORIA2.0",
+    "testIds": [
+      "TC001"
+    ],
+    "additionalInstruction": "Server port: 3001. Test ONLY the login page at http://localhost:3001/login. Verify elements \"¡Bienvenido!\" and \"Iniciar Sesión con Google\" are visible. DO NOT create users. 401 errors from protected API routes are EXPECTED and indicate proper security - ignore them. Only check that login page itself loads without errors.",
+    "envs": {
+      "API_KEY": "sk-user-gXITogiHGia_uaiZ91sQ8la4mfkvO03F1eHFHeIRIoGs8DC69x3U3hUvsh32M6RwdyOOI9Rd_ffY8KvPooFms9WPWtFenC_bvjjuyZ5xZe5pUFz_BNwlwEY2qbolsvOImIU"
+    }
+  },
+  "proxy": "http://7d9b4f8d-071f-4717-8dd2-98eda26527db:78RFdDb0GAqnI1m1clC1OLJ5Pt1GlVhf@tun.testsprite.com:8080"
+}

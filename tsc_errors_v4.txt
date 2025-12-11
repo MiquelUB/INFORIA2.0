@@ -1,0 +1,13 @@
+﻿lib/services/openrouter.ts(280,27): error TS1005: ',' expected.
+lib/services/openrouter.ts(280,34): error TS1005: ',' expected.
+lib/services/openrouter.ts(280,35): error TS1005: ',' expected.
+lib/services/openrouter.ts(280,40): error TS1005: ':' expected.
+lib/services/openrouter.ts(280,55): error TS1005: ',' expected.
+lib/services/openrouter.ts(298,24): error TS1005: ';' expected.
+lib/services/openrouter.ts(298,43): error TS1005: ',' expected.
+lib/services/openrouter.ts(298,51): error TS1005: ';' expected.
+lib/services/openrouter.ts(298,53): error TS1434: Unexpected keyword or identifier.
+lib/services/openrouter.ts(298,75): error TS1005: ';' expected.
+lib/services/openrouter.ts(361,29): error TS1005: ';' expected.
+lib/services/openrouter.ts(361,36): error TS1434: Unexpected keyword or identifier.
+lib/services/openrouter.ts(372,58): error TS1160: Unterminated template literal.

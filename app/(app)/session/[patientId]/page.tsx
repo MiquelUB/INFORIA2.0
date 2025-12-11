@@ -1,23 +1,31 @@
 'use client';
 import { useState, useEffect } from 'react';
-// ✅ CORRECCIÓN 1: Eliminado useSearchParams
-import { useRouter } from "next/navigation"; 
+import { useRouter, useSearchParams } from "next/navigation"; 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Play, Square, Trash2, Save, Wand2, FileText, AlertTriangle, Calendar, ExternalLink } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Play, Square, Trash2, Save, Wand2, FileText, AlertTriangle, Calendar, ExternalLink, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import DashboardHeader from '@/components/DashboardHeader';
 import FileUploadZone from '@/components/FileUploadZone';
 import { useFileUpload } from '@/lib/hooks/useFileUpload';
 import { useAudioRecording } from '@/lib/hooks/useAudioRecording';
-import { useAuth } from '@/contexts/AuthContext';
 import { patientsService, reportsService } from '@/lib/services/database';
 import { googleDriveService } from '@/lib/services/googleDrive';
 import { googleSheetsPatientCRM } from '@/lib/services/googleSheetsPatientCRM';
 import { openRouterService } from '@/lib/services/openrouter';
+import { emailService } from '@/lib/services/emailService';
 import type { Patient } from '@/lib/services/database';
+import { createClient } from '@/lib/supabase/client';
+import { User } from '@supabase/supabase-js';
+import { deductCredits } from '@/lib/actions/credits';
+import { pricingService } from '@/lib/services/pricing';
+import { transcribeAudioAction } from '@/app/actions/transcribe'; // Server Action
+
+// Constantes para el "Límite Inteligente"
+const MAX_NOTES_LENGTH = 20000;
+const WARNING_NOTES_LENGTH = 15000;
 
 // ✅ CORRECCIÓN 2: Añadida la interfaz de Props para 'params'
 interface PageProps {
@@ -26,42 +34,64 @@ interface PageProps {
   };
 }
 
-// ✅ CORRECCIÓN 3: Recibir 'params' en la firma de la función
-export default function SessionWorkspace({ params }: PageProps) {
+export default function SessionPage({ params }: PageProps) {
+  const { patientId } = params;
   const router = useRouter();
-  // ✅ CORRECCIÓN 4: Eliminada la línea de 'useSearchParams'
-  const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const modeParam = searchParams.get('mode');
+  const supabase = createClient();
+
+  const [user, setUser] = useState<User | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [notes, setNotes] = useState('');
-  const [reportType, setReportType] = useState<'primera_visita' | 'seguimiento'>('primera_visita');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isTranscribing, setIsTranscribing] = useState(false); // Tu lógica original (correcta)
-  const [transcription, setTranscription] = useState<string>('');
-  const [generatedReportId, setGeneratedReportId] = useState<string | null>(null);
-  const [aiStatus, setAiStatus] = useState<'working' | 'fallback' | 'unknown'>('unknown');
-  const [driveStatus, setDriveStatus] = useState<'working' | 'no-permissions' | 'unknown'>('unknown');
   const [patientReports, setPatientReports] = useState<any[]>([]);
+  const [reportType, setReportType] = useState<string>('primera_visita');
+  const [notes, setNotes] = useState<string>('');
+  const [transcription, setTranscription] = useState<string>('');
+  const [aiStatus, setAiStatus] = useState<string>('idle');
+  const [driveStatus, setDriveStatus] = useState<string>('working');
+  const [isTranscribing, setIsTranscribing] = useState<boolean>(false);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [isConfirmingReport, setIsConfirmingReport] = useState<boolean>(false);
+  const [generatedReportId, setGeneratedReportId] = useState<string | null>(null);
+  const [hasGoogleToken, setHasGoogleToken] = useState<boolean>(true); 
+  const [skipCharge, setSkipCharge] = useState<boolean>(false);
+  const [totalCredits, setTotalCredits] = useState<number>(0);
+  const [details, setDetails] = useState<string[]>([]);
+
+  const getReportTypeLabel = (type: string) => {
+    const labels = {
+      primera_visita: 'Informe Primera Visita',
+      seguimiento: 'Informe Seguimiento',
+    };
+    return labels[type as keyof typeof labels] || type;
+  };
+
+  const calculateAge = (birthDate: string) => {
+    const diff = Date.now() - new Date(birthDate).getTime();
+    return Math.abs(new Date(diff).getUTCFullYear() - 1970);
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'No especificada';
+    return new Date(dateString).toLocaleDateString('es-ES');
+  };
+
+  useEffect(() => {
+    const verifySession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/login');
+      } else {
+        setUser(session.user);
+      }
+    };
+    verifySession();
+  }, [supabase.auth, router]);
   
   // Interfaces corregidas (tu código original)
-  interface PatientData {
-    name: string;
-    age?: number;
-    previousReports: string[];
-    firstVisitDate?: string;
-  }
 
-  interface SelectedPatient {
-    id: string;
-    name: string;
-    email: string | null;
-    phone: string | null;
-    birth_date: string | null;
-    created_at: string | null;
-    notes: string | null;
-  }
 
-  // ✅ CORRECCIÓN 5: Usar params.patientId en lugar de searchParams.get()
-  const patientId = params.patientId; 
+  // ✅ patientId ya declarado al inicio del componente (línea 40)
   
   const patientInitials = selectedPatient
     ? selectedPatient.name
@@ -83,25 +113,69 @@ export default function SessionWorkspace({ params }: PageProps) {
     playRecording,
   } = useAudioRecording(patientInitials); // Tu hook (sin 'isProcessing')
 
+  const [isLoadingPatient, setIsLoadingPatient] = useState(true);
+
   useEffect(() => {
-    const loadPatient = async () => {
+    const loadPatientAndReports = async () => {
+      // Si no tenemos ID de usuario o paciente todavía, esperamos para no dar falsos negativos
       if (!user?.id || !patientId) return;
+
       try {
+        console.log('🔍 Loading patient:', { patientId, userId: user?.id });
         const patient = await patientsService.getById(patientId);
+        
         if (patient) {
           setSelectedPatient(patient);
+          console.log('✅ Patient loaded:', patient);
+          
+          // Cargar reportes del paciente
+          console.log('📋 Loading reports for patient:', patientId);
           const reports = await reportsService.getByPatient(patientId);
-          setPatientReports(reports);
+          console.log('✅ Reports loaded:', reports);
+          setPatientReports(reports || []);
+
+          // ✅ LOGICA DE AUTO-AJUSTE (BLINDADA)
+          console.log(`🔍 Revisando modo. URL Mode: ${modeParam}, Historial: ${reports.length}`);
+
+          if (modeParam === 'alta') {
+            // CASO 1: Usuario pidió ALTA explícitamente vía ?mode=alta
+            if ((reports || []).length > 0) {
+              setReportType('alta_paciente');
+              toast.success('Modo Dossier de Alta activado.');
+              console.log('🔴 ✅ CASO 1: Alta Dossier confirmado (tiene historial)');
+            } else {
+              console.error('Error: No se puede generar Alta sin historial.');
+              toast.error('Error: No se puede generar Alta sin historial.');
+              setReportType('primera_visita');
+              console.log('🔴 ❌ CASO 1: Revertiendo a Primera Visita (sin historial)');
+            }
+          } 
+          else if ((reports || []).length > 0) {
+            // CASO 2: Tiene historial y no pidió alta -> Seguimiento
+            setReportType('seguimiento');
+            console.log('🟢 CASO 2: Auto-ajustado a Seguimiento (paciente tiene historial)');
+          } 
+          else {
+            // CASO 3: Nuevo paciente -> Primera Visita
+            setReportType('primera_visita');
+            console.log('🟢 CASO 3: Auto-ajustado a Primera Visita (paciente nuevo)');
+          }
+        } else {
+          console.error("Paciente no encontrado en DB");
         }
       } 
       catch (error) {
         console.error('Error loading patient:', error);
         toast.error('Error al cargar datos del paciente');
+      } finally {
+        setIsLoadingPatient(false);
       }
     };
-    loadPatient();
-  }, [user?.id, patientId]);
+    loadPatientAndReports();
+  }, [user?.id, patientId, modeParam]); // ✅ Añadimos modeParam a dependencias
 
+  // ✅ DESACTIVADO: Auto-transcripción - Ahora el usuario elige entre Guardar Audio o Transcribir
+  /*
   useEffect(() => {
     const handleAutoTranscription = async () => {
       if (audioBlob && !isRecording && !isTranscribing) {
@@ -111,11 +185,101 @@ export default function SessionWorkspace({ params }: PageProps) {
     handleAutoTranscription();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audioBlob, isRecording]);
+  */
+
+  // Nueva función para controlar el input de notas
+  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newText = e.target.value;
+    // Límite Duro: No permitir escribir más allá de 20.000 caracteres
+    if (newText.length <= MAX_NOTES_LENGTH) {
+      setNotes(newText);
+    }
+  };
+
+  // -------------------------------------------------------------------------
+  // REGLA DE NEGOCIO: SOLO 1 FUENTE DE AUDIO (Grabación O Archivo)
+  // -------------------------------------------------------------------------
+  
+  const handleStartRecording = async () => {
+    // Verificar si ya hay archivo de audio subido
+    const hasAudioFile = selectedFiles.some(f => f.type.startsWith('audio/') || f.name.match(/\.(mp3|wav|m4a|ogg)$/i));
+    if (hasAudioFile) {
+      toast.error('⚠️ Límite de Audio: Ya has subido un archivo de audio. Elimínalo para poder grabar.');
+      return;
+    }
+    await startRecording();
+  };
+
+  const handleUploadFiles = (files: File[]) => {
+    // 1. Verificar si estamos intentando subir audio
+    const incomingAudio = files.some(f => f.type.startsWith('audio/') || f.name.match(/\.(mp3|wav|m4a|ogg)$/i));
+    
+    if (incomingAudio) {
+       // 2. Verificar conflicto con grabación existente
+       if (audioBlob) {
+         toast.error('⚠️ Límite de Audio: Ya tienes una grabación activa. Elimínala/Bórrala para subir un archivo de audio.');
+         return;
+       }
+       // 3. Verificar conflicto con otro archivo de audio ya subido
+       const existingAudio = selectedFiles.some(f => f.type.startsWith('audio/') || f.name.match(/\.(mp3|wav|m4a|ogg)$/i));
+       if (existingAudio) {
+         toast.error('⚠️ Límite de Audio: Solo se permite 1 archivo de audio por sesión.');
+         return;
+       }
+    }
+    
+    uploadFiles(files);
+  };
+
+  const handleTranscribeAudio = async (skipCharge = false) => {
+    if (!audioBlob) {
+      toast.error('No hay audio para transcribir');
+      return;
+    }
+    try {
+      console.log('🎤 Intentando transcribir audio con Whisper (Server Action)...');
+      
+      const formData = new FormData();
+      formData.append('file', audioBlob, 'session_audio.wav');
+
+      const result = await transcribeAudioAction(formData);
+      
+      if (!result.success || !result.text) {
+        throw new Error(result.error || 'Transcripción fallida');
+      }
+
+      // ✅ COBRO DIFERIDO: Solo si éxito
+      if (!skipCharge && user?.id) {
+        const creditResult = await deductCredits(user.id, 1, 'Transcripción de Audio (Micrófono)');
+        if (!creditResult.success) {
+           console.warn('Transcripción exitosa pero falló el cobro:', creditResult.error);
+        } else {
+           toast.success('Audio transcrito correctamente (1 crédito deducido)');
+        }
+      } else if (!skipCharge) {
+         // Si no hay user id?
+      }
+
+      setTranscription(result.text);
+      setAiStatus('working');
+      console.log('✅ Transcripción completada:', result.text.substring(0, 100) + '...');
+      return result.text;
+
+    } catch (error: any) {
+      console.error('Error transcribing audio:', error);
+      setAiStatus('fallback');
+      toast.error(`Error al transcribir el audio: ${error.message}`);
+      return null;
+    } finally {
+      setIsTranscribing(false); // Usando tu estado original
+    }
+  };
 
   const testOpenRouterConnectivity = async () => {
     console.log('🧪 Testing OpenRouter connectivity...');
-    // @ts-ignore
-    const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY; 
+    // --- CORRECCIÓN: Usar sintaxis Next.js ---
+    const apiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
+    // ----------------------------------------
     console.log('🔑 API Key debug info:', {
       exists: !!apiKey,
       length: apiKey?.length,
@@ -167,285 +331,339 @@ export default function SessionWorkspace({ params }: PageProps) {
     }
   };
 
-  const handleTranscribeAudio = async () => {
-    if (!audioBlob) {
-      toast.error('No hay audio para transcribir');
+  // ✅ NUEVO: Guardar audio directamente a Google Drive sin transcripción
+  const handleSaveAudioOnly = async () => {
+    if (!audioBlob || !selectedPatient) return;
+    
+    // ✅ NUEVO: Verificar token de Google antes de intentar guardar
+    if (!hasGoogleToken) {
+      toast.error('❌ No tienes autorización de Google Drive. Por favor, inicia sesión con Google.');
+      console.warn('⚠️ Intento de guardar audio sin token de Google');
       return;
     }
-    setIsTranscribing(true); // Usando tu estado original
+    
+    toast.info('Subiendo audio a Drive...');
     try {
-      console.log('🎤 Intentando transcribir audio con Whisper...');
-      const isConnected = await testOpenRouterConnectivity();
-      if (!isConnected) {
-        throw new Error('OpenRouter no disponible');
+      const fileName = `${new Date().toISOString().split('T')[0]} - Audio Sesión - ${selectedPatient.name}.wav`;
+      const result = await googleDriveService.uploadFile(
+        audioBlob,
+        fileName,
+        selectedPatient.name,
+        selectedPatient.id
+      );
+      
+      if (result?.id) {
+        toast.success('✅ Audio guardado en la carpeta del paciente');
+      } else {
+        throw new Error('Fallo en la subida');
       }
-      const transcriptionText = await openRouterService.transcribeAudio(audioBlob);
-      setTranscription(transcriptionText);
-      setAiStatus('working');
-      toast.success('Audio transcrito correctamente con IA');
-      console.log('✅ Transcripción completada:', transcriptionText.substring(0, 100) + '...');
     } catch (error) {
-      console.error('Error transcribing audio:', error);
-      setAiStatus('fallback');
-      const fallbackTranscription = `[AUDIO GRABADO - ${recordingTime}]
-Archivo: ${new Date().toLocaleDateString()}_${recordingTime}_${patientInitials}_session.wav
-Duración: ${recordingTime}
-Estado: Pendiente transcripción manual
-Nota: La transcripción automática no está disponible.
-Por favor, revise el audio manualmente.`;
-      setTranscription(fallbackTranscription);
-      toast.error('Transcripción automática no disponible. Usando información básica del audio.');
-    } finally {
-      setIsTranscribing(false); // Usando tu estado original
+      console.error('❌ Error al guardar audio:', error);
+      toast.error('Error al guardar el audio. Verifica tu conexión o que hayas iniciado sesión con Google.');
     }
   };
 
-  const generateStructuredReport = (title: string, date: string) => {
-    return `# ${title}
-
-## INFORMACIÓN DE LA SESIÓN
-- **Fecha**: ${date}
-- **Paciente**: ${selectedPatient?.name}
-- **Tipo de consulta**: ${getReportTypeLabel(reportType)}
-- **Profesional**: ${user?.email}
-
-## DESARROLLO DE LA SESIÓN
-
-${notes.trim() ?
-`### Observaciones Clínicas
-${notes.trim()}
-
-` : ''}
-
-${transcription ? `### Registro de Audio
-${transcription}
-
-` : ''}
-
-${selectedFiles.length > 0 ?
-`### Documentación Adjunta
-${selectedFiles
-  .map((file, index) => `${index + 1}. ${file.name} (${Math.round(file.size / 1024)} KB)`)
-  .join('\n')}
-
-` : ''}
-
-## EVALUACIÓN Y SEGUIMIENTO
-
-### Estado Actual
-- Sesión documentada completamente
-- ${audioBlob ?
-'Incluye grabación de audio' : 'Sesión basada en notas escritas'}
-- ${selectedFiles.length > 0 ?
-`${selectedFiles.length} documento(s) adicional(es)` : 'Sin documentación adicional'}
-
-### Próximos Pasos
-- Revisar contenido de la sesión
-- ${reportType === 'primera_visita' ?
-'Planificar seguimiento inicial' : 'Continuar con plan terapéutico establecido'}
-- Actualizar historial clínico
-
----
-*Informe generado automáticamente el ${new Date().toLocaleString()}*
-*Sistema: iNFORiA Clinical Assistant*`;
+  // ✅ NUEVO: Función para confirmar generación de informe desde AlertDialog
+  const confirmGenerateReport = async () => {
+    setIsConfirmingReport(false);
+    await handleGenerateReport();
   };
 
   const handleGenerateReport = async () => {
-    if (!selectedPatient || (!notes.trim() && !transcription.trim() && selectedFiles.length === 0)) {
-      toast.error('Por favor proporciona contenido para el informe');
-      return;
+    if (!selectedPatient || !user) return;
+
+    // ---------------------------------------------------------
+    // FASE 0: CÁLCULO DE COSTES Y VALIDACIÓN
+    // ---------------------------------------------------------
+    
+    const { totalCredits, details } = pricingService.calculateSessionCost({
+      hasAudio: !!audioBlob || !!transcription,
+      files: selectedFiles,
+      reportType: reportType
+    });
+    setTotalCredits(totalCredits);
+    setDetails(details);
+
+    // 2. Validación básica de contenido (excepto Alta que usa historial)
+    if (totalCredits === 0 && !notes.trim() && reportType !== 'alta_paciente') {
+       toast.error('Debes aportar algún contenido (audio, notas o archivos) para generar un informe.');
+       return;
     }
+
+    // 3. Confirmación de coste (si > 1 crédito)
+    if (totalCredits > 1) {
+      const confirmed = window.confirm(
+        `Esta sesión compleja costará ${totalCredits} créditos.\n\nDesglose:\n${details.map(d => `- ${d}`).join('\n')}\n\n¿Deseas continuar?`
+      );
+      if (!confirmed) return;
+    }
+
     setIsGenerating(true);
+    setAiStatus('working');
+
     try {
-      console.log('🚀 Generando informe con sistema híbrido IA/Estructurado:', {
-        patient: selectedPatient.name,
-        type: reportType,
-        hasAudio: !!audioBlob,
-        hasTranscription: !!transcription,
-        filesCount: selectedFiles.length,
-        notesLength: notes.length,
-      });
-      const now = new Date();
-      const dateStr = now.toISOString().split('T')[0];
-      const reportTitle = `${getReportTypeLabel(reportType)} - ${selectedPatient.name} - ${dateStr}`;
+      // 4. (COBRO MOVIDO AL FINAL)
+      // Validaremos el saldo al final del proceso exitoso o usaremos 'checkCredits' si quisiéramos validar antes sin cobrar.
+      if (totalCredits > 0) {
+         // Opcional: Podríamos verificar si tiene saldo SUFICIENTE antes de empezar para no gastar recursos de IA
+         // pero sin cobrar. Por ahora, confiamos en el check del Middleware/UI y cobramos al éxito.
+      }
 
-      let aiGeneratedContent: string;
-      let reportMethod = 'structured';
-
-      if (notes.trim() || transcription.trim()) {
-        try {
-          console.log('🤖 Intentando generar informe con IA...');
-          const isConnected = await testOpenRouterConnectivity();
-          if (!isConnected) {
-            throw new Error('OpenRouter no disponible - usando fallback estructurado');
-          }
-
-          const previousReports = reportType === 'seguimiento'
-            ?
-            await reportsService.getByPatient(selectedPatient.id)
-            : [];
-          
-          const patientData: PatientData = {
-            name: selectedPatient.name,
-            age: selectedPatient.birth_date
-              ?
-              Math.floor(
-                  (Date.now() - new Date(selectedPatient.birth_date).getTime()) /
-                    (365.25 * 24 * 60 * 60 * 1000)
-                )
-              : undefined,
-            previousReports: previousReports.map((r) => r.content || '').slice(0, 3), 
-            firstVisitDate: selectedPatient.created_at ||
-            undefined,
-          };
-          
-          const sessionData = {
-            audioTranscription: transcription ||
-            undefined,
-            clinicalNotes: notes.trim(),
-            sessionDate: dateStr,
-          };
-          
-          const compiledInfo = await openRouterService.compileReportInfo({
-            reportType: reportType === 'primera_visita' ? 'nuevo_paciente' : 'seguimiento',
-            patientData,
-            sessionData,
-          });
-          
-          aiGeneratedContent = await openRouterService.generateReport(compiledInfo);
-          reportMethod = 'ai-generated';
-          setAiStatus('working');
-          console.log('✅ IA generó informe exitosamente');
-        } catch (aiError) {
-          console.warn('⚠️ Error IA, usando contenido estructurado:', aiError);
-          setAiStatus('fallback');
-          aiGeneratedContent = generateStructuredReport(reportTitle, dateStr);
-          reportMethod = 'structured-fallback';
-        }
+      console.log(`🚀 Iniciando generación. Modo: ${reportType}`);
+      
+      // ---------------------------------------------------------
+      // FASE 1: PREPARACIÓN DE DATOS
+      // ---------------------------------------------------------
+      const dateStr = new Date().toISOString().split('T')[0];
+      
+      // Título dinámico
+      let reportTitle = '';
+      if (reportType === 'alta_paciente') {
+        reportTitle = `DOSSIER DE ALTA - ${selectedPatient.name} - ${dateStr}`;
       } else {
-        aiGeneratedContent = generateStructuredReport(reportTitle, dateStr);
-        reportMethod = 'structured-direct';
+        reportTitle = `${getReportTypeLabel(reportType)} - ${selectedPatient.name} - ${dateStr}`;
       }
 
-      console.log('📝 Informe generado con método:', reportMethod);
-      
-      let driveResult: {
-        fileId: string;
-        webViewLink: string;
-        success: boolean;
-        message: string;
-      };
-      
-      let driveSuccess = false;
+      // Contexto de Archivos (Lectura)
+      let filesContext = '';
+      if (selectedFiles.length > 0) {
+        const filePromises = selectedFiles.map(async (file) => {
+          try {
+            // ARCHIVOS DE AUDIO
+            if (file.type.startsWith('audio/') || file.name.match(/\.(mp3|wav|m4a|ogg)$/i)) {
+              try {
+                // Convertir File a FormData para Server Action
+                const formData = new FormData();
+                formData.append('file', file, file.name || 'audio_file.wav');
+                
+                const result = await transcribeAudioAction(formData);
+                if (!result.success) throw new Error(result.error);
+                
+                return `--- Archivo de Audio Transcrito: ${file.name} ---\n${result.text}\n`;
+              } catch (audioError) {
+                console.error(`Error transcribiendo: ${audioError}`);
+                return `--- Error transcribiendo archivo de audio: ${file.name} ---\n`;
+              }
+            }
+            // ARCHIVOS DE TEXTO
+            else if (file.type === 'text/plain' || file.name.match(/\.(txt|md|csv|json)$/i)) {
+              const text = await file.text();
+              return `--- Archivo de Texto: ${file.name} ---\nContenido:\n${text}\n`;
+            }
+            // OTROS
+            else {
+              return `--- Archivo Adjunto: ${file.name} (Tipo: ${file.type}) ---\n`;
+            }
+          } catch (fileError) {
+            console.error(`Error procesando archivo ${file.name}:`, fileError);
+            return `--- Error procesando archivo: ${file.name} ---\n`;
+          }
+        });
+        
+        const processedFiles = await Promise.all(filePromises);
+        filesContext = processedFiles.join('\n');
+      }
 
-      try {
-        driveResult = await googleDriveService.createPatientReport(
-          reportTitle,
-          aiGeneratedContent,
-          selectedPatient.name,
-          selectedPatient.id
-        );
-        if (driveResult.success) {
-          driveSuccess = true;
-          setDriveStatus('working');
-          console.log('💾 Informe guardado en Google Drive:', driveResult.fileId);
-        } else {
-          throw new Error(driveResult.message);
+      // ---------------------------------------------------------
+      // FASE 1.5: TRANSCRIPCIÓN AUTOMÁTICA SI PENDIENTE
+      // ---------------------------------------------------------
+      let finalTranscription = transcription;
+      if (audioBlob && !transcription) {
+        console.log('🎙️ Audio detectado sin transcribir. Iniciando transcripción automática (ya cobrada en el total)...');
+        try {
+          const autoTranscribed = await handleTranscribeAudio(true); // skipCharge = true
+          if (autoTranscribed) {
+            finalTranscription = autoTranscribed;
+          } else {
+            console.warn('⚠️ Transcripción automática falló o retornó vacío.');
+            toast.warning('El audio no se pudo transcribir, el report se generará sin él.');
+          }
+        } catch (err) {
+          console.error('Error en transcripción automática:', err);
         }
-      } catch (driveError) {
-        console.warn('⚠️ Error Google Drive:', driveError);
-        setDriveStatus('no-permissions');
-        driveResult = {
-          fileId: '',
-          webViewLink: '',
-          success: false,
-          message: 'Sin permisos de Google Drive',
-        };
       }
 
-      const reportData = {
+      const sessionData = {
+        audioTranscription: finalTranscription || undefined,
+        clinicalNotes: notes.trim(),
+        filesContext: filesContext,
+        sessionDate: dateStr,
+      };
+
+      // ---------------------------------------------------------
+      // FASE 2: HISTORIAL CLÍNICO (Diferenciado)
+      // ---------------------------------------------------------
+      let reportsToAnalyze = [];
+      
+      if (reportType === 'alta_paciente') {
+        // ALTA: Recuperamos TODO el historial ordenado
+        console.log('📚 MODO ALTA: Recopilando historial completo...');
+        reportsToAnalyze = patientReports
+          .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+          .map(r => `[FECHA: ${new Date(r.created_at).toLocaleDateString()}] - TIPO: ${r.title}\n${r.content || 'Sin contenido'}`);
+      } else if (reportType === 'seguimiento') {
+        // SEGUIMIENTO: Solo últimos 3 para contexto
+        reportsToAnalyze = patientReports.map(r => r.content || '').slice(0, 3);
+      }
+
+      // ---------------------------------------------------------
+      // FASE 3: LLAMADA A LA IA (OpenRouter)
+      // ---------------------------------------------------------
+      console.log('🤖 Enviando datos a OpenRouter...');
+      
+      // Mapeo correcto de los 3 tipos
+      let openRouterType: 'nuevo_paciente' | 'seguimiento' | 'alta_paciente';
+      if (reportType === 'primera_visita') openRouterType = 'nuevo_paciente';
+      else if (reportType === 'alta_paciente') openRouterType = 'alta_paciente';
+      else openRouterType = 'seguimiento';
+
+      const compiledInfo = await openRouterService.compileReportInfo({
+        reportType: openRouterType,
+        patientData: {
+          name: selectedPatient.name,
+          age: selectedPatient.birth_date ? calculateAge(selectedPatient.birth_date) : undefined,
+          previousReports: reportsToAnalyze,
+          firstVisitDate: selectedPatient.created_at || undefined,
+        },
+        sessionData,
+      });
+
+      const aiContent = await openRouterService.generateReport(compiledInfo, openRouterType);
+      
+      if (!aiContent || aiContent.length < 100) {
+        throw new Error('La IA devolvió un informe vacío.');
+      }
+      
+      setAiStatus('working');
+
+      // ---------------------------------------------------------
+      // FASE 4: CONSTRUCCIÓN DEL DOCUMENTO FINAL
+      // ---------------------------------------------------------
+      let finalDocumentContent = '';
+
+      if (reportType === 'alta_paciente') {
+        // ESTRUCTURA DOSSIER COMPLETO
+        finalDocumentContent = `
+# DOSSIER CLÍNICO DE ALTA
+Paciente: ${selectedPatient.name}
+Fecha de Emisión: ${dateStr}
+
+================================================================
+PARTE I: INFORME DE SÍNTESIS Y CIERRE
+================================================================
+${aiContent}
+
+================================================================
+PARTE II: ANEXO DOCUMENTAL (HISTORIAL COMPLETO)
+================================================================
+A continuación se adjunta el historial clínico completo del paciente:
+
+${reportsToAnalyze.join('\n\n------------------------------------------------\n\n')}
+`;
+      } else {
+        // ESTRUCTURA ESTÁNDAR (Sesión)
+        finalDocumentContent = `
+# REGISTRO DE SESIÓN CLÍNICA
+Paciente: ${selectedPatient.name}
+Fecha: ${dateStr}
+
+## TRANSCRIPCIÓN / NOTAS
+${transcription || '(Sin audio)'}
+${notes || ''}
+
+---
+## INFORME CLÍNICO
+${aiContent}
+`;
+      }
+
+      // ---------------------------------------------------------
+      // FASE 5: GUARDADO (Drive + DB)
+      // ---------------------------------------------------------
+      console.log('💾 Guardando en Google Drive...');
+      
+      const driveResult = await googleDriveService.createPatientReport(
+        reportTitle,
+        finalDocumentContent,
+        selectedPatient.name,
+        selectedPatient.id
+      );
+
+      if (!driveResult.success) throw new Error(`Fallo Drive: ${driveResult.message}`);
+
+      console.log('💽 Guardando en Supabase...');
+      const newReport = await reportsService.create({
         user_id: user!.id,
         patient_id: selectedPatient.id,
         title: reportTitle,
-        content: aiGeneratedContent,
+        content: aiContent, // En DB guardamos la síntesis limpia
         report_type: reportType,
-        input_type: audioBlob ?
-        ('voice' as const) : selectedFiles.length > 0 ? ('mixed' as const) : ('text' as const),
-        google_drive_file_id: driveResult?.fileId ||
-        null,
-        status: 'completed' as const,
-        audio_transcription: transcription ||
-        undefined,
-      };
+        input_type: 'mixed',
+        google_drive_file_id: driveResult.fileId,
+        status: 'completed',
+        audio_transcription: transcription || undefined
+      });
 
-      const newReport = await reportsService.create(reportData);
-      console.log('💽 Informe guardado en base de datos:', newReport.id);
-      
-      if (driveSuccess) {
-        try {
-          await googleSheetsPatientCRM.addReportToCRM({
-            date: dateStr,
-            patientId: selectedPatient.id,
-            patientName: selectedPatient.name,
-            reportType: getReportTypeLabel(reportType),
-            title: reportTitle,
-            status: 
-            'Completado',
-            driveLink: driveResult.webViewLink,
-            inputMethod: `${reportMethod} + ${audioBlob ? 'audio' : selectedFiles.length > 0 ? 'archivos' : 'notas'}`,
-          });
-          
-          const patientReportsCount = await reportsService.getByPatient(selectedPatient.id);
-          const patientFolderUrl = await googleDriveService.getPatientFolderUrl(
-            selectedPatient.name,
-            selectedPatient.id
-          );
-          
-          await googleSheetsPatientCRM.upsertPatientInCRM({
-            id: selectedPatient.id,
-            name: selectedPatient.name,
-            email: selectedPatient.email || undefined,
-            phone: selectedPatient.phone || undefined,
-            birth_date: selectedPatient.birth_date || undefined,
-            created_at: selectedPatient.created_at || new Date().toISOString(),
-            
-            total_reports: patientReportsCount.length + 1,
-            last_report_date: dateStr,
-            payment_status: 'Pendiente',
-            total_paid: 0,
-            status: 'active',
-            notes: selectedPatient.notes || undefined,
-            drive_folder_url: patientFolderUrl || undefined,
-          });
-          console.log('📊 CRM actualizado exitosamente');
-        } catch (crmError) {
-          console.warn('Error actualizando CRM (no crítico):', crmError);
+      // ---------------------------------------------------------
+      // FASE 5.5: COBRO DIFERIDO (Solo si todo lo anterior funciona)
+      // ---------------------------------------------------------
+      if (totalCredits > 0) {
+        console.log(`💰 Cobrando ${totalCredits} créditos tras éxito...`);
+        const creditResult = await deductCredits(user.id, totalCredits, `Informe: ${getReportTypeLabel(reportType)}`);
+        
+        if (!creditResult.success) {
+           // Si falla el cobro pero ya entregamos el servicio, lo logueamos como error crítico pero NO borramos el trabajo.
+           console.error('CRITICAL: Informe generado pero cobro fallido:', creditResult.error);
+           // Opcional: toast.error('Informe generado, pero hubo un error al actualizar tu saldo.');
+        } else {
+           toast.success(`Se han descontado ${totalCredits} créditos.`);
         }
       }
 
-      const updatedReports = await reportsService.getByPatient(selectedPatient.id);
-      setPatientReports(updatedReports);
-      setGeneratedReportId(newReport.id);
-      
-      let successMessage = '';
-      if (reportMethod === 'ai-generated' && driveSuccess) {
-        successMessage = '¡Informe clínico generado por IA y guardado en Google Drive exitosamente!';
-      } else if (reportMethod === 'ai-generated') {
-        successMessage = '¡Informe clínico generado por IA exitosamente! (Guardado localmente - Google Drive no disponible)';
-      } else if (driveSuccess) {
-        successMessage = '¡Informe estructurado creado y guardado en Google Drive exitosamente!';
-      } else {
-        successMessage = '¡Informe estructurado creado exitosamente! (Guardado localmente - Google Drive no disponible)';
-      }
-      toast.success(successMessage, { duration: 6000 });
+      // ---------------------------------------------------------
+      // FASE 6: REFRESCO DE LISTA (Todos los modos)
+      // ---------------------------------------------------------
+      // Pequeño delay para asegurar consistencia antes de recargar lista
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const refreshedReports = await reportsService.getByPatient(selectedPatient.id);
+      setPatientReports(refreshedReports);
+      console.log('🔄 Lista de informes actualizada. Total:', refreshedReports.length);
 
+      // ---------------------------------------------------------
+      // FASE 7: LIMPIEZA DE DUPLICADOS (Solo Alta)
+      // ---------------------------------------------------------
+      if (reportType === 'alta_paciente') {
+        toast.info('Finalizando Alta: Limpiando informes parciales...');
+        
+        const deletePromises = patientReports.map(async (r) => {
+          if (r.google_drive_file_id) {
+            try {
+              return await googleDriveService.deleteFile(r.google_drive_file_id);
+            } catch (deleteError) {
+              console.warn(`No se pudo eliminar ${r.title}:`, deleteError);
+              return false;
+            }
+          }
+          return false;
+        });
+        
+        await Promise.all(deletePromises);
+        toast.success('✨ Dossier generado y carpeta optimizada.');
+      } else {
+        toast.success('✅ Informe guardado correctamente.');
+      }
+
+      // Limpieza de formulario
+      setGeneratedReportId(newReport.id);
       setNotes('');
       setTranscription('');
       clearFiles();
-      deleteRecording();
-    } catch (error) {
-      console.error('Error generating report:', error);
-      toast.error(`Error al generar el informe: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      if (deleteRecording) deleteRecording();
+
+    } catch (error: any) {
+      console.error('❌ Error generando informe:', error);
+      toast.error(error.message || 'Error desconocido');
+      setAiStatus('fallback');
     } finally {
       setIsGenerating(false);
     }
@@ -483,18 +701,13 @@ ${selectedFiles
     }
   };
 
-  const getReportTypeLabel = (type: string) => {
-    const labels = {
-      primera_visita: 'Informe Primera Visita',
-      seguimiento: 'Informe Seguimiento',
-    };
-    return labels[type as keyof typeof labels] || type;
-  };
+
 
   const getTotalContent = () => {
     const parts = [];
     if (notes.trim()) parts.push(`Notas (${notes.length} chars)`);
     if (transcription.trim()) parts.push(`Transcripción (${transcription.length} chars)`);
+    else if (audioBlob) parts.push(`Audio grabado pendiente de procesar`); // ✅ AVISO DE AUDIO PENDIENTE
     if (selectedFiles.length > 0) parts.push(`${selectedFiles.length} archivos`);
     return parts.join(' + ') || 'Sin contenido';
   };
@@ -513,15 +726,22 @@ ${selectedFiles
     return 'Estado del sistema: Verificando...';
   };
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'No especificada';
-    return new Date(dateString).toLocaleDateString('es-ES');
-  };
+
+
+  if (isLoadingPatient) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Cargando datos del paciente...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!selectedPatient) {
     return (
       <>
-        <DashboardHeader />
         <div className="container mx-auto max-w-6xl px-6 py-8">
           <div className="text-center py-12">
             <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -539,12 +759,11 @@ ${selectedFiles
 
   return (
     <>
-      <DashboardHeader />
       <div className="container mx-auto max-w-6xl px-6 py-8 space-y-8">
         <div className="text-center">
           <h1 className="font-lora text-3xl font-bold mb-2">Registro de Sesión - {selectedPatient.name}</h1>
           <p className="text-muted-foreground">
-            Sistema híbrido de documentación clínica con IA y fallbacks robustos
+          
           </p>
          <p className={`text-sm mt-1 ${getSystemStatusColor()}`}>{getSystemStatusText()}</p>
         </div>
@@ -560,31 +779,27 @@ ${selectedFiles
                 <div className="space-y-4">
                   <h3 className="font-semibold">Grabación de Sesión</h3>
                   <div className="flex items-center gap-4">
-                    <Button
+                    <button
                       onClick={isRecording ?
                       stopRecording : startRecording}
-                      variant={isRecording ?
-                      'destructive' : 'default'}
-                      size="lg"
-                      className="bg-primary hover:bg-primary/90"
-                      disabled={isTranscribing} // Usando tu estado original
+                      disabled={isTranscribing}
+                      className="btn-neumorphic flex items-center justify-center"
+                      style={{ minWidth: '250px' }}
                     >
            
                       {isRecording ?
                       (
                         <>
                           <Square className="w-4 h-4 mr-2" />
-                          Parar Grabación
-                   
+                          DETENER GRABACIÓN
                         </>
                       ) : (
                         <>
                           <Play className="w-4 h-4 mr-2" />
-                 
-                          Empezar Grabación
+                          INICIAR GRABACIÓN
                         </>
                       )}
-                    </Button>
+                    </button>
 
                     {isRecording && (
   
@@ -609,8 +824,9 @@ ${selectedFiles
 
            
                   {audioBlob && !isRecording && (
-                    <Card className={transcription.includes('Pendiente transcripción manual') ? 'border-yellow-200 bg-yellow-50' : 'border-green-200 bg-green-50'}>
+                    <Card className="border-blue-100 bg-blue-50/50">
                       <CardContent className="p-4">
+<<<<<<< HEAD
                         <div className="flex items-center justify-between">
           
                           <div>
@@ -630,19 +846,42 @@ ${selectedFiles
                           </div>
                           <div className="flex gap-2">
        
-                            <Button variant="outline" size="sm" onClick={playRecording}>
+                            <Button variant="outline" size="sm" onClick={playRecording} aria-label="Reproducir grabación">
                               <Play className="w-4 h-4" />
                             </Button>
-               
-                            <Button variant="outline" size="sm" onClick={deleteRecording}>
+                
+                            <Button variant="outline" size="sm" onClick={deleteRecording} aria-label="Eliminar grabación">
                               <Trash2 className="w-4 h-4" />
                             </Button>
                        
+=======
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-blue-900">Audio grabado ({recordingTime})</p>
+                              <p className="text-xs text-blue-700">Listo para procesar</p>
+                            </div>
+                            <div className="flex gap-2">
+                               <Button variant="ghost" size="sm" onClick={deleteRecording} className="text-red-500 hover:text-red-700" title="Eliminar grabación">
+                                 <Trash2 className="w-4 h-4" />
+                               </Button>
+                            </div>
+>>>>>>> feature/stripe-integration
                           </div>
                         </div>
                       </CardContent>
                     </Card>
                   )}
+
+                  <div className="mt-4">
+                    <FileUploadZone
+                      files={selectedFiles}
+                      onFilesSelected={handleUploadFiles}
+                      onFileRemove={removeFile}
+                      acceptedTypes=".wav,.mp3,.m4a,.txt,.pdf,.doc,.docx"
+                      maxFiles={10}
+                    />
+                  </div>
 
              
                   {transcription && (
@@ -664,69 +903,135 @@ ${selectedFiles
                   )}
                 </div>
 
+                {/* SECCIÓN DE NOTAS CLÍNICAS CON PROTECCIÓN DE TOKENS */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Notas Clínicas</label>
+                  <div className="flex justify-between items-center">
+                    <label className="text-sm font-medium">Notas Clínicas</label>
+                    <span 
+                      className={`text-xs transition-colors duration-200 ${
+                        notes.length > WARNING_NOTES_LENGTH 
+                          ? 'text-yellow-600 font-bold' 
+                          : 'text-muted-foreground'
+                      }`}
+                    >
+                      {notes.length} / {MAX_NOTES_LENGTH} caracteres
+                    </span>
+                  </div>
+                  
                   <Textarea
-                
                     placeholder="Observaciones clínicas, contexto de la sesión, notas importantes..."
                     value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    className="min-h-[150px] resize-none"
+                    onChange={handleNotesChange}
+                    className={`min-h-[150px] resize-none transition-all duration-200 ${
+                      notes.length > WARNING_NOTES_LENGTH 
+                        ? 'border-yellow-400 focus-visible:ring-yellow-400 bg-yellow-50/30' 
+                        : ''
+                    }`}
                   />
-        
-                </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Archivos Adicionales</label>
-                  <FileUploadZone
-                    files={selectedFiles}
-                
-                    onFilesSelected={uploadFiles}
-                    onFileRemove={removeFile}
-                    acceptedTypes=".wav,.mp3,.m4a,.txt,.pdf,.doc,.docx"
-                    maxFiles={5}
-                  />
+                  {/* Zona Amarilla: Advertencia de abuso/optimización */}
+                  {notes.length > WARNING_NOTES_LENGTH && (
+                    <div className="flex items-start gap-2 p-2 bg-yellow-50 text-yellow-800 text-xs rounded-md border border-yellow-200 animate-in fade-in slide-in-from-top-1">
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <p>
+                        <strong>Texto muy extenso:</strong> Estás escribiendo mucho contenido. 
+                        Para asegurar la mejor calidad de análisis y evitar costes extra, 
+                        te recomendamos subir este texto como un <strong>archivo adjunto</strong> (.txt o .docx) en la sección inferior.
+                      </p>
+                    </div>
+                  )}
                 </div>
-
+                {/* FIN SECCIÓN NOTAS */}
   
                 <div className="bg-gray-50 p-3 rounded-lg">
                   <p className="text-sm text-gray-600">
                     <strong>Contenido del informe:</strong> {getTotalContent()}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
- 
-                    Sistema: {aiStatus === 'working' ?
-                    'IA disponible' : 'Informes estructurados'} | Drive: {driveStatus === 'working' ?
-                    'Conectado' : 'Sin permisos'}
-                  </p>
+
                 </div>
               </CardContent>
             </Card>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="outline" size="lg" onClick={handleSaveDraft} className="flex items-center 
-              gap-2">
-                <Save className="w-4 h-4" />
-                Guardar Borrador
-              </Button>
-
-              <Button variant="outline" size="lg" onClick={loadDraft} className="flex items-center gap-2">
-                Cargar Borrador
-             
-              </Button>
-
-              <Button
-                size="lg"
-                onClick={handleGenerateReport}
-                disabled={isGenerating ||
-                isTranscribing} // Usando tu estado original
-                className="bg-primary hover:bg-primary/90 flex items-center gap-2"
-              >
-                <Wand2 className="w-4 h-4" />
-                {isGenerating ?
-                'Generando Informe...' : aiStatus === 'working' ? 'Generar con IA' : 'Generar Informe Estructurado'}
-              </Button>
+            {/* --- BLOQUE DE BOTONES CON ALERTDIALOG --- */}
+            <div className="flex justify-center mt-6">
+              <AlertDialog open={isConfirmingReport} onOpenChange={setIsConfirmingReport}>
+                <Button
+                  type="button"
+                  onClick={() => setIsConfirmingReport(true)}
+                  disabled={isGenerating || isTranscribing}
+                  className={`flex items-center justify-center ${
+                    reportType === 'alta_paciente' 
+                      ? 'bg-purple-600 hover:bg-purple-700 text-white ring-2 ring-purple-200' 
+                      : 'btn-neumorphic'
+                  }`}
+                  style={{ minWidth: '250px' }}
+                >
+                  {reportType === 'alta_paciente' ? (
+                    <>
+                      {isGenerating ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <FileText className="mr-2 h-4 w-4" />
+                      )}
+                      {isGenerating ? 'Generando Dossier...' : 'Generar Dossier de Alta'}
+                    </>
+                  ) : (
+                    <>
+                      {isGenerating ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Wand2 className="mr-2 h-4 w-4" />
+                      )}
+                      {isGenerating ? 'Generando Informe...' : 'Generar Informe Clínico'}
+                    </>
+                  )}
+                </Button>
+                
+                {/* AlertDialog de confirmación */}
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Generar Informe de Sesión</AlertDialogTitle>
+                    <AlertDialogDescription className="space-y-3">
+                      <span className="block">
+                        Se va a generar un informe para la sesión clínica de <strong>{selectedPatient?.name}</strong>.
+                      </span>
+                      <div className="bg-blue-50 border border-blue-200 rounded p-3 space-y-2">
+                        <span className="block font-medium text-blue-900">Contenido a procesar:</span>
+                        <span className="block text-sm text-blue-800">
+                          {getTotalContent()}
+                        </span>
+                      </div>
+                      <span className="block text-xs text-muted-foreground">
+                        El informe será generado con IA y guardado en Google Drive.
+                      </span>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isGenerating}>
+                      Cancelar
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={confirmGenerateReport}
+                      disabled={isGenerating}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generando...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="mr-2 h-4 w-4" />
+                          Generar Informe
+                        </>
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
+            {/* --- FIN DE BLOQUE CON ALERTDIALOG --- */}
 
             {(aiStatus === 'fallback' || driveStatus === 'no-permissions') && (
               <Card className="border-yellow-200 bg-yellow-50">
@@ -793,30 +1098,24 @@ ${selectedFiles
                             </Badge>
                             {report.google_drive_file_id && (
                               <a
-          
                                 href={`https://docs.google.com/document/d/${report.google_drive_file_id}/edit`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-             
                                 className="text-primary hover:text-primary/80 transition-colors"
-                                title="Abrir informe en Google Drive"
+                                title="Abrir informe en Google Drive" aria-label="Abrir informe en Google Drive"
                               >
-             
                                 <ExternalLink className="h-4 w-4" />
                               </a>
                             )}
-                    
                           </div>
                         </div>
                       </div>
                     ))
                   ) : (
-        
                     <div className="text-center py-8">
                       <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                       <p className="text-sm text-muted-foreground">Sin informes registrados</p>
                     </div>
-            
                   )}
                 </div>
               </CardContent>

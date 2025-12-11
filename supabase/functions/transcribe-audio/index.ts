@@ -38,7 +38,8 @@ serve(async (req) => {
       throw new Error('Invalid authentication token');
     }
 
-    console.log('Audio transcription request from user:', user.id);
+    // Log only non-sensitive info (PILAR 2: Volatilidad - no loguear datos clínicos)
+    console.log('Transcription request from user');
 
     // Parse form data for audio file
     const formData = await req.formData();
@@ -48,7 +49,8 @@ serve(async (req) => {
       throw new Error('No audio file provided');
     }
 
-    console.log('Processing audio file:', audioFile.name, 'Size:', audioFile.size);
+    // Log only metadata, not content (PILAR 2: Volatilidad)
+    console.log('Processing audio file - Size:', audioFile.size);
 
     // Prepare form data for OpenAI Whisper API
     const whisperFormData = new FormData();
@@ -57,7 +59,7 @@ serve(async (req) => {
     whisperFormData.append('language', 'es'); // Spanish language
     whisperFormData.append('response_format', 'json');
 
-    // Call OpenAI Whisper API
+    // Call OpenAI Whisper API (data only in memory - PILAR 2: Volatilidad)
     const whisperResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
@@ -67,16 +69,17 @@ serve(async (req) => {
     });
 
     if (!whisperResponse.ok) {
-      const errorData = await whisperResponse.text();
-      console.error('Whisper API error:', errorData);
+      console.error('Whisper API error status:', whisperResponse.status);
       throw new Error(`Whisper API error: ${whisperResponse.status}`);
     }
 
     const whisperData = await whisperResponse.json();
     const transcription = whisperData.text;
 
-    console.log('Audio transcription completed successfully');
+    // Log only completion, not content (PILAR 2: Volatilidad)
+    console.log('Audio transcription completed');
 
+    // Return transcription (now in memory, will be used by client/further processing)
     return new Response(
       JSON.stringify({
         success: true,
@@ -89,7 +92,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in transcribe-audio function:', error);
+    console.error('Error in transcribe-audio function:', error.message);
     
     return new Response(
       JSON.stringify({ 
@@ -98,6 +101,11 @@ serve(async (req) => {
       }),
       {
         status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+  }
+});
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );

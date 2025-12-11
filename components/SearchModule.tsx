@@ -1,47 +1,33 @@
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { Search,User, FileText, ArrowUpRight } from "lucide-react";
-import { useState } from "react";
-import { useSearchPatients } from "@/lib/hooks/usePatients";
-import { useReports } from "@/lib/hooks/useReports";
-import Link from "next/link";
-import { useDebounce } from "@/lib/hooks/useDebounce";
+"use client";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 
-const SearchModule = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState<'all' | 'patients' | 'reports'>('all');
-  const [isExpanded, setIsExpanded] = useState(false);
-  
-  const debouncedQuery = useDebounce(searchQuery, 300);
-  const { data: patients = [] } = useSearchPatients(debouncedQuery);
-  const { data: allReports = [] } = useReports();
-  
-  // Filter reports by search query
-  const reports = allReports.filter(report => 
-    report.title?.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
-    report.content?.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
-    report.patients?.name?.toLowerCase().includes(debouncedQuery.toLowerCase())
-  );
+// 1. Definir las props
+interface SearchModuleProps {
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  placeholder?: string;
+}
 
-  const hasResults = patients.length > 0 || reports.length > 0;
-  const showResults = debouncedQuery.length > 0 && (isExpanded || hasResults);
-
-  const filteredResults = () => {
-    switch (activeFilter) {
-      case 'patients':
-        return { patients, reports: [] };
-      case 'reports':
-        return { patients: [], reports };
-      default:
-        return { patients, reports };
-    }
-  };
-
-  const { patients: filteredPatients, reports: filteredReports } = filteredResults();
-
+export function SearchModule({
+  searchQuery,
+  onSearchChange,
+  placeholder = "Buscar paciente por nombre, DNI o email..."
+}: SearchModuleProps) {
   return (
+<<<<<<< HEAD
+    <div className="relative w-full max-w-md">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <Input
+        type="search"
+        placeholder={placeholder}
+        className="pl-9 w-full"
+        // 2. Conectar las props al Input
+        value={searchQuery}
+        onChange={(e) => onSearchChange(e.target.value)}
+      />
+    </div>
+=======
     <Card className="border-module-border bg-module-background hover:shadow-md transition-calm">
       <CardHeader className="pb-3">
         <CardTitle className="module-title flex items-center">
@@ -104,7 +90,7 @@ const SearchModule = () => {
             {filteredPatients.map((patient) => (
               <Link
                 key={patient.id}
-                href={`/patient-detailed-profile?id=${patient.id}`}
+                href={`/patients/${patient.id}`}
                 className="block p-3 rounded-md bg-muted/30 hover:bg-muted/50 transition-calm border border-transparent hover:border-primary/20"
               >
                 <div className="flex items-center justify-between">
@@ -203,7 +189,6 @@ const SearchModule = () => {
         )}
       </CardContent>
     </Card>
+>>>>>>> feature/stripe-integration
   );
-};
-
-export { SearchModule };
+}

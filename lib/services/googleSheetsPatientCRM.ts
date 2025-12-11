@@ -1,7 +1,4 @@
 // Ruta: src/services/GoogleSheetsPatientCRMService.ts
-import { createClient } from '@/lib/supabase/client';
-
-const supabase = createClient();
 
 interface PatientCRMData {
   id: string;
@@ -44,44 +41,32 @@ interface ReportCRMData {
 
 export class GoogleSheetsPatientCRMService {
   private static readonly CRM_SHEET_NAME = 'iNFORiA_CRM_PACIENTES';
-  
-  async getAccessToken(): Promise<string | null> {
-    try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error || !session?.provider_token) {
-        console.error('No hay token de Google disponible:', error);
-        return null;
-      }
-      return session.provider_token;
-    } catch (err: unknown) {
-      console.error('Error obteniendo token:', err);
-      return null;
-    }
-  }
 
-  async getOrCreateCRMSheet(): Promise<string | null> {
+  async getOrCreateCRMSheet(token: string | null): Promise<string | null> {
     try {
-      const token = await this.getAccessToken();
       if (!token) return null;
 
-      // Buscar sheet existente
+      // 1. Buscar sheet existente
       const searchResponse = await fetch(
         `https://www.googleapis.com/drive/v3/files?q=name='${GoogleSheetsPatientCRMService.CRM_SHEET_NAME}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
         {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+          headers: { 'Authorization': `Bearer ${token}` }
         }
       );
-
       if (!searchResponse.ok) throw new Error('Error buscando CRM Sheet');
-      const searchData: { files?: { id: string }[] } = await searchResponse.json();
+      const searchData = await searchResponse.json();
+
       if (searchData.files && searchData.files.length > 0) {
-        return searchData.files[0].id;
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ CRM Sheet existente encontrado:', searchData.files[0].id);
+        }
+        return searchData.files[0].id; // Devuelve el ID del Sheet existente
       }
 
-      // Crear nuevo sheet
+      // 2. Crear nuevo sheet si no se encuentra
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📝 No se encontró CRM Sheet. Creando uno nuevo...');
+      }
       const createResponse = await fetch(
         'https://sheets.googleapis.com/v4/spreadsheets',
         {
@@ -94,6 +79,7 @@ export class GoogleSheetsPatientCRMService {
             properties: { title: GoogleSheetsPatientCRMService.CRM_SHEET_NAME },
             sheets: [
               { properties: { title: 'Pacientes' } },
+              { properties: { title: 'Citas' } },
               { properties: { title: 'Pagos' } },
               { properties: { title: 'Informes' } }
             ]
@@ -102,14 +88,27 @@ export class GoogleSheetsPatientCRMService {
       );
 
       if (!createResponse.ok) throw new Error('Error creando CRM Sheet');
-      const sheetData: { spreadsheetId: string } = await createResponse.json();
+      const sheetData = await createResponse.json();
       const sheetId = sheetData.spreadsheetId;
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ CRM Sheet nuevo creado:', sheetId);
+      }
 
-      await this.setupPatientsSheet(sheetId);
-      await this.setupPaymentsSheet(sheetId);
-      await this.setupReportsSheet(sheetId);
+      // 3. Obtener los IDs reales de las pestañas
+      const sheetIds = {
+        pacientes: sheetData.sheets[0].properties.sheetId,
+        citas: sheetData.sheets[1].properties.sheetId,
+        pagos: sheetData.sheets[2].properties.sheetId,
+        informes: sheetData.sheets[3].properties.sheetId,
+      };
 
-      console.log('✅ CRM Sheet creado:', sheetId);
+      // 4. Configurar las cabeceras
+      await this.setupPatientsSheet(token, sheetId, sheetIds.pacientes);
+      await this.setupCitasSheet(token, sheetId, sheetIds.citas);
+      await this.setupPaymentsSheet(token, sheetId, sheetIds.pagos);
+      await this.setupReportsSheet(token, sheetId, sheetIds.informes);
+
       return sheetId;
     } catch (err: unknown) {
       console.error('Error gestionando CRM Sheet:', err);
@@ -117,8 +116,7 @@ export class GoogleSheetsPatientCRMService {
     }
   }
 
-  private async setupPatientsSheet(sheetId: string): Promise<void> {
-    const token = await this.getAccessToken();
+  private async setupPatientsSheet(token: string | null, sheetId: string, sheetNumericId: number): Promise<void> {
     if (!token) return;
 
     const headers = [
@@ -153,7 +151,7 @@ export class GoogleSheetsPatientCRMService {
             requests: [
               {
                 repeatCell: {
-                  range: { sheetId: 0, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 14 },
+                  range: { sheetId: sheetNumericId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 14 },
                   cell: {
                     userEnteredFormat: {
                       backgroundColor: { red: 0.18, green: 0.25, blue: 0.23 },
@@ -172,8 +170,60 @@ export class GoogleSheetsPatientCRMService {
     }
   }
 
-  private async setupPaymentsSheet(sheetId: string): Promise<void> {
-    const token = await this.getAccessToken();
+  private async setupCitasSheet(token: string | null, sheetId: string, sheetNumericId: number): Promise<void> {
+    if (!token) return;
+
+    const headers = [
+      'Fecha', 'Hora', 'ID Paciente', 'Nombre Paciente', 'Tipo Sesión', 'Estado', 'Notas'
+    ];
+
+    try {
+      // Escribir cabeceras
+      await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Citas!A1:G1?valueInputOption=RAW`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ values: [headers] })
+        }
+      );
+
+      // Aplicar estilo a cabeceras (verde)
+      await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            requests: [
+              {
+                repeatCell: {
+                  range: { sheetId: sheetNumericId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 7 },
+                  cell: {
+                    userEnteredFormat: {
+                      backgroundColor: { red: 0.18, green: 0.25, blue: 0.23 },
+                      textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, bold: true }
+                    }
+                  },
+                  fields: 'userEnteredFormat'
+                }
+              }
+            ]
+          })
+        }
+      );
+    } catch (err: unknown) {
+      console.error('Error configurando hoja Citas:', err);
+    }
+  }
+
+  private async setupPaymentsSheet(token: string | null, sheetId: string, sheetNumericId: number): Promise<void> {
     if (!token) return;
 
     const headers = [
@@ -207,7 +257,7 @@ export class GoogleSheetsPatientCRMService {
             requests: [
               {
                 repeatCell: {
-                  range: { sheetId: 1, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 8 },
+                  range: { sheetId: sheetNumericId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 8 },
                   cell: {
                     userEnteredFormat: {
                       backgroundColor: { red: 0.5, green: 0, blue: 0.125 },
@@ -226,8 +276,7 @@ export class GoogleSheetsPatientCRMService {
     }
   }
 
-  private async setupReportsSheet(sheetId: string): Promise<void> {
-    const token = await this.getAccessToken();
+  private async setupReportsSheet(token: string | null, sheetId: string, sheetNumericId: number): Promise<void> {
     if (!token) return;
 
     const headers = [
@@ -252,12 +301,11 @@ export class GoogleSheetsPatientCRMService {
     }
   }
 
-  async upsertPatientInCRM(patientData: PatientCRMData, sheetId?: string): Promise<boolean> {
+  async upsertPatientInCRM(token: string | null, patientData: PatientCRMData, sheetId?: string): Promise<boolean> {
     try {
-      const token = await this.getAccessToken();
       if (!token) return false;
 
-      const crmSheetId = sheetId || await this.getOrCreateCRMSheet();
+      const crmSheetId = sheetId || await this.getOrCreateCRMSheet(token);
       if (!crmSheetId) return false;
 
       const searchResponse = await fetch(
@@ -323,12 +371,11 @@ export class GoogleSheetsPatientCRMService {
     }
   }
 
-  async addReportToCRM(reportData: ReportCRMData, sheetId?: string): Promise<boolean> {
+  async addReportToCRM(token: string | null, reportData: ReportCRMData, sheetId?: string): Promise<boolean> {
     try {
-      const token = await this.getAccessToken();
       if (!token) return false;
 
-      const crmSheetId = sheetId || await this.getOrCreateCRMSheet();
+      const crmSheetId = sheetId || await this.getOrCreateCRMSheet(token);
       if (!crmSheetId) return false;
 
       const getResponse = await fetch(
@@ -368,12 +415,11 @@ export class GoogleSheetsPatientCRMService {
     }
   }
 
-  async addPaymentToCRM(paymentData: PaymentData, sheetId?: string): Promise<boolean> {
+  async addPaymentToCRM(token: string | null, paymentData: PaymentData, sheetId?: string): Promise<boolean> {
     try {
-      const token = await this.getAccessToken();
       if (!token) return false;
 
-      const crmSheetId = sheetId || await this.getOrCreateCRMSheet();
+      const crmSheetId = sheetId || await this.getOrCreateCRMSheet(token);
       if (!crmSheetId) return false;
 
       const getResponse = await fetch(
@@ -409,6 +455,68 @@ export class GoogleSheetsPatientCRMService {
       return true;
     } catch (err: unknown) {
       console.error('Error agregando pago al CRM:', err);
+      return false;
+    }
+  }
+
+  async addCitaToCRM(
+    token: string | null,
+    citaData: {
+      date: string; // YYYY-MM-DD
+      time: string; // HH:MM
+      patientId: string;
+      patientName: string;
+      sessionType: string; // Ej: "Primera Visita", "Seguimiento"
+      status: string;      // Ej: "Programada"
+      notes?: string;
+    },
+    sheetId?: string
+  ): Promise<boolean> {
+    try {
+      if (!token) return false;
+
+      const crmSheetId = sheetId || (await this.getOrCreateCRMSheet(token));
+      if (!crmSheetId) return false;
+
+      // Buscar la próxima fila vacía en la pestaña 'Citas'
+      const getResponse = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${crmSheetId}/values/Citas!A:A`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (!getResponse.ok) throw new Error('Error obteniendo datos de citas');
+      const getData: { values?: string[][] } = await getResponse.json();
+      const nextRow = (getData.values?.length || 0) + 1;
+
+      const rowData = [
+        citaData.date,
+        citaData.time,
+        citaData.patientId,
+        citaData.patientName,
+        citaData.sessionType,
+        citaData.status,
+        citaData.notes || '',
+      ];
+
+      // Escribir los datos de la cita en la nueva fila
+      await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${crmSheetId}/values/Citas!A${nextRow}:G${nextRow}?valueInputOption=RAW`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ values: [rowData] }),
+        }
+      );
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ Cita agregada al CRM');
+      }
+      return true;
+    } catch (err: unknown) {
+      console.error('Error agregando cita al CRM:', err);
       return false;
     }
   }

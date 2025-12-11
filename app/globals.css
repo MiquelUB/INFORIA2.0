@@ -10,22 +10,24 @@ All colors MUST be HSL for consistency.
 @layer base {
   :root {
     /* INFORIA Brand Colors - Exact Specifications */
-    /* Verde INFORIA (#2E403B) - Primary Brand Color */
-    --inforia-green: 155 17% 21%;
-    /* Burdeos Acento (#800020) - CTA and Highlights */  
+    /* Verde INFORIA (#2E403B) - Primary Brand Color -> HSL(164, 16%, 22%) */
+    --inforia-green: 164 16% 22%;
+    /* Burdeos Acento (#800020) - CTA and Highlights -> HSL(345, 100%, 25%) */  
     --inforia-burgundy: 345 100% 25%;
-    /* Dorado Premium (#D4AF37) - Success States */
-    --inforia-gold: 43 74% 49%;
-    /* Blanco Hueso (#FBF9F6) - Backgrounds */
-    --inforia-cream: 40 40% 98%;
+    /* Dorado Premium (#D4AF37) - Success States -> HSL(46, 65%, 52%) */
+    --inforia-gold: 46 65% 52%;
+    /* Blanco Hueso (#FBF9F6) - Backgrounds -> HSL(36, 33%, 97%) */
+    --inforia-cream: 36 33% 97%;
     /* Gris Grafito (#333333) - Text */
     --inforia-graphite: 0 0% 20%;
+    
+    
 
     /* Semantic Color Mapping */
     --background: var(--inforia-cream); /* Blanco Hueso background */
     --foreground: var(--inforia-graphite); /* Gris Grafito text */
 
-    --card: 0 0% 100%; /* Pure white for cards */
+    --card: var(--inforia-cream); /* Cream background for cards */
     --card-foreground: var(--inforia-graphite);
 
     --popover: 0 0% 100%;
@@ -124,13 +126,6 @@ All colors MUST be HSL for consistency.
   }
 
   /* INFORIA Typography System */
-  .font-serif {
-    font-family: 'Lora', serif;
-  }
-
-  .font-sans {
-    font-family: 'Nunito Sans', sans-serif;
-  }
 
   /* Typography Hierarchy */
   .inforia-h1 {
@@ -186,3 +181,296 @@ All colors MUST be HSL for consistency.
     background: hsl(var(--muted-foreground) / 0.5);
   }
 }
+<<<<<<< HEAD
+=======
+
+/* iNFORiA Custom Button Styles - Add Tag Button (Circular) */
+.btn-add-tag {
+  display: inline-block;
+  position: relative;
+  height: 44px;
+  width: 44px;
+  cursor: pointer;
+}
+
+.btn-add-tag:before {
+  box-shadow: 0;
+  border-radius: 22px;
+  background: #fff;
+  position: absolute;
+  margin-left: -12px;
+  margin-top: -12px;
+  opacity: 0.2;
+  height: 24px;
+  width: 24px;
+  left: 50%;
+  top: 50%;
+}
+
+.btn-add-tag .button {
+  transition: all 300ms cubic-bezier(0.23, 1, 0.32, 1);
+  box-shadow: 0 15px 25px -4px rgba(0, 0, 0, 0.5), inset 0 -3px 4px -1px rgba(0, 0, 0, 0.2), 0 -10px 15px -1px rgba(255, 255, 255, 0.6), inset 0 3px 4px -1px rgba(255, 255, 255, 0.2), inset 0 0 5px 1px rgba(255, 255, 255, 0.8), inset 0 20px 30px 0 rgba(255, 255, 255, 0.2);
+  border-radius: 22px;
+  position: absolute;
+  background: hsl(var(--inforia-cream));
+  margin-left: -22px;
+  margin-top: -22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  width: 44px;
+  left: 50%;
+  top: 50%;
+  color: hsl(var(--inforia-green));
+}
+
+.btn-add-tag:active .button {
+  filter: blur(0.5px);
+  box-shadow: 0 12px 25px -4px rgba(0, 0, 0, 0.4), inset 0 -8px 30px 1px rgba(255, 255, 255, 0.9), 0 -10px 15px -1px rgba(255, 255, 255, 0.6), inset 0 8px 25px 0 rgba(0, 0, 0, 0.4), inset 0 0 10px 1px rgba(255, 255, 255, 0.6);
+}
+
+/* iNFORiA Dashboard Button - Nueva Cita */
+.btn-nueva-cita {
+  color: hsl(var(--inforia-green));
+  padding: 0.7em 1.7em;
+  font-size: 18px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  border-radius: 0.5em;
+  background: #e8e8e8;
+  cursor: pointer;
+  border: 1px solid #e8e8e8;
+  transition: all 0.3s;
+  box-shadow: 6px 6px 12px #c5c5c5, -6px -6px 12px #ffffff;
+  font-weight: 600;
+}
+
+.btn-nueva-cita:hover {
+  border: 1px solid white;
+  color: hsl(var(--inforia-burgundy));
+}
+
+.btn-nueva-cita:active {
+  box-shadow: 4px 4px 12px #c5c5c5, -4px -4px 12px #ffffff;
+}
+
+.btn-nueva-cita:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* iNFORiA Universal Neumorphic Button Style */
+.btn-neumorphic {
+  color: hsl(var(--inforia-graphite));
+  padding: 0.7em 1.7em;
+  font-size: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  border-radius: 0.5em;
+  background: hsl(var(--inforia-cream));
+  cursor: pointer;
+  border: 1px solid hsl(var(--inforia-cream));
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  box-shadow: 6px 6px 12px rgba(46, 64, 59, 0.15), -6px -6px 12px rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+.btn-neumorphic:hover {
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  color: hsl(var(--inforia-burgundy));
+  box-shadow: 6px 6px 12px rgba(46, 64, 59, 0.1), -6px -6px 12px rgba(255, 255, 255, 0.9);
+}
+
+.btn-neumorphic:active {
+  color: hsl(var(--inforia-graphite));
+  box-shadow: inset 4px 4px 12px rgba(46, 64, 59, 0.15), inset -4px -4px 12px rgba(255, 255, 255, 0.8);
+}
+
+.btn-neumorphic:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-neumorphic:focus-visible {
+  outline: 2px solid hsl(var(--inforia-burgundy));
+  outline-offset: 2px;
+}
+
+/* iNFORiA Custom Card Styles - Neumomorphic Design */
+.card-neumorphic {
+  border-radius: 30px;
+  background: hsl(var(--inforia-cream));
+  box-shadow: 15px 15px 30px rgba(46, 64, 59, 0.1),
+              -15px -15px 30px rgba(255, 255, 255, 0.9);
+  border: none;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.card-neumorphic:hover {
+  box-shadow: 15px 15px 30px rgba(46, 64, 59, 0.15),
+              -15px -15px 30px rgba(255, 255, 255, 0.9);
+}
+
+/* Toggle Button Style - Add Tags */
+.toggle {
+  display: inline-block;
+  position: relative;
+  height: 80px;
+  width: 80px;
+}
+
+.toggle:before {
+  box-shadow: 0;
+  border-radius: 84.5px;
+  background: hsl(var(--inforia-green));
+  position: absolute;
+  margin-left: -36px;
+  margin-top: -36px;
+  opacity: 0.1;
+  height: 72px;
+  width: 72px;
+  left: 50%;
+  top: 50%;
+}
+
+.toggle input:checked ~ .label {
+  color: hsl(var(--inforia-green));
+}
+
+.toggle .button {
+  transition: all 300ms cubic-bezier(0.23, 1, 0.32, 1);
+  box-shadow: 0 15px 25px -4px rgba(46, 64, 59, 0.3), 
+              inset 0 -3px 4px -1px rgba(46, 64, 59, 0.2), 
+              0 -10px 15px -1px rgba(255, 255, 255, 0.6), 
+              inset 0 3px 4px -1px rgba(255, 255, 255, 0.2), 
+              inset 0 0 5px 1px rgba(255, 255, 255, 0.8), 
+              inset 0 20px 30px 0 rgba(255, 255, 255, 0.2);
+  border-radius: 68.8px;
+  position: absolute;
+  background: hsl(var(--inforia-cream));
+  margin-left: -34.4px;
+  margin-top: -34.4px;
+  display: block;
+  height: 68.8px;
+  width: 68.8px;
+  left: 50%;
+  top: 50%;
+}
+
+.toggle .label {
+  transition: color 300ms ease-out;
+  line-height: 81px;
+  text-align: center;
+  position: absolute;
+  font-weight: 700;
+  font-size: 28px;
+  display: block;
+  opacity: 0.9;
+  height: 100%;
+  width: 100%;
+  color: hsl(var(--inforia-green));
+}
+
+.toggle input {
+  opacity: 0;
+  position: absolute;
+  cursor: pointer;
+  z-index: 1;
+  height: 100%;
+  width: 100%;
+  left: 0;
+  top: 0;
+}
+
+.toggle input:active ~ .button {
+  filter: blur(0.5px);
+  box-shadow: 0 12px 25px -4px rgba(46, 64, 59, 0.4), 
+              inset 0 -8px 30px 1px rgba(255, 255, 255, 0.9), 
+              0 -10px 15px -1px rgba(255, 255, 255, 0.6), 
+              inset 0 8px 25px 0 rgba(46, 64, 59, 0.2), 
+              inset 0 0 10px 1px rgba(255, 255, 255, 0.6);
+}
+
+.toggle input:active ~ .label {
+  font-size: 26px;
+  color: rgba(46, 64, 59, 0.6);
+}
+
+.toggle input:checked ~ .button {
+  filter: blur(0.5px);
+  box-shadow: 0 10px 25px -4px rgba(46, 64, 59, 0.4), 
+              inset 0 -8px 25px -1px rgba(255, 255, 255, 0.9), 
+              0 -10px 15px -1px rgba(255, 255, 255, 0.6), 
+              inset 0 8px 20px 0 rgba(46, 64, 59, 0.2), 
+              inset 0 0 5px 1px rgba(255, 255, 255, 0.6);
+}
+
+.toggle input:checked ~ .label {
+  color: hsl(var(--inforia-green));
+}
+
+/* iNFORiA Custom Save Buttons */
+.btn-save {
+  color: hsl(var(--inforia-green));
+  padding: 0.7em 1.7em;
+  font-size: 18px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  border-radius: 0.5em;
+  background: #e8e8e8;
+  cursor: pointer;
+  border: 1px solid #e8e8e8;
+  transition: all 0.3s;
+  box-shadow: 6px 6px 12px #c5c5c5, -6px -6px 12px #ffffff;
+  font-weight: 600;
+  width: 100%;
+}
+
+.btn-save:hover {
+  border: 1px solid white;
+  color: hsl(var(--inforia-burgundy));
+}
+
+.btn-save:active {
+  box-shadow: 4px 4px 12px #c5c5c5, -4px -4px 12px #ffffff;
+}
+
+.btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Estilo de botón Neumórfico Unificado (Corregido con color de marca) */
+.btn-neumorphic {
+  color: hsl(var(--inforia-green));
+  padding: 0.7em 1.7em;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 0.5em;
+  
+  /* --- CORRECCIÓN DE COLOR --- */
+  background: hsl(var(--inforia-background)); /* <-- De #e8e8e8 a blanco hueso */
+  border: 1px solid hsl(var(--inforia-background));
+  transition: all 0.3s;
+  /* Sombras ajustadas para el blanco hueso (#FAF8F5) */
+  box-shadow: 6px 6px 12px #dcdad8, -6px -6px 12px #ffffff;
+  /* --- FIN DE CORRECCIÓN --- */
+  
+  cursor: pointer;
+}
+
+.btn-neumorphic:hover {
+  /* El borde blanco está bien */
+  border: 1px solid white;
+}
+
+.btn-neumorphic:active {
+  /* Sombras activas ajustadas */
+  box-shadow: 4px 4px 12px #dcdad8, -4px -4px 12px #ffffff;
+}
+
+.btn-neumorphic:disabled {
+  color: #999;
+  cursor: not-allowed;
+  box-shadow: inset 4px 4px 8px #dcdad8, inset -4px -4px 8px #ffffff;
+}
+>>>>>>> feature/stripe-integration

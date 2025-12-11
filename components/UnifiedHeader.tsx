@@ -16,16 +16,28 @@ import {
 } from "@/components/ui/avatar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/lib/hooks/use-toast";
+import { createClient } from "@/lib/supabase/client";
+import { User } from "@supabase/supabase-js";
+import { useState, useEffect } from "react";
+
 const UnifiedHeader = () => {
   const router = useRouter();
-  const { user, signOut } = useAuth();
+  const supabase = createClient();
+  const [user, setUser] = useState<User | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, [supabase.auth]);
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      await supabase.auth.signOut();
       toast({
         title: "Sesión cerrada",
         description: "Has cerrado sesión correctamente",
@@ -104,7 +116,7 @@ const UnifiedHeader = () => {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer">
-                  <Link href="/session-workspace" className="w-full flex items-center">
+                  <Link href="/session" className="w-full flex items-center">
                     <FileText className="mr-2 h-4 w-4" />
                     Nueva Sesión
                   </Link>

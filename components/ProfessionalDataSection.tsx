@@ -1,5 +1,5 @@
 // Ruta: src/components/ProfessionalDataSection.tsx (versión sin foto de perfil)
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,9 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Save, Loader2, User, FileText, Phone, Mail, MapPin } from 'lucide-react';
 import { useUserProfile } from '@/lib/hooks/useUserProfile';
 import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface BillingFormData {
   full_name: string;
@@ -26,8 +26,16 @@ interface BillingFormData {
 
 export function ProfessionalDataSection() {
   const supabase = createClient();
-  const { user } = useAuth();
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const { data: profile, isLoading, refetch: refreshProfile } = useUserProfile(user?.id || null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, [supabase.auth]);
   const [formData, setFormData] = useState<BillingFormData>({
     full_name: '',
     professional_license: '',
@@ -375,7 +383,7 @@ export function ProfessionalDataSection() {
           onClick={handleSaveChanges}
           disabled={isSaving}
           size="lg"
-          className="min-w-[150px]"
+          className="min-w-[150px] btn-neumorphic"
         >
           {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
           <Save className="h-4 w-4 mr-2" />

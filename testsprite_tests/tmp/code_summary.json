@@ -1,0 +1,339 @@
+{
+  "tech_stack": [
+    "TypeScript",
+    "Next.js 14",
+    "React 18",
+    "PostgreSQL",
+    "Supabase",
+    "Tailwind CSS",
+    "Shadcn/UI",
+    "OpenRouter",
+    "Google Drive API",
+    "Stripe",
+    "Vercel"
+  ],
+  "application_structure": {
+    "routes": {
+      "public": [
+        "/login",
+        "/blocked",
+        "/auth-code-error",
+        "/auth/callback"
+      ],
+      "protected": [
+        "/dashboard",
+        "/patients",
+        "/patients/[id]",
+        "/patient-list",
+        "/patient-detailed-profile",
+        "/new-patient",
+        "/reports/new",
+        "/reports/new/[patientId]",
+        "/session/[patientId]",
+        "/session-workspace/[patientId]",
+        "/account",
+        "/my-account",
+        "/onboarding",
+        "/faqs"
+      ],
+      "api": [
+        "/api/auth/login",
+        "/api/auth/session",
+        "/api/get-patient-appointments"
+      ]
+    },
+    "file_structure": {
+      "app": {
+        "root": "app/layout.tsx",
+        "routes": [
+          "app/(app)/(auth)/login/page.tsx",
+          "app/(app)/(auth)/blocked/page.tsx",
+          "app/(app)/(auth)/auth-code-error/page.tsx",
+          "app/(app)/(auth)/callback/route.ts",
+          "app/(app)/dashboard/page.tsx",
+          "app/(app)/patients/page.tsx",
+          "app/(app)/patients/[id]/page.tsx",
+          "app/(app)/patient-list/page.tsx",
+          "app/(app)/patient-detailed-profile/page.tsx",
+          "app/(app)/new-patient/page.tsx",
+          "app/(app)/reports/new/page.tsx",
+          "app/(app)/reports/new/[patientId]/page.tsx",
+          "app/(app)/session/[patientId]/page.tsx",
+          "app/(app)/session-workspace/[patientId]/page.tsx",
+          "app/(app)/account/page.tsx",
+          "app/(app)/my-account/page.tsx",
+          "app/(app)/onboarding/page.tsx",
+          "app/(app)/faqs/page.tsx"
+        ],
+        "api_routes": [
+          "app/api/auth/login/route.ts",
+          "app/api/auth/session/route.ts",
+          "app/api/get-patient-appointments/route.ts"
+        ]
+      },
+      "components": {
+        "auth": [
+          "components/auth/AuthGuard.tsx",
+          "components/auth/LoginForm.tsx"
+        ],
+        "core": [
+          "components/Dashboard.tsx",
+          "components/MainDashboard.tsx",
+          "components/Header.tsx",
+          "components/NavigationHeader.tsx",
+          "components/CalendarModule.tsx",
+          "components/ReportModule.tsx",
+          "components/SearchModule.tsx",
+          "components/VoiceRecorder.tsx",
+          "components/ReportGenerator.tsx",
+          "components/FileUploadZone.tsx",
+          "components/GoogleDriveIntegration.tsx"
+        ],
+        "ui": "components/ui/* (Shadcn/UI components)"
+      },
+      "lib": {
+        "hooks": [
+          "lib/hooks/usePatients.ts",
+          "lib/hooks/useReports.ts",
+          "lib/hooks/useAudioRecording.ts",
+          "lib/hooks/useFileUpload.ts",
+          "lib/hooks/useStats.ts",
+          "lib/hooks/useUserProfile.ts",
+          "lib/hooks/useStripeCheckout.tsx"
+        ],
+        "services": [
+          "lib/services/database.ts",
+          "lib/services/reports.ts",
+          "lib/services/openrouter.ts",
+          "lib/services/googleDrive.ts",
+          "lib/services/googleSheetsPatientCRM.ts",
+          "lib/services/stripe.ts",
+          "lib/services/credits.ts"
+        ],
+        "supabase": [
+          "lib/supabase/client.ts",
+          "lib/supabase/server.ts"
+        ]
+      },
+      "supabase": {
+        "functions": [
+          "supabase/functions/generate-report/index.ts",
+          "supabase/functions/transcribe-audio/index.ts"
+        ],
+        "migrations": "supabase/migrations/*.sql"
+      }
+    }
+  },
+  "features": [
+    {
+      "name": "Authentication System",
+      "description": "User authentication using Supabase SSR with Google OAuth. IMPORTANT: Users cannot be created through the app - only login with existing accounts that have credits in Supabase database.",
+      "files": [
+        "app/(app)/(auth)/login/page.tsx",
+        "app/(app)/(auth)/callback/route.ts",
+        "app/(app)/(auth)/auth-code-error/page.tsx",
+        "app/(app)/(auth)/blocked/page.tsx",
+        "components/auth/AuthGuard.tsx",
+        "components/auth/LoginForm.tsx",
+        "app/api/auth/login/route.ts",
+        "app/api/auth/session/route.ts",
+        "middleware.ts",
+        "lib/supabase/client.ts",
+        "lib/supabase/server.ts"
+      ],
+      "testing_notes": "DO NOT attempt to create new users. Only verify login page loads and displays correctly. Users must exist in Supabase with credits > 0."
+    },
+    {
+      "name": "Dashboard",
+      "description": "Main dashboard with calendar, appointments, and quick actions",
+      "files": [
+        "app/(app)/dashboard/page.tsx",
+        "components/Dashboard.tsx",
+        "components/MainDashboard.tsx",
+        "components/DashboardHeader.tsx",
+        "components/DayFocus.tsx",
+        "components/CalendarModule.tsx",
+        "components/QuickActions.tsx",
+        "components/StatsOverview.tsx",
+        "components/CreditsStatus.tsx"
+      ]
+    },
+    {
+      "name": "Patient Management (CRM)",
+      "description": "Patient list, detailed profiles, and patient creation",
+      "files": [
+        "app/(app)/patients/page.tsx",
+        "app/(app)/patients/[id]/page.tsx",
+        "app/(app)/patients/actions.ts",
+        "app/(app)/patient-list/page.tsx",
+        "app/(app)/patient-detailed-profile/page.tsx",
+        "app/(app)/new-patient/page.tsx",
+        "app/(app)/new-patient/NewPatientClient.tsx",
+        "lib/hooks/usePatients.ts",
+        "lib/services/googleSheetsPatientCRM.ts"
+      ]
+    },
+    {
+      "name": "Report Generation",
+      "description": "AI-powered report generation with voice transcription and text input. Verifies audio recording works and reports can be generated.",
+      "files": [
+        "app/(app)/reports/new/page.tsx",
+        "app/(app)/reports/new/[patientId]/page.tsx",
+        "app/(app)/reports/actions.ts",
+        "components/ReportGenerator.tsx",
+        "components/ReportModule.tsx",
+        "components/ReportsViewer.tsx",
+        "lib/hooks/useReports.ts",
+        "lib/services/reports.ts",
+        "lib/services/openrouter.ts",
+        "supabase/functions/generate-report/index.ts",
+        "supabase/functions/transcribe-audio/index.ts"
+      ],
+      "testing_notes": "Verify audio recording interface is present and functional. Verify report generation UI elements are accessible."
+    },
+    {
+      "name": "Session Workspace",
+      "description": "Workspace for clinical sessions with patient - includes audio recording",
+      "files": [
+        "app/(app)/session/[patientId]/page.tsx",
+        "app/(app)/session-workspace/[patientId]/page.tsx",
+        "app/(app)/session-workspace/actions.ts",
+        "components/VoiceRecorder.tsx",
+        "lib/hooks/useAudioRecording.ts"
+      ],
+      "testing_notes": "Verify VoiceRecorder component is present and audio recording interface is accessible."
+    },
+    {
+      "name": "Google Drive Integration",
+      "description": "Integration with Google Drive for storing reports (Zero-Knowledge architecture)",
+      "files": [
+        "components/GoogleDriveIntegration.tsx",
+        "lib/services/googleDrive.ts"
+      ]
+    },
+    {
+      "name": "Billing and Subscription",
+      "description": "Subscription management, pricing plans, and Stripe integration",
+      "files": [
+        "app/(app)/account/page.tsx",
+        "app/(app)/my-account/page.tsx",
+        "app/(app)/my-account/MyAccountClient.tsx",
+        "components/BillingSection.tsx",
+        "components/SubscriptionSection.tsx",
+        "components/PricingCards.tsx",
+        "lib/services/stripe.ts",
+        "lib/services/credits.ts",
+        "lib/hooks/useStripeCheckout.tsx",
+        "lib/types/billing.ts"
+      ]
+    },
+    {
+      "name": "Search Module",
+      "description": "Universal search functionality for patients and reports",
+      "files": [
+        "components/SearchModule.tsx",
+        "components/shared/SearchModule.tsx"
+      ]
+    },
+    {
+      "name": "File Upload",
+      "description": "File upload functionality for documents and audio",
+      "files": [
+        "components/FileUploadZone.tsx",
+        "lib/hooks/useFileUpload.ts"
+      ]
+    },
+    {
+      "name": "Navigation and Layout",
+      "description": "Navigation components and layout structure",
+      "files": [
+        "components/Header.tsx",
+        "components/NavigationHeader.tsx",
+        "components/UnifiedHeader.tsx",
+        "components/layout/Header.tsx",
+        "components/AccountHeader.tsx",
+        "app/layout.tsx",
+        "app/(app)/layout.tsx"
+      ]
+    },
+    {
+      "name": "User Profile",
+      "description": "User profile management and professional data",
+      "files": [
+        "components/ProfessionalDataSection.tsx",
+        "components/shared/ProfessionalDataSection.tsx",
+        "lib/hooks/useUserProfile.ts"
+      ]
+    },
+    {
+      "name": "Statistics and Analytics",
+      "description": "Statistics overview and data visualization",
+      "files": [
+        "components/StatsOverview.tsx",
+        "lib/hooks/useStats.ts"
+      ]
+    },
+    {
+      "name": "API Routes",
+      "description": "Next.js API route handlers",
+      "files": [
+        "app/api/auth/login/route.ts",
+        "app/api/auth/session/route.ts",
+        "app/api/get-patient-appointments/route.ts"
+      ]
+    },
+    {
+      "name": "Database Services",
+      "description": "Database access and Prisma client",
+      "files": [
+        "lib/services/database.ts",
+        "lib/generated/prisma/client.ts",
+        "lib/generated/prisma/browser.ts"
+      ]
+    },
+    {
+      "name": "Onboarding",
+      "description": "User onboarding flow",
+      "files": [
+        "app/(app)/onboarding/page.tsx"
+      ]
+    },
+    {
+      "name": "FAQs",
+      "description": "Frequently asked questions page",
+      "files": [
+        "app/(app)/faqs/page.tsx"
+      ]
+    }
+  ],
+  "testing_requirements": {
+    "structural_audit": {
+      "description": "Verify file structure, route accessibility, and component rendering",
+      "checks": [
+        "All routes are accessible (will redirect to /login if not authenticated)",
+        "File structure matches expected Next.js App Router conventions",
+        "Components render without errors",
+        "Navigation between pages works correctly"
+      ]
+    },
+    "authentication_constraints": {
+      "critical": "DO NOT attempt to create new users. The application only supports login with existing users that have credits in Supabase.",
+      "allowed_actions": [
+        "Verify login page loads and displays correctly",
+        "Verify login form elements are present",
+        "Verify redirects work correctly (unauthenticated users redirected to /login)"
+      ],
+      "forbidden_actions": [
+        "Creating new user accounts",
+        "Attempting OAuth sign-up flow",
+        "Filling registration forms"
+      ]
+    },
+    "functional_verification": {
+      "audio_recording": "Verify VoiceRecorder component is present and interface is accessible",
+      "report_generation": "Verify report generation UI elements are present and accessible",
+      "navigation": "Verify all navigation links work and pages load correctly",
+      "file_structure": "Verify all expected files exist in correct locations"
+    }
+  }
+}
