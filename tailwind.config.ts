@@ -16,7 +16,27 @@ const config: Config = {
       },
     },
     extend: {
+      boxShadow: {
+        'neu-flat': '6px 6px 12px rgba(46, 64, 59, 0.15), -6px -6px 12px rgba(255, 255, 255, 0.8)',
+        'neu-pressed': 'inset 4px 4px 12px rgba(46, 64, 59, 0.15), inset -4px -4px 12px rgba(255, 255, 255, 0.8)',
+        'neu-convex': '15px 15px 30px rgba(46, 64, 59, 0.1), -15px -15px 30px rgba(255, 255, 255, 0.9)',
+      },
       colors: {
+        // --- INICIO DE LA CORRECCIÓN ---
+        // Añade tus colores personalizados aquí
+        inforia: {
+          DEFAULT: "hsl(var(--inforia))",
+          foreground: "hsl(var(--inforia-foreground))",
+        },
+        burgundy: {
+          DEFAULT: "hsl(var(--burgundy))",
+          foreground: "hsl(var(--burgundy-foreground))",
+        },
+        gold: {
+          DEFAULT: "hsl(var(--gold))",
+          foreground: "hsl(var(--gold-foreground))",
+        },
+        'module-border': "hsl(var(--module-border))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -57,8 +77,8 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        serif: ['Lora', 'serif'],
-        sans: ['Nunito Sans', 'sans-serif'],
+        sans: ["var(--font-nunito-sans)"],
+        serif: ["var(--font-lora)"],
       },
       keyframes: {
         "accordion-down": {
@@ -76,7 +96,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [],
 };
 
 export default config;

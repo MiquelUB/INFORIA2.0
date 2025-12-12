@@ -210,7 +210,7 @@ export const GoogleDriveIntegration: React.FC<GoogleDriveIntegrationProps> = ({
                 </p>
                 <p className="text-amber-700 mt-1">
                   Para garantizar la privacidad de tus informes, necesitamos acceso a tu Google Drive. 
-                  Los informes se guardarán en una carpeta privada llamada "INFORIA Reports".
+                  Los informes se guardarán en una carpeta privada llamada &quot;INFORIA Reports&quot;.
                 </p>
               </div>
             </div>

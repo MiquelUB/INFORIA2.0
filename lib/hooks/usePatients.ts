@@ -2,10 +2,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { patientsService, type PatientInsert, type PatientUpdate } from '@/lib/services/database';
 import { useToast } from '@/lib/hooks/use-toast';
 
-export const usePatients = () => {
+export const usePatients = (searchQuery: string | undefined = undefined) => {
   return useQuery({
-    queryKey: ['patients'],
-    queryFn: patientsService.getAll,
+    queryKey: ['patients', searchQuery], // Include searchQuery in queryKey
+    queryFn: () => searchQuery ? patientsService.search(searchQuery) : patientsService.getAll(),
   });
 };
 
@@ -87,13 +87,5 @@ export const useDeletePatient = () => {
         variant: "destructive",
       });
     },
-  });
-};
-
-export const useSearchPatients = (query: string) => {
-  return useQuery({
-    queryKey: ['patients', 'search', query],
-    queryFn: () => patientsService.search(query),
-    enabled: query.length > 0,
   });
 };

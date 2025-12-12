@@ -28,6 +28,7 @@ export interface SubscriptionPlan {
   name: string;
   price: number;
   reports: number;
+  seats: number;
   features: string[];
   stripeProductId: string;
   stripePriceId: string;

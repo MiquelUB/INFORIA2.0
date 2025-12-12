@@ -1,0 +1,443 @@
+{
+<<<<<<< HEAD
+  "timestamp": "2025-11-18T11:54:13.482586",
+=======
+  "timestamp": "2025-12-11T22:25:16.917797",
+>>>>>>> release/v2.0-final
+  "total_tests": 15,
+  "tests": [
+    {
+      "tc_number": 1,
+      "title": "User sign up and login with Supabase authentication",
+<<<<<<< HEAD
+      "lines": 70,
+      "coverage": 80.0,
+=======
+      "lines": 55,
+      "coverage": 62.5,
+>>>>>>> release/v2.0-final
+      "assertions": 7,
+      "features": [
+        "authentication",
+        "clinical_session"
+      ],
+<<<<<<< HEAD
+      "endpoints_count": 1,
+      "issues": [
+        "URLs hardcodeadas (considerar variables de entorno)"
+      ]
+=======
+      "endpoints_count": 0,
+      "issues": []
+>>>>>>> release/v2.0-final
+    },
+    {
+      "tc_number": 2,
+      "title": "Dashboard loads appointments and statistics with real time updates",
+<<<<<<< HEAD
+      "lines": 68,
+      "coverage": 79.0,
+      "assertions": 7,
+      "features": [
+        "dashboard",
+        "authentication",
+        "clinical_session"
+      ],
+      "endpoints_count": 1,
+      "issues": [
+        "URLs hardcodeadas (considerar variables de entorno)"
+      ]
+=======
+      "lines": 70,
+      "coverage": 70.0,
+      "assertions": 7,
+      "features": [
+        "authentication",
+        "clinical_session",
+        "dashboard"
+      ],
+      "endpoints_count": 0,
+      "issues": []
+>>>>>>> release/v2.0-final
+    },
+    {
+      "tc_number": 3,
+      "title": "Patient management create edit view and delete patient profiles",
+<<<<<<< HEAD
+      "lines": 67,
+      "coverage": 78.5,
+=======
+      "lines": 69,
+      "coverage": 69.5,
+>>>>>>> release/v2.0-final
+      "assertions": 7,
+      "features": [
+        "error_handling",
+        "authentication",
+<<<<<<< HEAD
+        "patient_management",
+        "clinical_session"
+      ],
+      "endpoints_count": 1,
+      "issues": [
+        "URLs hardcodeadas (considerar variables de entorno)"
+      ]
+=======
+        "clinical_session",
+        "patient_management"
+      ],
+      "endpoints_count": 0,
+      "issues": []
+>>>>>>> release/v2.0-final
+    },
+    {
+      "tc_number": 4,
+      "title": "AI powered clinical report generation with voice transcription and text input",
+<<<<<<< HEAD
+      "lines": 67,
+      "coverage": 78.5,
+=======
+      "lines": 69,
+      "coverage": 69.5,
+>>>>>>> release/v2.0-final
+      "assertions": 7,
+      "features": [
+        "error_handling",
+        "authentication",
+        "clinical_session"
+      ],
+<<<<<<< HEAD
+      "endpoints_count": 1,
+      "issues": [
+        "URLs hardcodeadas (considerar variables de entorno)"
+      ]
+=======
+      "endpoints_count": 0,
+      "issues": []
+>>>>>>> release/v2.0-final
+    },
+    {
+      "tc_number": 5,
+      "title": "Clinical session workspace with audio recording and playback",
+<<<<<<< HEAD
+      "lines": 68,
+      "coverage": 79.0,
+      "assertions": 7,
+      "features": [
+        "authentication",
+        "patient_management",
+        "clinical_session"
+      ],
+      "endpoints_count": 1,
+      "issues": [
+        "URLs hardcodeadas (considerar variables de entorno)"
+      ]
+=======
+      "lines": 70,
+      "coverage": 70.0,
+      "assertions": 7,
+      "features": [
+        "authentication",
+        "clinical_session",
+        "patient_management"
+      ],
+      "endpoints_count": 0,
+      "issues": []
+>>>>>>> release/v2.0-final
+    },
+    {
+      "tc_number": 6,
+      "title": "Google Drive integration with zero knowledge report storage",
+<<<<<<< HEAD
+      "lines": 67,
+      "coverage": 73.5,
+=======
+      "lines": 70,
+      "coverage": 65.0,
+>>>>>>> release/v2.0-final
+      "assertions": 6,
+      "features": [
+        "error_handling",
+        "google_integration",
+<<<<<<< HEAD
+        "dashboard",
+        "clinical_session"
+      ],
+      "endpoints_count": 1,
+      "issues": [
+        "URLs hardcodeadas (considerar variables de entorno)"
+      ]
+=======
+        "clinical_session",
+        "dashboard"
+      ],
+      "endpoints_count": 0,
+      "issues": []
+>>>>>>> release/v2.0-final
+    },
+    {
+      "tc_number": 7,
+      "title": "Billing system subscription plans payments and Stripe integration",
+<<<<<<< HEAD
+      "lines": 67,
+      "coverage": 78.5,
+      "assertions": 7,
+      "features": [
+        "authentication",
+        "clinical_session",
+        "billing"
+      ],
+      "endpoints_count": 1,
+      "issues": [
+        "URLs hardcodeadas (considerar variables de entorno)"
+      ]
+=======
+      "lines": 69,
+      "coverage": 69.5,
+      "assertions": 7,
+      "features": [
+        "authentication",
+        "billing",
+        "clinical_session"
+      ],
+      "endpoints_count": 0,
+      "issues": []
+>>>>>>> release/v2.0-final
+    },
+    {
+      "tc_number": 8,
+      "title": "Universal search for patients and reports",
+<<<<<<< HEAD
+      "lines": 67,
+      "coverage": 78.5,
+      "assertions": 7,
+      "features": [
+        "patient_management",
+        "error_handling",
+        "dashboard",
+        "clinical_session",
+        "search"
+      ],
+      "endpoints_count": 1,
+      "issues": [
+        "URLs hardcodeadas (considerar variables de entorno)"
+      ]
+=======
+      "lines": 69,
+      "coverage": 69.5,
+      "assertions": 7,
+      "features": [
+        "dashboard",
+        "search",
+        "error_handling",
+        "clinical_session",
+        "patient_management"
+      ],
+      "endpoints_count": 0,
+      "issues": []
+>>>>>>> release/v2.0-final
+    },
+    {
+      "tc_number": 9,
+      "title": "File upload functionality for documents and audio files",
+<<<<<<< HEAD
+      "lines": 67,
+      "coverage": 78.5,
+      "assertions": 7,
+      "features": [
+        "file_upload",
+        "error_handling",
+        "patient_management",
+        "clinical_session"
+      ],
+      "endpoints_count": 1,
+      "issues": [
+        "URLs hardcodeadas (considerar variables de entorno)"
+      ]
+=======
+      "lines": 69,
+      "coverage": 69.5,
+      "assertions": 7,
+      "features": [
+        "error_handling",
+        "clinical_session",
+        "file_upload",
+        "patient_management"
+      ],
+      "endpoints_count": 0,
+      "issues": []
+>>>>>>> release/v2.0-final
+    },
+    {
+      "tc_number": 10,
+      "title": "User onboarding flow completion and data initialization",
+<<<<<<< HEAD
+      "lines": 67,
+      "coverage": 73.5,
+      "assertions": 6,
+      "features": [
+        "onboarding",
+        "authentication",
+        "clinical_session"
+      ],
+      "endpoints_count": 1,
+      "issues": [
+        "URLs hardcodeadas (considerar variables de entorno)"
+      ]
+=======
+      "lines": 69,
+      "coverage": 64.5,
+      "assertions": 6,
+      "features": [
+        "authentication",
+        "onboarding",
+        "clinical_session"
+      ],
+      "endpoints_count": 0,
+      "issues": []
+>>>>>>> release/v2.0-final
+    },
+    {
+      "tc_number": 11,
+      "title": "Statistics and analytics dashboard data accuracy and updates",
+<<<<<<< HEAD
+      "lines": 68,
+      "coverage": 74.0,
+      "assertions": 6,
+      "features": [
+        "dashboard",
+        "clinical_session"
+      ],
+      "endpoints_count": 1,
+      "issues": [
+        "URLs hardcodeadas (considerar variables de entorno)"
+      ]
+=======
+      "lines": 70,
+      "coverage": 65.0,
+      "assertions": 6,
+      "features": [
+        "clinical_session",
+        "dashboard"
+      ],
+      "endpoints_count": 0,
+      "issues": []
+>>>>>>> release/v2.0-final
+    },
+    {
+      "tc_number": 12,
+      "title": "User profile management viewing and editing professional data and preferences",
+<<<<<<< HEAD
+      "lines": 68,
+      "coverage": 79.0,
+=======
+      "lines": 70,
+      "coverage": 70.0,
+>>>>>>> release/v2.0-final
+      "assertions": 7,
+      "features": [
+        "clinical_session"
+      ],
+<<<<<<< HEAD
+      "endpoints_count": 1,
+      "issues": [
+        "URLs hardcodeadas (considerar variables de entorno)"
+      ]
+=======
+      "endpoints_count": 0,
+      "issues": []
+>>>>>>> release/v2.0-final
+    },
+    {
+      "tc_number": 13,
+      "title": "UI rendering consistency on navigation and layout components",
+<<<<<<< HEAD
+      "lines": 68,
+      "coverage": 74.0,
+      "assertions": 6,
+      "features": [
+        "dashboard",
+        "clinical_session",
+        "ui_rendering"
+      ],
+      "endpoints_count": 1,
+      "issues": [
+        "URLs hardcodeadas (considerar variables de entorno)"
+      ]
+=======
+      "lines": 70,
+      "coverage": 65.0,
+      "assertions": 6,
+      "features": [
+        "ui_rendering",
+        "clinical_session",
+        "dashboard"
+      ],
+      "endpoints_count": 0,
+      "issues": []
+>>>>>>> release/v2.0-final
+    },
+    {
+      "tc_number": 14,
+      "title": "Error handling and validation in API routes and server functions",
+<<<<<<< HEAD
+      "lines": 68,
+      "coverage": 79.0,
+      "assertions": 7,
+      "features": [
+        "authentication",
+        "patient_management",
+        "error_handling",
+        "dashboard",
+        "clinical_session"
+      ],
+      "endpoints_count": 1,
+      "issues": [
+        "URLs hardcodeadas (considerar variables de entorno)"
+      ]
+=======
+      "lines": 70,
+      "coverage": 70.0,
+      "assertions": 7,
+      "features": [
+        "authentication",
+        "dashboard",
+        "error_handling",
+        "clinical_session",
+        "patient_management"
+      ],
+      "endpoints_count": 0,
+      "issues": []
+>>>>>>> release/v2.0-final
+    },
+    {
+      "tc_number": 15,
+      "title": "Onboarding FAQ page accessibility and content validation",
+<<<<<<< HEAD
+      "lines": 68,
+      "coverage": 79.0,
+      "assertions": 7,
+      "features": [
+        "onboarding",
+        "clinical_session",
+        "ui_rendering"
+      ],
+      "endpoints_count": 1,
+      "issues": [
+        "URLs hardcodeadas (considerar variables de entorno)"
+      ]
+=======
+      "lines": 70,
+      "coverage": 70.0,
+      "assertions": 7,
+      "features": [
+        "ui_rendering",
+        "onboarding",
+        "clinical_session"
+      ],
+      "endpoints_count": 0,
+      "issues": []
+>>>>>>> release/v2.0-final
+    }
+  ]
+}

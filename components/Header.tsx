@@ -1,55 +1,57 @@
-"use client"; // CRÍTICO: Debe ser Client Component para usar hooks
-import Link from 'next/link'; // ✅ Importación correcta de Next.js
-import { useRouter } from 'next/navigation'; // ✅ Hook de navegación correcto
-import { LogOut, User } from 'lucide-react'; 
-import { Button } from '@/components/ui/button'; 
-import { useAuth } from '@/contexts/AuthContext'; // Importar el contexto de Auth
+// components/Header.tsx (CORREGIDO)
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { LogOut, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client'; // 👈 IMPORTAR EL NUEVO CLIENTE
 
-// Nota: No se necesita createClient aquí si useAuth ya proporciona signOut
-// import { createClient } from '@/lib/supabase/client'; 
+export const Header = () => {
+  const router = useRouter();
+  // Inicializar el cliente de Supabase
+  const supabase = createClient(); 
 
-export const Header = () => { // ✅ SOLUCIÓN AL BUCLE: Declaración y Exportación explícita
-  const router = useRouter(); 
-  const { signOut } = useAuth(); // ✅ useAuth debe proporcionar la función signOut
-  
+  // ❌ ELIMINADO EL 'useAuth' OBSOLETO
+  // const { signOut, user } = useAuth(); 
+
   const handleSignOut = async () => {
     try {
-      // 🎯 CORRECCIÓN DE TIPADO: El error era SingOut, la función correcta es signOut.
-      // Se asume que useAuth().signOut() maneja la lógica de Supabase y la limpieza local.
-      await signOut(); 
+      // ✅ USAR LA NUEVA FUNCIÓN 'signOut'
+      const { error } = await supabase.auth.signOut();
       
-      toast.info('Sesión cerrada correctamente.');
+      if (error) {
+        throw new Error(error.message);
+      }
       
-      // Redirección a /login después del logout
-      router.push('/login'); 
-    } catch (error) {
-      console.error("Error al cerrar sesión:", error);
-      toast.error('Fallo al cerrar sesión.');
+      toast.success('Has cerrado sesión exitosamente.');
+      router.push('/login'); // Redirigir al login
+      router.refresh(); // Forzar actualización del estado
+    } catch (error: any) {
+      toast.error('Error al cerrar sesión', {
+        description: error.message,
+      });
     }
   };
 
   return (
-    <header className="flex items-center justify-between p-4 border-b">
-      <Link href="/dashboard" className="text-xl font-bold text-primary"> 
-        INFORIA2.0
-      </Link>
-
-      <nav className="flex items-center space-x-4">
-        <Link href="/account" className="text-sm font-medium hover:text-primary flex items-center">
-          <User className="w-4 h-4 mr-1" />
-          Cuenta
-        </Link>
-        
-        <Button 
-          variant="destructive"
-          size="sm"
-          onClick={handleSignOut} 
-        >
-          <LogOut className="w-4 h-4 mr-2" />
+    <header className="flex items-center justify-between p-4 border-b bg-background">
+      <div className="text-lg font-semibold">
+        INFORIA 2.0
+      </div>
+      <div className="flex items-center gap-4">
+        {/* Nota: La información del usuario ahora vendrá del 'layout'
+          o se puede obtener con 'supabase.auth.getUser()' si es necesario.
+          Por ahora, nos centramos en arreglar el 'signOut'.
+        */}
+        <Button variant="ghost" size="icon" onClick={() => router.push('/account')}>
+          <User className="h-5 w-5" />
+        </Button>
+        <Button variant="destructive" size="sm" onClick={handleSignOut}>
+          <LogOut className="mr-2 h-4 w-4" />
           Cerrar Sesión
         </Button>
-      </nav>
+      </div>
     </header>
   );
 };

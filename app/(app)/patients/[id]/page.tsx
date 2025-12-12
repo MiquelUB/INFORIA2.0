@@ -1,798 +1,540 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation"; 
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import DashboardHeader from "@/components/DashboardHeader";
-import { ArrowLeft, Edit, Plus, FileText, Calendar, Trash2, User, Tag, FileSignature, CreditCard, FileCheck, X, Loader2, Mail, Phone, MapPin, UserCheck, AlertTriangle, ExternalLink } from "lucide-react";
-import { useRouter } from "next/navigation"; // ✅ Next.js App Router
-import { usePatient, useUpdatePatient, useDeletePatient } from "@/lib/hooks/usePatients";
-import { useToast } from "@/lib/hooks/use-toast"; // ✅ RUTA DE IMPORTACIÓN CORREGIDA
 
-// Define la interfaz de props para capturar el parámetro dinámico
+import { 
+  ArrowLeft, Edit, Plus, FileText, Calendar, Trash2, User, Tag, 
+  FileSignature, CreditCard, FileCheck, X, Loader2, Mail, Phone, 
+  MapPin, UserCheck, AlertTriangle, ExternalLink 
+} from "lucide-react";
+
+// Hooks y Servicios
+import { usePatient, useUpdatePatient, useDeletePatient } from "@/lib/hooks/usePatients";
+import { useToast } from "@/lib/hooks/use-toast";
+import { reportsService } from "@/lib/services/database";
+import { googleDriveService } from "@/lib/services/googleDrive";
+import { openRouterService } from "@/lib/services/openrouter";
+import { createClient } from "@/lib/supabase/client";
+
 interface PageProps {
   params: {
-    id: string; // ✅ Captura el ID de la ruta [id]
-  };
-  searchParams: {
-    [key: string]: string | string[] | undefined;
+    id: string;
   };
 }
 
-export default function PatientDetailedProfile({ params, searchParams }: PageProps) {
+export default function PatientDetailedProfile({ params }: PageProps) {
   const router = useRouter();
   const { toast } = useToast();
-
-  // ✅ CORRECCIÓN 1: Obtener patientId directamente de params (App Router)
-  const patientId = params.id;
+  const [supabase] = useState(() => createClient());
   
+  const patientId = params.id;
   const { data: patient, isLoading: patientLoading } = usePatient(patientId || '');
   const updatePatientMutation = useUpdatePatient();
   const deletePatientMutation = useDeletePatient();
   
+  // Estados UI
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingPayments, setIsEditingPayments] = useState(false);
+  const [isGeneratingDossier, setIsGeneratingDossier] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // Datos Reales
+  const [realReports, setRealReports] = useState<any[]>([]);
   
-  // TODOS LOS CAMPOS DEL PACIENTE - INCLUIDOS ADICIONALES
   const [patientData, setPatientData] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    birth_date: "",
-    sexo: "",
-    direccion_fisica: "",
-    persona_rescate_nombre: "",
-    persona_rescate_telefono: "",
-    persona_rescate_email: "",
-    notes: "",
-    tags: [] as string[]
+    name: "", phone: "", email: "", birth_date: "", sexo: "",
+    direccion_fisica: "", persona_rescate_nombre: "", persona_rescate_telefono: "",
+    persona_rescate_email: "", notes: "", tags: [] as string[]
   });
 
-  // Estados para pagos mock - EDITABLE (Lógica extensa preservada)
-  const [paymentData, setPaymentData] = useState([
-    { id: 1, date: '2025-01-15', amount: '85.00', status: 'Pagado', method: 'Tarjeta', concept: 'Sesión individual' },
-    { id: 2, date: '2025-02-15', amount: '85.00', status: 'Pendiente', method: 'Transferencia', concept: 'Sesión individual' }
-  ]);
+  const [paymentData, setPaymentData] = useState<any[]>([]); // CORRECCIÓN: Datos de pago vacíos por defecto
 
-  // Mock data para informes con enlaces Drive VÁLIDOS (Lógica extensa preservada)
-  const mockReports = [
-    {
-      id: 1,
-      title: "Informe Inicial - Evaluación Psicológica",
-      date: "2025-01-10",
-      type: "Evaluación",
-      status: "Completado",
-      driveUrl: "https://docs.google.com/document/d/1abc123/edit"
-    },
-    {
-      id: 2,
-      title: "Seguimiento Sesión 5",
-      date: "2025-02-05",
-      type: "Seguimiento", 
-      status: "Completado",
-      driveUrl: "https://docs.google.com/document/d/1def456/edit"
-    },
-    {
-      id: 3,
-      title: "Informe de Progreso Mensual",
-      date: "2025-02-28",
-      type: "Progreso",
-      status: "Borrador",
-      driveUrl: "https://docs.google.com/document/d/1ghi789/edit"
-    },
-    {
-      id: 4,
-      title: "Evaluación Neuropsicológica Completa",
-      date: "2025-01-20",
-      type: "Evaluación",
-      status: "Completado",
-      driveUrl: "https://docs.google.com/document/d/1jkl012/edit"
-    },
-    {
-      id: 5,
-      title: "Seguimiento Sesión 10",
-      date: "2025-02-10",
-      type: "Seguimiento",
-      status: "Completado",
-      driveUrl: "https://docs.google.com/document/d/1mno345/edit"
-    },
-    {
-      id: 6,
-      title: "Informe Familiar - Entorno de Apoyo",
-      date: "2025-02-15",
-      type: "Familiar",
-      status: "Completado",
-      driveUrl: "https://docs.google.com/document/d/1pqr678/edit"
-    },
-    {
-      id: 7,
-      title: "Seguimiento Sesión 15",
-      date: "2025-02-20",
-      type: "Seguimiento",
-      status: "Completado",
-      driveUrl: "https://docs.google.com/document/d/1stu901/edit"
-    },
-    {
-      id: 8,
-      title: "Evaluación de Riesgo",
-      date: "2025-02-25",
-      type: "Evaluación",
-      status: "Borrador",
-      driveUrl: "https://docs.google.com/document/d/1vwx234/edit"
-    },
-    {
-      id: 9,
-      title: "Plan de Tratamiento Trimestral",
-      date: "2025-03-01",
-      type: "Plan",
-      status: "Borrador",
-      driveUrl: "https://docs.google.com/document/d/1yz567/edit"
-    },
-    {
-      id: 10,
-      title: "Seguimiento Sesión 20",
-      date: "2025-03-05",
-      type: "Seguimiento",
-      status: "Completado",
-      driveUrl: "https://docs.google.com/document/d/1abc890/edit"
-    }
-  ];
+  // 1. Auth
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUser(user);
+    };
+    getUser();
+  }, []);
 
-  // Sincronizar datos del paciente
+  // 2. Cargar Informes
+  useEffect(() => {
+    const loadReports = async () => {
+        if (patientId) {
+            try {
+                const reports = await reportsService.getByPatient(patientId);
+                setRealReports(reports || []);
+            } catch (error) {
+                console.error("Error cargando informes:", error);
+            }
+        }
+    };
+    loadReports();
+  }, [patientId]);
+
+  // 3. Sincronizar Datos
   useEffect(() => {
     if (patient) {
       setPatientData({
-        name: patient.name || "",
-        phone: patient.phone || "",
+        name: patient.name || "", 
+        phone: patient.phone || "", 
         email: patient.email || "",
-        birth_date: patient.birth_date || "",
+        birth_date: patient.birth_date || "", 
         sexo: (patient as any).sexo || "",
         direccion_fisica: (patient as any).direccion_fisica || "",
         persona_rescate_nombre: (patient as any).persona_rescate_nombre || "",
         persona_rescate_telefono: (patient as any).persona_rescate_telefono || "",
         persona_rescate_email: (patient as any).persona_rescate_email || "",
-        notes: patient.notes || "",
+        notes: patient.notes || "", 
         tags: (patient as any).tags || []
       });
     }
   }, [patient]);
 
+  // --- LÓGICA ALTA DOSSIER ---
+  const handleGenerateDossier = async () => {
+    // ... (sin cambios)
+    if (!patientId || !patient || !currentUser) return;
+
+    setIsGeneratingDossier(true);
+    toast({ title: "Iniciando Alta", description: "Compilando historial...", duration: 3000 });
+
+    try {
+        const sortedReports = [...realReports].sort((a, b) => 
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+        
+        const historicalContext = sortedReports.map(r => 
+            `[FECHA: ${new Date(r.created_at).toLocaleDateString()}] - TIPO: ${r.title}\n${r.content || 'Sin contenido'}`
+        );
+
+        const dateStr = new Date().toISOString().split('T')[0];
+        
+        // 1. IA
+        const compiledInfo = await openRouterService.compileReportInfo({
+            reportType: 'alta_paciente',
+            patientData: {
+                name: patient.name,
+                age: patient.birth_date ? calculateAge(patient.birth_date) : undefined,
+                previousReports: historicalContext,
+                firstVisitDate: patient.created_at || undefined,
+            },
+            sessionData: {
+                clinicalNotes: "Cierre de expediente.",
+                audioTranscription: undefined,
+                sessionDate: dateStr
+            }
+        });
+
+        const aiContent = await openRouterService.generateReport(compiledInfo);
+
+        // 2. Documento
+        const finalDocument = `
+# DOSSIER CLÍNICO DE ALTA
+Paciente: ${patient.name}
+Fecha de Emisión: ${dateStr}
+
+================================================================
+PARTE I: INFORME DE SÍNTESIS Y CIERRE
+================================================================
+${aiContent}
+
+================================================================
+PARTE II: ANEXO DOCUMENTAL (HISTORIAL COMPLETO)
+================================================================
+${historicalContext.join('\n\n------------------------------------------------\n\n')}
+`;
+
+        // 3. Drive
+        const reportTitle = `DOSSIER DE ALTA - ${patient.name} - ${dateStr}`;
+        const driveResult = await googleDriveService.createPatientReport(
+            reportTitle,
+            finalDocument,
+            patient.name,
+            patientId
+        );
+
+        if (!driveResult.success) throw new Error("Fallo Drive");
+
+        // 4. DB
+        await reportsService.create({
+            user_id: currentUser.id,
+            patient_id: patientId,
+            title: reportTitle,
+            content: aiContent,
+            report_type: 'alta_paciente',
+            input_type: 'mixed',
+            google_drive_file_id: driveResult.fileId,
+            status: 'completed'
+        });
+
+        // 5. Limpieza
+        toast({ title: "Limpiando", description: "Eliminando informes antiguos..." });
+        const deletePromises = realReports.map(async (r) => {
+            if (r.google_drive_file_id) {
+                try {
+                    return await googleDriveService.deleteFile(r.google_drive_file_id);
+                } catch (e) { return false; }
+            }
+            return false;
+        });
+        await Promise.all(deletePromises);
+
+        toast({ title: "✅ Dossier Completado", description: "Historial unificado." });
+        
+        const refreshed = await reportsService.getByPatient(patientId);
+        setRealReports(refreshed || []);
+
+    } catch (error: any) {
+        console.error(error);
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+        setIsGeneratingDossier(false);
+    }
+  };
+
+  // --- UTILS ---
   const handleSaveChanges = async () => {
     try {
-      const updateData = {
-        name: patientData.name,
-        phone: patientData.phone,
-        email: patientData.email,
-        birth_date: patientData.birth_date,
-        notes: patientData.notes,
-        sexo: patientData.sexo,
-        direccion_fisica: patientData.direccion_fisica,
-        persona_rescate_nombre: patientData.persona_rescate_nombre,
-        persona_rescate_telefono: patientData.persona_rescate_telefono,
-        persona_rescate_email: patientData.persona_rescate_email,
-        tags: patientData.tags
-      };
-      
-      await updatePatientMutation.mutateAsync({
-        id: patientId!,
-        updates: updateData
+      await updatePatientMutation.mutateAsync({ 
+        id: patientId!, 
+        updates: { 
+            name: patientData.name, 
+            phone: patientData.phone, 
+            email: patientData.email, 
+            birth_date: patientData.birth_date, 
+            notes: patientData.notes,
+            // @ts-ignore: Campos adicionales que pueden no estar en el tipo estricto pero si en DB
+            sexo: patientData.sexo,
+            direccion_fisica: patientData.direccion_fisica,
+            persona_rescate_nombre: patientData.persona_rescate_nombre,
+            persona_rescate_telefono: patientData.persona_rescate_telefono,
+            persona_rescate_email: patientData.persona_rescate_email,
+        } 
       });
       setIsEditing(false);
-      toast({
-        title: "Datos actualizados",
-        description: "Los datos del paciente se han guardado correctamente.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudieron guardar los cambios.",
-        variant: "destructive"
-      });
-    }
+      toast({ title: "Guardado", description: "Datos del paciente actualizados." });
+    } catch (e) { toast({ title: "Error", variant: "destructive" }); }
   };
-
+  
   const handleCancelEdit = () => {
-    if (patient) {
-      setPatientData({
-        name: patient.name || "",
-        phone: patient.phone || "",
-        email: patient.email || "",
-        birth_date: patient.birth_date || "",
-        sexo: (patient as any).sexo || "",
-        direccion_fisica: (patient as any).direccion_fisica || "",
-        persona_rescate_nombre: (patient as any).persona_rescate_nombre || "",
-        persona_rescate_telefono: (patient as any).persona_rescate_telefono || "",
-        persona_rescate_email: (patient as any).persona_rescate_email || "",
-        notes: patient.notes || "",
-        tags: (patient as any).tags || []
-      });
-    }
     setIsEditing(false);
+    // Revertir cambios
+    if (patient) {
+        setPatientData({
+            name: patient.name || "", 
+            phone: patient.phone || "", 
+            email: patient.email || "",
+            birth_date: patient.birth_date || "", 
+            sexo: (patient as any).sexo || "",
+            direccion_fisica: (patient as any).direccion_fisica || "",
+            persona_rescate_nombre: (patient as any).persona_rescate_nombre || "",
+            persona_rescate_telefono: (patient as any).persona_rescate_telefono || "",
+            persona_rescate_email: (patient as any).persona_rescate_email || "",
+            notes: patient.notes || "", 
+            tags: (patient as any).tags || []
+        });
+    }
   };
-
+  
   const handleDeletePatient = async () => {
     try {
       await deletePatientMutation.mutateAsync(patientId!);
-      router.push('/patients'); 
-      toast({
-        title: "Paciente eliminado",
-        description: "El paciente ha sido eliminado correctamente.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar el paciente.",
-        variant: "destructive"
-      });
-    }
+      router.push('/patients');
+      toast({ title: "Eliminado" });
+    } catch (e) { toast({ title: "Error", variant: "destructive" }); }
   };
 
-  const handleAddTag = () => {
-    const newTagName = prompt("Escribe la nueva etiqueta:");
-    if (newTagName && newTagName.trim() && !patientData.tags.includes(newTagName.trim())) {
-      setPatientData({
-        ...patientData,
-        tags: [...patientData.tags, newTagName.trim()]
-      });
-    }
+  // Helpers
+  const handleAddTag = () => { setPatientData(p => ({ ...p, tags: [...p.tags, "Etiqueta"] })); };
+  const handleRemoveTag = (i: number) => { setPatientData(p => ({ ...p, tags: p.tags.filter((_, idx) => idx !== i) })); };
+  const handlePaymentChange = (i: number, f: string, v: string) => {
+     const n = [...paymentData]; (n[i] as any)[f] = v; setPaymentData(n);
   };
-
-  const handleRemoveTag = (indexToRemove: number) => {
-    setPatientData({
-      ...patientData,
-      tags: patientData.tags.filter((_, index) => index !== indexToRemove)
-    });
-  };
-
+  const handleRemovePayment = (i: number) => { setPaymentData(paymentData.filter((_, idx) => idx !== i)); };
   const handleAddPayment = () => {
-    const newPayment = {
-      id: paymentData.length + 1,
-      date: new Date().toISOString().split('T')[0],
-      amount: '0.00',
-      status: 'Pendiente',
-      method: 'Transferencia',
-      concept: 'Sesión individual'
-    };
-    setPaymentData([...paymentData, newPayment]);
+     setPaymentData([...paymentData, { id: Date.now(), date: '', amount: '', status: 'Pendiente', method: '', concept: '' }]);
   };
 
-  const handlePaymentChange = (index: number, field: string, value: string) => {
-    const updatedPayments = paymentData.map((payment, i) => 
-      i === index ? { ...payment, [field]: value } : payment
-    );
-    setPaymentData(updatedPayments);
-  };
+  const formatDate = (d: string) => d ? new Date(d).toLocaleDateString('es-ES') : '-';
+  const calculateAge = (d: string) => d ? Math.floor((Date.now() - new Date(d).getTime())/31557600000) : undefined;
+  const formatAge = (d: string) => { const a = calculateAge(d); return a ? `${a} años` : ''; };
 
-  const handleRemovePayment = (index: number) => {
-    setPaymentData(paymentData.filter((_, i) => i !== index));
-  };
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'No especificada';
-    return new Date(dateString).toLocaleDateString('es-ES');
-  };
-
-  const calculateAge = (birthDate: string) => {
-    if (!birthDate) return 'No especificada';
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
-    }
-    return `${age} años`;
-  };
-
-  if (patientLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <DashboardHeader />
-        <main className="container mx-auto px-6 py-8">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-              <p className="text-muted-foreground">Cargando perfil del paciente...</p>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  if (!patient && patientId) {
-    return (
-      <div className="min-h-screen bg-background">
-        <DashboardHeader />
-        <main className="container mx-auto px-6 py-8">
-          <div className="text-center py-12">
-            <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
-              <User className="h-12 w-12 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">Paciente no encontrado</h3>
-            <p className="text-muted-foreground mb-6">El paciente solicitado no existe o ha sido eliminado.</p>
-            <Button onClick={() => router.push('/patients')} className="mt-4">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Volver a la lista de pacientes
-            </Button>
-          </div>
-        </main>
-      </div>
-    );
-  }
+  if (patientLoading) return <div className="min-h-screen flex justify-center items-center"><Loader2 className="animate-spin" /></div>;
+  if (!patient && patientId) return <div className="p-8 text-center">Paciente no encontrado</div>;
 
   return (
     <div className="min-h-screen bg-background">
-      <DashboardHeader />
-      <div className="border-b border-border bg-background">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
+      {/* CORRECCIÓN: Eliminado DashboardHeader duplicado */}
+      
+      <main className="container mx-auto px-6 py-8 max-w-7xl">
+        {/* HEADER DE PAGINA (Movido dentro del main para evitar efecto duplicado) */}
+        <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
             <div className="flex items-center space-x-4">
-              <h1 className="font-serif text-2xl font-medium text-foreground">
-                {patient?.name || 'Paciente'}
-              </h1>
-              <span className="text-muted-foreground">|</span>
-              <div className="flex items-center space-x-2 text-muted-foreground text-sm">
-                <Calendar className="h-4 w-4" />
-                <span>Alta: {patient?.created_at ? formatDate(patient.created_at) : 'No disponible'}</span>
+              <h1 className="font-serif text-3xl font-medium text-primary">{patient?.name}</h1>
+              <span className="text-muted-foreground hidden md:inline">|</span>
+              <div className="text-sm text-muted-foreground flex gap-2">
+                <Calendar className="h-4 w-4" /> Alta: {formatDate(patient?.created_at || '')}
               </div>
             </div>
-            <div className="flex items-center space-x-3">
-              <Button variant="outline" onClick={() => router.push(`/session-workspace/${patientId}`)}>
-                <FileText className="mr-2 h-4 w-4" />
-                Iniciar Sesión
-              </Button>
-              <Button>
-                <FileSignature className="mr-2 h-4 w-4" />
-                Alta Dossier
-              </Button>
+
+            <div className="flex items-center gap-4">
+              <Link href={`/session/${patientId}`}>
+                <Button variant="neumorphic" className="h-12 px-6 font-semibold text-primary flex gap-2">
+                  <FileText className="h-4 w-4" /> Iniciar Sesión
+                </Button>
+              </Link>
+
+               {/* AlertDialog Alta Dossier */}
+                <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    disabled={realReports.length === 0 || isGeneratingDossier}
+                    variant="neumorphic"
+                    className={`h-12 px-6 font-semibold flex gap-2 ${realReports.length === 0 ? 'opacity-50' : 'text-[#800020] hover:text-[#a00028]'}`}
+                  >
+                    {isGeneratingDossier ? <Loader2 className="animate-spin h-4 w-4" /> : <FileSignature className="h-4 w-4" />}
+                    {isGeneratingDossier ? 'Generando...' : 'Alta Dossier'}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                   <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                      <AlertTriangle /> Confirmar Alta Clínica
+                    </AlertDialogTitle>
+                    <AlertDialogDescription asChild>
+                        <div className="text-sm text-muted-foreground space-y-2">
+                            <p>Se generará el Dossier unificado y se eliminarán los <strong>{realReports.length} informes parciales</strong> de Drive.</p>
+                            <p>Esta acción es irreversible.</p>
+                        </div>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleGenerateDossier} className="bg-purple-600 hover:bg-purple-700">
+                      Confirmar y Generar
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
-          </div>
         </div>
-      </div>
-      <main className="container mx-auto px-6 py-8 max-w-7xl">
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* DATOS COMPLETOS EDITABLES */}
           <div className="lg:col-span-2 space-y-8">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="font-serif text-xl flex items-center">
-                    <User className="mr-2 h-5 w-5" />
-                    Datos del Paciente
-                  </CardTitle>
-                  {!isEditing ? (
-                    <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Editar Datos
-                    </Button>
-                  ) : (
-                    <div className="flex items-center space-x-2">
-                      <Button size="sm" onClick={handleSaveChanges}>
-                        <FileCheck className="mr-2 h-4 w-4" />
-                        Guardar
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={handleCancelEdit}>
-                        <X className="mr-2 h-4 w-4" />
-                        Cancelar
-                      </Button>
-                    </div>
-                  )}
+                <div className="flex justify-between items-center">
+                    <CardTitle className="flex gap-2"><User /> Datos Personales Completos</CardTitle>
+                    {!isEditing ? (
+                        <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}><Edit className="w-4 h-4 mr-2"/> Editar Ficha</Button>
+                    ) : (
+                        <div className="flex gap-2 items-center">
+                             <Button size="sm" onClick={handleSaveChanges} className="bg-green-600 hover:bg-green-700"><FileCheck className="w-4 h-4 mr-2"/> Guardar</Button>
+                             <Button variant="ghost" size="sm" onClick={handleCancelEdit}><X className="w-4 h-4 mr-2"/> Cancelar</Button>
+                             
+                             <div className="w-px h-6 bg-gray-300 mx-2 hidden md:block"></div>
+
+                             <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" size="sm" className="bg-red-100 text-red-600 hover:bg-red-200 shadow-none border border-red-200"><Trash2 className="w-4 h-4 mr-2"/> Eliminar</Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>¿Está seguro de eliminar este paciente?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Esta acción eliminará permanentemente la ficha de <strong>{patient?.name}</strong> y todos sus informes asociados.
+                                            <br/><br/>
+                                            Esta acción no se puede deshacer.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                        <AlertDialogAction onClick={handleDeletePatient} className="bg-red-600 hover:bg-red-700 text-white">Confirmar Eliminación</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                             </AlertDialog>
+                        </div>
+                    )}
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <h3 className="font-medium text-foreground flex items-center">
-                    <UserCheck className="mr-2 h-4 w-4" />
-                    Información Personal
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground block mb-2">
-                        Nombre Completo
-                      </label>
-                      {isEditing ? (
-                        <Input
-                          value={patientData.name}
-                          onChange={(e) => setPatientData({...patientData, name: e.target.value})}
-                          placeholder="Nombre completo del paciente"
-                        />
-                      ) : (
-                        <p className="text-foreground">{patientData.name || 'No especificado'}</p>
-                      )}
+                 {/* BLOQUE I: Identificación */}
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                        <label className="text-xs font-semibold text-muted-foreground">Nombre Completo</label>
+                        {isEditing ? <Input value={patientData.name} onChange={e => setPatientData({...patientData, name: e.target.value})} /> : <p className="p-2 bg-slate-50 rounded">{patientData.name}</p>}
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground block mb-2">
-                        Sexo
-                      </label>
-                      {isEditing ? (
-                        <Select value={patientData.sexo} onValueChange={(value) => setPatientData({...patientData, sexo: value})}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar sexo" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Masculino">Masculino</SelectItem>
-                            <SelectItem value="Femenino">Femenino</SelectItem>
-                            <SelectItem value="No binario">No binario</SelectItem>
-                            <SelectItem value="Prefiero no decir">Prefiero no decir</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <p className="text-foreground">{patientData.sexo || 'No especificado'}</p>
-                      )}
+                    <div className="space-y-1">
+                         <label className="text-xs font-semibold text-muted-foreground">Fecha Nacimiento / Edad</label>
+                         {isEditing ? <Input type="date" value={patientData.birth_date} onChange={e => setPatientData({...patientData, birth_date: e.target.value})} /> 
+                         : <p className="p-2 bg-slate-50 rounded">{formatDate(patientData.birth_date)} {patientData.birth_date && `(${formatAge(patientData.birth_date)})`}</p>}
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground block mb-2">
-                        Fecha de Nacimiento
-                      </label>
-                      {isEditing ? (
-                        <Input
-                          type="date"
-                          value={patientData.birth_date}
-                          onChange={(e) => setPatientData({...patientData, birth_date: e.target.value})}
-                        />
-                      ) : (
-                        <p className="text-foreground">
-                          {patientData.birth_date ? `${formatDate(patientData.birth_date)} (${calculateAge(patientData.birth_date)})` : 'No especificada'}
-                        </p>
-                      )}
+                    <div className="space-y-1">
+                        <label className="text-xs font-semibold text-muted-foreground">Email</label>
+                        {isEditing ? <Input value={patientData.email} onChange={e => setPatientData({...patientData, email: e.target.value})} /> : <p className="p-2 bg-slate-50 rounded break-all">{patientData.email || '-'}</p>}
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground block mb-2">
-                        <Phone className="inline mr-1 h-3 w-3" />
-                        Teléfono
-                      </label>
-                      {isEditing ? (
-                        <Input
-                          value={patientData.phone}
-                          onChange={(e) => setPatientData({...patientData, phone: e.target.value})}
-                          placeholder="+34 000 000 000"
-                        />
-                      ) : (
-                        <p className="text-foreground">{patientData.phone || 'No especificado'}</p>
-                      )}
+                     <div className="space-y-1">
+                        <label className="text-xs font-semibold text-muted-foreground">Teléfono</label>
+                        {isEditing ? <Input value={patientData.phone} onChange={e => setPatientData({...patientData, phone: e.target.value})} /> : <p className="p-2 bg-slate-50 rounded">{patientData.phone || '-'}</p>}
                     </div>
-                    <div className="md:col-span-2">
-                      <label className="text-sm font-medium text-muted-foreground block mb-2">
-                        <Mail className="inline mr-1 h-3 w-3" />
-                        Email
-                      </label>
-                      {isEditing ? (
-                        <Input
-                          type="email"
-                          value={patientData.email}
-                          onChange={(e) => setPatientData({...patientData, email: e.target.value})}
-                          placeholder="email@ejemplo.com"
-                        />
-                      ) : (
-                        <p className="text-foreground">{patientData.email || 'No especificado'}</p>
-                      )}
+                     <div className="space-y-1">
+                        <label className="text-xs font-semibold text-muted-foreground">Sexo / Género</label>
+                        {isEditing ? <Input value={patientData.sexo} placeholder="Ej: Mujer, Hombre, NB..." onChange={e => setPatientData({...patientData, sexo: e.target.value})} /> : <p className="p-2 bg-slate-50 rounded">{patientData.sexo || '-'}</p>}
                     </div>
-                    <div className="md:col-span-2">
-                      <label className="text-sm font-medium text-muted-foreground block mb-2">
-                        <MapPin className="inline mr-1 h-3 w-3" />
-                        Dirección Física
-                      </label>
-                      {isEditing ? (
-                        <Textarea
-                          value={patientData.direccion_fisica}
-                          onChange={(e) => setPatientData({...patientData, direccion_fisica: e.target.value})}
-                          placeholder="Dirección completa del paciente"
-                          rows={2}
-                        />
-                      ) : (
-                        <p className="text-foreground">{patientData.direccion_fisica || 'No especificada'}</p>
-                      )}
+                    <div className="space-y-1 md:col-span-2">
+                        <label className="text-xs font-semibold text-muted-foreground">Dirección Física</label>
+                        {isEditing ? <Input value={patientData.direccion_fisica} placeholder="Calle, número, piso, ciudad..." onChange={e => setPatientData({...patientData, direccion_fisica: e.target.value})} /> : <p className="p-2 bg-slate-50 rounded">{patientData.direccion_fisica || '-'}</p>}
                     </div>
-                  </div>
-                </div>
-                <div className="space-y-4 border-t pt-6">
-                  <h3 className="font-medium text-foreground flex items-center">
-                    <UserCheck className="mr-2 h-4 w-4" />
-                    Persona Responsable / Emergencia
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground block mb-2">
-                        Nombre Completo
-                      </label>
-                      {isEditing ? (
-                        <Input
-                          value={patientData.persona_rescate_nombre}
-                          onChange={(e) => setPatientData({...patientData, persona_rescate_nombre: e.target.value})}
-                          placeholder="Nombre de la persona responsable"
-                        />
-                      ) : (
-                        <p className="text-foreground">{patientData.persona_rescate_nombre || 'No especificado'}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground block mb-2">
-                        <Phone className="inline mr-1 h-3 w-3" />
-                        Teléfono
-                      </label>
-                      {isEditing ? (
-                        <Input
-                          value={patientData.persona_rescate_telefono}
-                          onChange={(e) => setPatientData({...patientData, persona_rescate_telefono: e.target.value})}
-                          placeholder="+34 000 000 000"
-                        />
-                      ) : (
-                        <p className="text-foreground">{patientData.persona_rescate_telefono || 'No especificado'}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground block mb-2">
-                        <Mail className="inline mr-1 h-3 w-3" />
-                        Email
-                      </label>
-                      {isEditing ? (
-                        <Input
-                          type="email"
-                          value={patientData.persona_rescate_email}
-                          onChange={(e) => setPatientData({...patientData, persona_rescate_email: e.target.value})}
-                          placeholder="email@ejemplo.com"
-                        />
-                      ) : (
-                        <p className="text-foreground">{patientData.persona_rescate_email || 'No especificado'}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-4 border-t pt-6">
-                  <h3 className="font-medium text-foreground">Notas Clínicas</h3>
-                  {isEditing ? (
-                    <Textarea
-                      value={patientData.notes}
-                      onChange={(e) => setPatientData({...patientData, notes: e.target.value})}
-                      placeholder="Notas importantes sobre el paciente..."
-                      rows={4}
-                    />
-                  ) : (
-                    <p className="text-foreground text-sm leading-relaxed bg-muted/30 p-4 rounded-lg">
-                      {patientData.notes || 'Sin notas registradas'}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-4 border-t pt-6">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-medium text-foreground flex items-center">
-                      <Tag className="mr-2 h-4 w-4" />
-                      Etiquetas
-                    </h3>
-                    {isEditing && (
-                      <Button variant="outline" size="sm" onClick={handleAddTag}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Añadir Etiqueta
-                      </Button>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {patientData.tags.length > 0 ? (
-                      patientData.tags.map((tag, index) => (
-                        <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                          {tag}
-                          {isEditing && (
-                            <button
-                              onClick={() => handleRemoveTag(index)}
-                              className="ml-1 hover:text-destructive"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          )}
-                        </Badge>
-                      ))
-                    ) : (
-                      <p className="text-muted-foreground text-sm">Sin etiquetas</p>
-                    )}
-                  </div>
-                </div>
-                {isEditing && (
-                  <div className="space-y-4 border-t border-destructive/20 pt-6">
-                    <div className="flex items-center space-x-2 text-destructive">
-                      <AlertTriangle className="h-5 w-5" />
-                      <h3 className="font-medium">Zona de Peligro</h3>
-                    </div>
-                    <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-4">
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Esta acción eliminará permanentemente todos los datos del paciente, incluyendo informes y historial. 
-                        Esta acción no se puede deshacer.
-                      </p>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Eliminar Paciente
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="flex items-center">
-                              <AlertTriangle className="mr-2 h-5 w-5 text-destructive" />
-                              ¿Eliminar paciente permanentemente?
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Esta acción eliminará permanentemente a <strong>{patient?.name}</strong> y todos sus datos asociados, incluyendo:
-                              <ul className="list-disc list-inside mt-2 space-y-1">
-                                <li>Informes clínicos</li>
-                                <li>Historial de pagos</li>
-                                <li>Notas y etiquetas</li>
-                                <li>Archivos adjuntos</li>
-                              </ul>
-                              <p className="mt-4 font-medium text-destructive">Esta acción no se puede deshacer.</p>
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDeletePatient} className="bg-destructive hover:bg-destructive/90">
-                              Eliminar Definitivamente
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-          <div className="space-y-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-serif text-lg flex items-center">
-                  <FileText className="mr-2 h-5 w-5" />
-                  Actividad - Informes
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="h-60 overflow-y-auto custom-scrollbar space-y-4 pr-2">
-                  {mockReports.length > 0 ? (
-                    mockReports.map((report) => (
-                      <div key={report.id} className="border rounded-lg p-4 hover:bg-muted/30 transition-colors">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <h4 className="font-medium text-foreground text-sm leading-tight">
-                              {report.title}
-                            </h4>
-                            <div className="flex items-center space-x-2 mt-2 text-xs text-muted-foreground">
-                              <Calendar className="h-3 w-3" />
-                              <span>{formatDate(report.date)}</span>
-                              <span>•</span>
-                              <Badge variant="outline" className="text-xs">
-                                {report.type}
-                              </Badge>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Badge variant={report.status === 'Completado' ? 'default' : 'secondary'} className="text-xs">
-                              {report.status}
-                            </Badge>
-                            <a
-                              href={report.driveUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:text-primary/80"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                            </a>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-4">
-                      <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-muted-foreground text-sm">Aún no hay informes registrados.</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                 </div>
 
-            {/* CARD: Historial de Pagos - LÓGICA COMPLETA */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="font-serif text-lg flex items-center">
-                    <CreditCard className="mr-2 h-5 w-5" />
-                    Historial de Pagos
-                  </CardTitle>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setIsEditingPayments(!isEditingPayments)}
-                  >
-                    {isEditingPayments ? 'Terminar Edición' : 'Editar Pagos'}
-                    {isEditingPayments ? <X className="ml-2 h-4 w-4" /> : <Edit className="ml-2 h-4 w-4" />}
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {paymentData.length === 0 && !isEditingPayments ? (
-                  <p className="text-muted-foreground text-sm">No hay pagos registrados.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {paymentData.map((payment, index) => (
-                      <div key={payment.id} className="border p-3 rounded-lg flex items-center justify-between">
-                        {isEditingPayments ? (
-                          <div className="grid grid-cols-5 gap-2 w-full items-center">
-                            <Input
-                              type="date"
-                              value={payment.date}
-                              onChange={(e) => handlePaymentChange(index, 'date', e.target.value)}
-                              className="col-span-1"
-                            />
-                            <Input
-                              type="number"
-                              value={payment.amount}
-                              onChange={(e) => handlePaymentChange(index, 'amount', e.target.value)}
-                              className="col-span-1"
-                            />
-                            <Select value={payment.status} onValueChange={(value) => handlePaymentChange(index, 'status', value)}>
-                              <SelectTrigger className="col-span-1">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Pagado">Pagado</SelectItem>
-                                <SelectItem value="Pendiente">Pendiente</SelectItem>
-                                <SelectItem value="Cancelado">Cancelado</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Input
-                              value={payment.concept}
-                              onChange={(e) => handlePaymentChange(index, 'concept', e.target.value)}
-                              className="col-span-2"
-                            />
-                            <Button 
-                              variant="destructive" 
-                              size="icon" 
-                              onClick={() => handleRemovePayment(index)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="flex justify-between w-full items-center">
-                            <div className="space-y-1">
-                              <p className="font-semibold text-sm">
-                                {payment.concept}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {formatDate(payment.date)} • {payment.method}
-                              </p>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Badge variant={payment.status === 'Pagado' ? 'default' : 'secondary'} className="font-semibold">
-                                {payment.amount} €
-                              </Badge>
-                              {/* ✅ CORRECCIÓN 3: Variantes de Badge válidas (default, secondary, destructive) */}
-                              <Badge variant={payment.status === 'Pagado' ? 'default' : payment.status === 'Pendiente' ? 'secondary' : 'destructive'}>
-                                {payment.status}
-                              </Badge>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                    {isEditingPayments && (
-                      <Button 
-                        variant="outline" 
-                        className="w-full border-dashed mt-4"
-                        onClick={handleAddPayment}
-                      >
-                        <Plus className="mr-2 h-4 w-4" />
-                        Añadir Nuevo Pago
-                      </Button>
-                    )}
-                  </div>
-                )}
+                 <div className="border-t pt-4">
+                     <h4 className="text-sm font-semibold mb-3 flex items-center gap-2"><AlertTriangle className="w-3 h-3 text-orange-500"/> Contacto de Emergencia</h4>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-orange-50/50 p-4 rounded-lg">
+                        <div className="space-y-1">
+                            <label className="text-xs font-semibold text-muted-foreground">Nombre Contacto</label>
+                            {isEditing ? <Input value={patientData.persona_rescate_nombre} onChange={e => setPatientData({...patientData, persona_rescate_nombre: e.target.value})} /> : <p className="text-sm">{patientData.persona_rescate_nombre || '-'}</p>}
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-semibold text-muted-foreground">Teléfono Contacto</label>
+                            {isEditing ? <Input value={patientData.persona_rescate_telefono} onChange={e => setPatientData({...patientData, persona_rescate_telefono: e.target.value})} /> : <p className="text-sm">{patientData.persona_rescate_telefono || '-'}</p>}
+                        </div>
+                        <div className="space-y-1 md:col-span-2">
+                             <label className="text-xs font-semibold text-muted-foreground">Email Contacto</label>
+                             {isEditing ? <Input value={patientData.persona_rescate_email} onChange={e => setPatientData({...patientData, persona_rescate_email: e.target.value})} /> : <p className="text-sm">{patientData.persona_rescate_email || '-'}</p>}
+                        </div>
+                     </div>
+                 </div>
+
+                 <div className="border-t pt-4">
+                    <label className="text-xs font-semibold text-muted-foreground block mb-2">Notas Fijas (Alergias, Antecedentes clave...)</label>
+                    {isEditing ? <Textarea value={patientData.notes} rows={4} onChange={e => setPatientData({...patientData, notes: e.target.value})} /> : <p className="text-sm bg-yellow-50/50 p-3 rounded border border-yellow-100 min-h-[80px]">{patientData.notes || 'Sin notas'}</p>}
+                 </div>
               </CardContent>
             </Card>
           </div>
+
+          {/* HISTORIAL */}
+          <div className="space-y-8">
+             <Card>
+               <CardHeader><CardTitle className="flex gap-2"><FileText/> Historial ({realReports.length})</CardTitle></CardHeader>
+               <CardContent>
+                  <div className="h-64 overflow-y-auto space-y-2 pr-2">
+                    {realReports.length > 0 ? realReports.map(r => (
+                        <div key={r.id} className="border p-3 rounded hover:bg-slate-50">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="font-medium text-sm">{r.title}</p>
+                                    <div className="flex gap-2 mt-1">
+                                        <Badge variant="outline" className="text-[10px]">{formatDate(r.created_at)}</Badge>
+                                        <Badge variant={r.report_type === 'alta_paciente' ? 'default' : 'secondary'} className="text-[10px]">{r.report_type}</Badge>
+                                    </div>
+                                </div>
+                                {r.google_drive_file_id && (
+                                    <a href={`https://docs.google.com/document/d/${r.google_drive_file_id}/edit`} target="_blank" className="text-blue-600"><ExternalLink className="w-4 h-4" /></a>
+                                )}
+                            </div>
+                        </div>
+                    )) : <p className="text-center text-sm text-muted-foreground">Sin informes</p>}
+                  </div>
+               </CardContent>
+             </Card>
+
+             <Card>
+               <CardHeader>
+                 <div className="flex justify-between items-center">
+                    <CardTitle className="flex gap-2"><CreditCard/> Pagos</CardTitle>
+                    <Button variant="ghost" size="sm" onClick={() => setIsEditingPayments(!isEditingPayments)}><Edit className="w-4 h-4"/></Button>
+                 </div>
+               </CardHeader>
+               <CardContent>
+                  <div className="space-y-2">
+                     {paymentData.map((p, idx) => (
+                        <div key={p.id} className="border p-3 rounded space-y-2 text-sm">
+                            {isEditingPayments ? (
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 items-end">
+                                    <div>
+                                        <label className="text-[10px] text-muted-foreground">Fecha</label>
+                                        <Input type="date" value={p.date} onChange={e => handlePaymentChange(idx, 'date', e.target.value)} className="h-8 text-xs" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] text-muted-foreground">Cantidad (€)</label>
+                                        <Input type="number" step="0.01" value={p.amount} onChange={e => handlePaymentChange(idx, 'amount', e.target.value)} className="h-8 text-xs" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] text-muted-foreground">Estado</label>
+                                        <Select value={p.status} onValueChange={v => handlePaymentChange(idx, 'status', v)}>
+                                            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Pagado">Pagado</SelectItem>
+                                                <SelectItem value="Pendiente">Pendiente</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] text-muted-foreground">Método</label>
+                                        <Select value={p.method} onValueChange={v => handlePaymentChange(idx, 'method', v)}>
+                                            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="-"/></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Tarjeta">Tarjeta</SelectItem>
+                                                <SelectItem value="Efectivo">Efectivo</SelectItem>
+                                                <SelectItem value="Transferencia">Transferencia</SelectItem>
+                                                <SelectItem value="Bizum">Bizum</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="md:col-span-3">
+                                        <Input placeholder="Concepto (ej. Sesión Inicial)" value={p.concept} onChange={e => handlePaymentChange(idx, 'concept', e.target.value)} className="h-8 text-xs" />
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <Button variant="ghost" size="icon" onClick={() => handleRemovePayment(idx)} className="h-8 w-8 text-red-500"><Trash2 className="w-4 h-4"/></Button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex justify-between items-center">
+                                    <div className="flex flex-col">
+                                        <span className="font-semibold">{formatDate(p.date)}</span>
+                                        <span className="text-xs text-muted-foreground">{p.concept}</span>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="font-bold text-base">{p.amount}€</div>
+                                        <div className="flex gap-2 justify-end mt-1">
+                                            <Badge variant={p.status === 'Pagado' ? 'default' : 'outline'} className="text-[10px]">{p.status}</Badge>
+                                            {p.method && <Badge variant="secondary" className="text-[10px]">{p.method}</Badge>}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                     ))}
+                     {isEditingPayments && <Button variant="outline" size="sm" className="w-full" onClick={handleAddPayment}><Plus className="w-4 h-4 mr-2"/> Añadir Pago</Button>}
+                  </div>
+               </CardContent>
+             </Card>
+          </div>
+
         </div>
       </main>
     </div>

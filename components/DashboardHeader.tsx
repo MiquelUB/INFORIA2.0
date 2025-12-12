@@ -30,9 +30,18 @@ import { createClient } from '@/lib/supabase/client';
 const DashboardHeader = () => {
   const router = useRouter();
   const { toast } = useToast();
+  const [searchValue, setSearchValue] = useState('');
+
+  const handleSearch = () => {
+    if (searchValue.trim()) {
+      router.push(`/patient-list?q=${encodeURIComponent(searchValue)}`);
+    } else {
+      router.push('/patient-list');
+    }
+  };
 
   // CORRECCIÓN: Lógica de autenticación refactorizada
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -42,7 +51,7 @@ const DashboardHeader = () => {
       setUser(user);
     };
     fetchUser();
-  }, [supabase.auth]); // Dependencia correcta
+  }, []); // Dependencia vacía para evitar bucle infinito
 
   const handleSignOut = async () => {
     try {
@@ -99,6 +108,13 @@ const DashboardHeader = () => {
               <Input
                 placeholder="Buscar paciente por nombre, etiqueta..."
                 className="pl-10 bg-background"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch();
+                  }
+                }}
               />
             </div>
           </div>
@@ -113,36 +129,29 @@ const DashboardHeader = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem className="cursor-pointer">
+                <DropdownMenuItem asChild className="cursor-pointer">
                   {/* CORREGIDO: 'to' cambiado a 'href' */}
                   <Link href="/" className="w-full flex items-center">
                     <Calendar className="mr-2 h-4 w-4" />
                     Dashboard
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
+                <DropdownMenuItem asChild className="cursor-pointer">
                   {/* CORREGIDO: 'to' cambiado a 'href' */}
                   <Link href="/patient-list" className="w-full flex items-center">
                     <Users className="mr-2 h-4 w-4" />
                     Pacientes
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
+                <DropdownMenuItem asChild className="cursor-pointer">
                   {/* CORREGIDO: 'to' cambiado a 'href' */}
                   <Link href="/new-patient" className="w-full flex items-center">
                     <Plus className="mr-2 h-4 w-4" />
                     Crear Ficha de Paciente
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                  {/* CORREGIDO: 'to' cambiado a 'href' */}
-                  <Link href="/session-workspace" className="w-full flex items-center">
-                    <FileText className="mr-2 h-4 w-4" />
-                    Nueva Sesión
-                  </Link>
-                </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer">
+                <DropdownMenuItem asChild className="cursor-pointer">
                   {/* CORREGIDO: 'to' cambiado a 'href' */}
                   <Link href="/faqs" className="w-full flex items-center">
                     <HelpCircle className="mr-2 h-4 w-4" />
@@ -181,7 +190,7 @@ const DashboardHeader = () => {
                   </p>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer">
+                <DropdownMenuItem asChild className="cursor-pointer">
                   {/* CORREGIDO: 'to' cambiado a 'href' */}
                   <Link href="/my-account" className="w-full flex items-center">
                     <UserCircle className="mr-2 h-4 w-4" />

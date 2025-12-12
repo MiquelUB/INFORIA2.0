@@ -1,0 +1,325 @@
+{
+  "meta": {
+    "project": "Clinical Session Management Platform",
+    "date": "2025-11-14",
+    "prepared_by": "Software Development Manager"
+  },
+  "product_overview": "A comprehensive web-based clinical management application designed to streamline patient management, session workflows, report generation, and billing for healthcare professionals with integrated AI and cloud services.",
+  "core_goals": [
+    "Provide a secure and seamless user authentication and session management experience.",
+    "Enable efficient patient and appointment management through a powerful CRM dashboard.",
+    "Facilitate AI-powered clinical report generation including voice transcription and text inputs.",
+    "Offer a focused clinical session workspace with audio recording capabilities.",
+    "Integrate with Google Drive for secure cloud storage following a zero-knowledge architecture.",
+    "Provide flexible billing and subscription management using Stripe.",
+    "Include universal search capabilities across patients and reports.",
+    "Ensure smooth onboarding and user profile management.",
+    "Deliver comprehensive statistics and analytics for user insights."
+  ],
+  "key_features": [
+    "User authentication and session management using Supabase with server-side rendering support.",
+    "Dashboard featuring calendar, appointments, quick actions, and statistical overviews.",
+    "Patient management including lists, detailed profiles, and new patient creation with CRM functionalities.",
+    "AI-powered report generation with voice transcription and text input support leveraging OpenRouter and custom server functions.",
+    "A dedicated session workspace for managing clinical sessions with audio recording and playback.",
+    "Google Drive integration for secure report storage using zero-knowledge principles.",
+    "Billing system with pricing plans, subscription handling, and Stripe payment gateway integration.",
+    "Universal search module covering patients and reports for quick retrieval.",
+    "File upload support for document and audio files.",
+    "User profile management focusing on professional data and preferences.",
+    "Responsive navigation and layout components built with Shadcn/UI and Tailwind CSS.",
+    "Statistics and analytics dashboards visualizing key usage data and metrics.",
+    "Custom React hooks to boost performance and usability, including debouncing and mobile-specific utilities.",
+    "Onboarding flow for new users to facilitate initial setup and education.",
+    "Frequently Asked Questions (FAQs) page for user support."
+  ],
+  "user_flow_summary": [
+    "User signs up or logs in through a secure authentication system using Supabase authentication flows.",
+    "Upon successful login, users land on a dashboard displaying their calendar, upcoming appointments, quick action buttons, and overall statistics.",
+    "Users can navigate to the patient management section to view, create, and edit patient profiles and access historical data.",
+    "When conducting a session, users enter the session workspace where they can record audio, take notes, and generate clinical reports with AI assistance.",
+    "Generated reports are saved securely with an option to store them on Google Drive under a zero-knowledge protocol to ensure data privacy.",
+    "Users manage their subscription plans and billing details from the account section, with Stripe handling payments and credits management.",
+    "Users utilize a universal search bar to quickly locate patients or reports across the system.",
+    "New users are guided via an onboarding process to configure their profile and understand platform features.",
+    "Users can access FAQs for help and troubleshooting."
+  ],
+  "validation_criteria": [
+    "Authentication system supports user signin, signout, session timeout, and proper error handling.",
+    "Dashboard loads appointment data, statistical summaries, and quick actions without delay and updates in real-time.",
+    "Patient management allows creation, editing, and deleting patients with data saved correctly to the database.",
+    "Report generation produces accurate AI-generated content with successful voice transcription and text input handling.",
+    "Session workspace accurately records and plays back audio with no data loss.",
+    "Google Drive integration successfully stores and retrieves reports preserving zero-knowledge privacy guarantees.",
+    "Billing system processes payments securely using Stripe, handles different subscription tiers, and updates credit status.",
+    "Search module returns relevant results quickly for both patients and reports.",
+    "File uploads accept expected file types and sizes and correctly link files to patient records or reports.",
+    "User onboarding is intuitive and completes without errors.",
+    "Statistics visualizations reflect up-to-date and accurate data.",
+    "UI components render consistently across supported browsers and screen sizes."
+  ],
+  "code_summary": {
+    "tech_stack": [
+      "TypeScript",
+      "Next.js 14",
+      "React 18",
+      "PostgreSQL",
+      "Supabase",
+      "Tailwind CSS",
+      "Shadcn/UI",
+      "OpenRouter",
+      "Google Drive API",
+      "Stripe",
+      "Vercel"
+    ],
+    "features": [
+      {
+        "name": "Authentication System",
+        "description": "User authentication and session management using Supabase SSR",
+        "files": [
+          "app/(app)/(auth)/login/page.tsx",
+          "app/(app)/(auth)/callback/route.ts",
+          "app/(app)/(auth)/auth-code-error/page.tsx",
+          "app/(app)/(auth)/blocked/page.tsx",
+          "components/auth/AuthGuard.tsx",
+          "components/auth/LoginForm.tsx",
+          "app/api/auth/login/route.ts",
+          "app/api/auth/session/route.ts",
+          "middleware.ts",
+          "lib/supabase/client.ts",
+          "lib/supabase/server.ts"
+        ]
+      },
+      {
+        "name": "Dashboard",
+        "description": "Main dashboard with calendar, appointments, and quick actions",
+        "files": [
+          "app/(app)/dashboard/page.tsx",
+          "components/Dashboard.tsx",
+          "components/MainDashboard.tsx",
+          "components/DashboardHeader.tsx",
+          "components/DayFocus.tsx",
+          "components/CalendarModule.tsx",
+          "components/QuickActions.tsx",
+          "components/StatsOverview.tsx",
+          "components/CreditsStatus.tsx"
+        ]
+      },
+      {
+        "name": "Patient Management (CRM)",
+        "description": "Patient list, detailed profiles, and patient creation",
+        "files": [
+          "app/(app)/patients/page.tsx",
+          "app/(app)/patients/[id]/page.tsx",
+          "app/(app)/patients/actions.ts",
+          "app/(app)/patient-list/page.tsx",
+          "app/(app)/patient-detailed-profile/page.tsx",
+          "app/(app)/new-patient/page.tsx",
+          "app/(app)/new-patient/NewPatientClient.tsx",
+          "lib/hooks/usePatients.ts",
+          "lib/services/googleSheetsPatientCRM.ts"
+        ]
+      },
+      {
+        "name": "Report Generation",
+        "description": "AI-powered report generation with voice transcription and text input",
+        "files": [
+          "app/(app)/reports/new/page.tsx",
+          "app/(app)/reports/new/[patientId]/page.tsx",
+          "app/(app)/reports/actions.ts",
+          "components/ReportGenerator.tsx",
+          "components/ReportModule.tsx",
+          "components/ReportsViewer.tsx",
+          "lib/hooks/useReports.ts",
+          "lib/services/reports.ts",
+          "lib/services/openrouter.ts",
+          "supabase/functions/generate-report/index.ts",
+          "supabase/functions/transcribe-audio/index.ts"
+        ]
+      },
+      {
+        "name": "Session Workspace",
+        "description": "Workspace for clinical sessions with patient",
+        "files": [
+          "app/(app)/session/[patientId]/page.tsx",
+          "app/(app)/session-workspace/[patientId]/page.tsx",
+          "app/(app)/session-workspace/actions.ts",
+          "components/VoiceRecorder.tsx",
+          "lib/hooks/useAudioRecording.ts"
+        ]
+      },
+      {
+        "name": "Google Drive Integration",
+        "description": "Integration with Google Drive for storing reports (Zero-Knowledge architecture)",
+        "files": [
+          "components/GoogleDriveIntegration.tsx",
+          "lib/services/googleDrive.ts"
+        ]
+      },
+      {
+        "name": "Billing and Subscription",
+        "description": "Subscription management, pricing plans, and Stripe integration",
+        "files": [
+          "app/(app)/account/page.tsx",
+          "app/(app)/my-account/page.tsx",
+          "app/(app)/my-account/MyAccountClient.tsx",
+          "components/BillingSection.tsx",
+          "components/SubscriptionSection.tsx",
+          "components/PricingCards.tsx",
+          "lib/services/stripe.ts",
+          "lib/services/credits.ts",
+          "lib/hooks/useStripeCheckout.tsx",
+          "lib/types/billing.ts"
+        ]
+      },
+      {
+        "name": "Search Module",
+        "description": "Universal search functionality for patients and reports",
+        "files": [
+          "components/SearchModule.tsx",
+          "components/shared/SearchModule.tsx"
+        ]
+      },
+      {
+        "name": "File Upload",
+        "description": "File upload functionality for documents and audio",
+        "files": [
+          "components/FileUploadZone.tsx",
+          "lib/hooks/useFileUpload.ts"
+        ]
+      },
+      {
+        "name": "Navigation and Layout",
+        "description": "Navigation components and layout structure",
+        "files": [
+          "components/Header.tsx",
+          "components/NavigationHeader.tsx",
+          "components/UnifiedHeader.tsx",
+          "components/layout/Header.tsx",
+          "components/AccountHeader.tsx",
+          "app/layout.tsx",
+          "app/(app)/layout.tsx"
+        ]
+      },
+      {
+        "name": "User Profile",
+        "description": "User profile management and professional data",
+        "files": [
+          "components/ProfessionalDataSection.tsx",
+          "components/shared/ProfessionalDataSection.tsx",
+          "lib/hooks/useUserProfile.ts"
+        ]
+      },
+      {
+        "name": "Statistics and Analytics",
+        "description": "Statistics overview and data visualization",
+        "files": [
+          "components/StatsOverview.tsx",
+          "lib/hooks/useStats.ts"
+        ]
+      },
+      {
+        "name": "API Routes",
+        "description": "Next.js API route handlers",
+        "files": [
+          "app/api/auth/login/route.ts",
+          "app/api/auth/session/route.ts",
+          "app/api/get-patient-appointments/route.ts"
+        ]
+      },
+      {
+        "name": "Database Services",
+        "description": "Database access and Prisma client",
+        "files": [
+          "lib/services/database.ts",
+          "lib/generated/prisma/client.ts",
+          "lib/generated/prisma/browser.ts"
+        ]
+      },
+      {
+        "name": "UI Components",
+        "description": "Reusable UI components from Shadcn/UI",
+        "files": [
+          "components/ui/button.tsx",
+          "components/ui/card.tsx",
+          "components/ui/input.tsx",
+          "components/ui/textarea.tsx",
+          "components/ui/dialog.tsx",
+          "components/ui/dropdown-menu.tsx",
+          "components/ui/toast.tsx",
+          "components/ui/table.tsx",
+          "components/ui/calendar.tsx",
+          "components/ui/badge.tsx",
+          "components/ui/avatar.tsx",
+          "components/ui/form.tsx",
+          "components/ui/select.tsx",
+          "components/ui/tabs.tsx",
+          "components/ui/accordion.tsx",
+          "components/ui/alert.tsx",
+          "components/ui/alert-dialog.tsx",
+          "components/ui/skeleton.tsx",
+          "components/ui/progress.tsx",
+          "components/ui/slider.tsx",
+          "components/ui/switch.tsx",
+          "components/ui/checkbox.tsx",
+          "components/ui/radio-group.tsx",
+          "components/ui/popover.tsx",
+          "components/ui/tooltip.tsx",
+          "components/ui/scroll-area.tsx",
+          "components/ui/separator.tsx",
+          "components/ui/sheet.tsx",
+          "components/ui/drawer.tsx",
+          "components/ui/carousel.tsx",
+          "components/ui/chart.tsx",
+          "components/ui/command.tsx",
+          "components/ui/context-menu.tsx",
+          "components/ui/hover-card.tsx",
+          "components/ui/menubar.tsx",
+          "components/ui/navigation-menu.tsx",
+          "components/ui/pagination.tsx",
+          "components/ui/resizable.tsx",
+          "components/ui/sidebar.tsx",
+          "components/ui/toggle.tsx",
+          "components/ui/toggle-group.tsx",
+          "components/ui/input-otp.tsx",
+          "components/ui/aspect-ratio.tsx",
+          "components/ui/breadcrumb.tsx",
+          "components/ui/collapsible.tsx",
+          "components/ui/sonner.tsx",
+          "components/ui/toaster.tsx",
+          "components/ui/use-toast.ts"
+        ]
+      },
+      {
+        "name": "Utility Hooks",
+        "description": "Custom React hooks for common functionality",
+        "files": [
+          "lib/hooks/use-mobile.tsx",
+          "lib/hooks/use-toast.ts",
+          "lib/hooks/useDebounce.ts"
+        ]
+      },
+      {
+        "name": "Query Provider",
+        "description": "React Query provider for data fetching",
+        "files": [
+          "components/QueryProvider.tsx"
+        ]
+      },
+      {
+        "name": "Onboarding",
+        "description": "User onboarding flow",
+        "files": [
+          "app/(app)/onboarding/page.tsx"
+        ]
+      },
+      {
+        "name": "FAQs",
+        "description": "Frequently asked questions page",
+        "files": [
+          "app/(app)/faqs/page.tsx"
+        ]
+      }
+    ]
+  }
+}

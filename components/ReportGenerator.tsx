@@ -99,7 +99,7 @@ export default function ReportGenerator({
         <Button 
           onClick={handleGenerateReport}
           disabled={isGenerating || !reportType || !sessionNotes.trim()}
-          className="w-full"
+          className="w-full btn-neumorphic"
         >
           {isGenerating ? (
             <>

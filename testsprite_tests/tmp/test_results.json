@@ -1,0 +1,16 @@
+[
+  {
+    "projectId": "51388373-f325-492e-9d07-ae5857435c18",
+    "testId": "c0f5f842-989c-4715-8051-d96b3edf1b4a",
+    "userId": "c448a4e8-d051-7041-5f84-9ec41f5f9047",
+    "title": "TC001-Structural Audit - Login Page Accessibility",
+    "description": "Verify login page loads correctly and displays all required UI elements. DO NOT attempt to create accounts or complete OAuth flow. Expected: Page loads, elements visible, NO 401 errors on login page itself.",
+    "testStatus": "FAILED",
+    "testError": "Test execution timed out after 15 minutes",
+    "testType": "FRONTEND",
+    "createFrom": "mcp",
+    "testVisualization": "",
+    "created": "2025-11-14T18:38:00.408Z",
+    "modified": "2025-11-14T18:38:00.408Z"
+  }
+]

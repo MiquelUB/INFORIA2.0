@@ -169,7 +169,7 @@ export const ReportModule = () => {
           <Button 
             onClick={handleGenerateReport}
             disabled={!notes.trim() || !selectedPatient || isGenerating}
-            className="bg-primary hover:bg-primary/90"
+            className="btn-neumorphic w-full"
           >
             {isGenerating ? (
               <>

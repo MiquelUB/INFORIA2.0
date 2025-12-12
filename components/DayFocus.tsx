@@ -16,15 +16,17 @@ const DayFocus = () => {
     day: 'numeric'
   });
 
-  // Mock data for today's appointments - In real app, this would come from appointments/calendar API
-  const todayAppointments = patients.slice(0, 4).map((patient, index) => ({
-    id: patient.id,
-    time: ["09:30", "11:00", "14:30", "16:30"][index],
-    patient: patient.name,
-    type: index === 0 ? "Primera Visita" : "Seguimiento",
-    status: index % 2 === 0 ? "confirmed" : "pending",
-    patientId: patient.id
-  }));
+  // Citas de hoy vacías - se cargarían desde la API en una implementación real
+  interface Appointment {
+    id: string;
+    time: string;
+    patient: string;
+    type: string;
+    status: string;
+    patientId: string;
+  }
+
+  const todayAppointments: Appointment[] = [];
 
   const getInitials = (name: string) => {
     return name.split(' ')
@@ -111,12 +113,12 @@ const DayFocus = () => {
                 </div>
                 
                 <div className="flex items-center space-x-2">
-                  <Link href={`/session-workspace?patientId=${appointment.patientId}`}>
+                  <Link href={`/session/${appointment.patientId}`}>
                     <Button size="sm" variant="outline">
                       Iniciar Sesión
                     </Button>
                   </Link>
-                  <Link href={`/patient-detailed-profile?id=${appointment.patientId}`}>
+                  <Link href={`/patients/${appointment.patientId}`}>
                     <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors cursor-pointer" />
                   </Link>
                 </div>

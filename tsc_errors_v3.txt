@@ -1,0 +1,43 @@
+﻿app/(app)/session/[patientId]/page.tsx(323,7): error TS1128: Declaration or statement expected.
+app/(app)/session/[patientId]/page.tsx(557,3): error TS1128: Declaration or statement expected.
+app/(app)/session/[patientId]/page.tsx(1005,1): error TS1128: Declaration or statement expected.
+lib/services/openrouter.ts(277,35): error TS1005: ',' expected.
+lib/services/openrouter.ts(277,36): error TS1005: ',' expected.
+lib/services/openrouter.ts(277,41): error TS1005: ':' expected.
+lib/services/openrouter.ts(277,60): error TS1005: ',' expected.
+lib/services/openrouter.ts(277,77): error TS1443: Module declaration names may only use ' or " quoted strings.
+lib/services/openrouter.ts(280,27): error TS1434: Unexpected keyword or identifier.
+lib/services/openrouter.ts(280,34): error TS1434: Unexpected keyword or identifier.
+lib/services/openrouter.ts(298,24): error TS1005: ';' expected.
+lib/services/openrouter.ts(298,43): error TS1005: ',' expected.
+lib/services/openrouter.ts(298,51): error TS1005: ';' expected.
+lib/services/openrouter.ts(298,53): error TS1434: Unexpected keyword or identifier.
+lib/services/openrouter.ts(298,75): error TS1005: ';' expected.
+lib/services/openrouter.ts(322,20): error TS1127: Invalid character.
+lib/services/openrouter.ts(322,23): error TS1434: Unexpected keyword or identifier.
+lib/services/openrouter.ts(322,34): error TS1434: Unexpected keyword or identifier.
+lib/services/openrouter.ts(322,42): error TS1434: Unexpected keyword or identifier.
+lib/services/openrouter.ts(322,46): error TS1434: Unexpected keyword or identifier.
+lib/services/openrouter.ts(322,64): error TS1434: Unexpected keyword or identifier.
+lib/services/openrouter.ts(325,21): error TS1127: Invalid character.
+lib/services/openrouter.ts(325,22): error TS1127: Invalid character.
+lib/services/openrouter.ts(325,24): error TS1434: Unexpected keyword or identifier.
+lib/services/openrouter.ts(325,30): error TS1434: Unexpected keyword or identifier.
+lib/services/openrouter.ts(325,34): error TS1434: Unexpected keyword or identifier.
+lib/services/openrouter.ts(325,49): error TS1128: Declaration or statement expected.
+lib/services/openrouter.ts(325,51): error TS1434: Unexpected keyword or identifier.
+lib/services/openrouter.ts(325,62): error TS1434: Unexpected keyword or identifier.
+lib/services/openrouter.ts(325,71): error TS1434: Unexpected keyword or identifier.
+lib/services/openrouter.ts(325,82): error TS1003: Identifier expected.
+lib/services/openrouter.ts(325,83): error TS1003: Identifier expected.
+lib/services/openrouter.ts(358,37): error TS1005: ';' expected.
+lib/services/openrouter.ts(358,62): error TS1161: Unterminated regular expression literal.
+lib/services/openrouter.ts(360,16): error TS1005: ';' expected.
+lib/services/openrouter.ts(361,26): error TS1005: ';' expected.
+lib/services/openrouter.ts(362,25): error TS1005: ';' expected.
+lib/services/openrouter.ts(364,8): error TS1068: Unexpected token. A constructor, method, accessor, or property was expected.
+lib/services/openrouter.ts(365,7): error TS1068: Unexpected token. A constructor, method, accessor, or property was expected.
+lib/services/openrouter.ts(366,5): error TS1128: Declaration or statement expected.
+lib/services/openrouter.ts(366,7): error TS1005: 'try' expected.
+lib/services/openrouter.ts(369,3): error TS1128: Declaration or statement expected.
+lib/services/openrouter.ts(370,1): error TS1128: Declaration or statement expected.

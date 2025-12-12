@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { CreditCard, Download, Check, Crown, Building2, TestTube, FileText, Calendar } from 'lucide-react';
-import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/lib/hooks/useUserProfile";
+import { createClient } from '@/lib/supabase/client';
+import { User } from '@supabase/supabase-js';
+import { useState, useEffect } from 'react';
 
 const plans = [
   {
@@ -57,55 +59,24 @@ const plans = [
   }
 ];
 
-const mockInvoices = [
-  {
-    id: 'INV-2025-001',
-    date: '2025-01-01',
-    concept: 'Plan Profesional - Enero 2025',
-    amount: '99,00 €',
-    status: 'paid',
-    downloadUrl: '#'
-  },
-  {
-    id: 'INV-2024-012',
-    date: '2024-12-01',
-    concept: 'Plan Profesional - Diciembre 2024',
-    amount: '99,00 €',
-    status: 'paid',
-    downloadUrl: '#'
-  },
-  {
-    id: 'INV-2024-011',
-    date: '2024-11-01',
-    concept: 'Plan Profesional - Noviembre 2024',
-    amount: '99,00 €',
-    status: 'paid',
-    downloadUrl: '#'
-  },
-  {
-    id: 'INV-2024-010',
-    date: '2024-10-01',
-    concept: 'Plan Profesional - Octubre 2024',
-    amount: '99,00 €',
-    status: 'paid',
-    downloadUrl: '#'
-  },
-  {
-    id: 'INV-2024-009',
-    date: '2024-09-01',
-    concept: 'Plan Profesional - Septiembre 2024',
-    amount: '99,00 €',
-    status: 'paid',
-    downloadUrl: '#'
-  }
-];
+// Facturas se cargan desde Stripe/BD en una implementación real
+const mockInvoices: any[] = [];
 
 export function SubscriptionSection() {
-  const { user } = useAuth();
+  const supabase = createClient();
+  const [user, setUser] = useState<User | null>(null);
   const { data: profile } = useUserProfile(user?.id || null);
 
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, [supabase.auth]);
+
   const currentPlan = plans.find(plan => plan.id === profile?.plan_type) || plans[0];
-  
+
   const handlePlanChange = (planId: string) => {
     // TODO: Integrar con Stripe para cambio de plan
     console.log('Cambiar a plan:', planId);
@@ -139,16 +110,16 @@ export function SubscriptionSection() {
                 </p>
               </div>
             </div>
-            
+
             {profile && (
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Uso actual</p>
                 <p className="text-lg font-semibold">
                   {profile.credits_used}/{profile.credits_limit} informes
                 </p>
-                <Progress 
-                  value={(profile.credits_used / profile.credits_limit) * 100} 
-                  className="w-32 h-2 mt-2" 
+                <Progress
+                  value={((profile.credits_used || 0) / (profile.credits_limit || 1)) * 100}
+                  className="w-32 h-2 mt-2"
                 />
               </div>
             )}
@@ -169,20 +140,19 @@ export function SubscriptionSection() {
             {plans.map((plan) => {
               const PlanIcon = plan.icon;
               const isCurrentPlan = plan.id === profile?.plan_type;
-              
+
               return (
-                <div 
+                <div
                   key={plan.id}
-                  className={`relative border rounded-lg p-6 ${
-                    plan.popular ? 'border-[#2E403B] shadow-lg' : 'border-gray-200'
-                  } ${isCurrentPlan ? 'bg-blue-50' : 'bg-white'}`}
+                  className={`relative border rounded-lg p-6 ${plan.popular ? 'border-[#2E403B] shadow-lg' : 'border-gray-200'
+                    } ${isCurrentPlan ? 'bg-blue-50' : 'bg-white'}`}
                 >
                   {plan.popular && (
                     <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[#2E403B] text-white">
                       Más Popular
                     </Badge>
                   )}
-                  
+
                   {isCurrentPlan && (
                     <Badge className="absolute -top-3 right-4 bg-green-500 text-white">
                       Plan Actual
@@ -238,7 +208,7 @@ export function SubscriptionSection() {
           <div className="max-h-80 overflow-y-auto">
             <div className="space-y-3">
               {mockInvoices.map((invoice) => (
-                <div 
+                <div
                   key={invoice.id}
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
                 >
@@ -262,14 +232,14 @@ export function SubscriptionSection() {
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <p className="font-semibold">{invoice.amount}</p>
-                      <Badge 
-                        variant="secondary" 
+                      <Badge
+                        variant="secondary"
                         className="bg-green-100 text-green-800"
                       >
                         Pagada
                       </Badge>
                     </div>
-                    
+
                     <Button
                       variant="outline"
                       size="sm"
@@ -281,7 +251,7 @@ export function SubscriptionSection() {
                 </div>
               ))}
             </div>
-            
+
             {mockInvoices.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -305,7 +275,7 @@ export function SubscriptionSection() {
                   Gestión de pagos
                 </h4>
                 <p className="text-sm text-blue-700">
-                  Los cambios de plan y la gestión de métodos de pago se realizarán 
+                  Los cambios de plan y la gestión de métodos de pago se realizarán
                   a través de Stripe. Esta funcionalidad estará disponible próximamente.
                 </p>
               </div>

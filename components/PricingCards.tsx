@@ -128,12 +128,11 @@ export const PricingCards: React.FC<PricingCardsProps> = ({
             ) : (
               <Button 
                 onClick={() => onPlanSelect?.(plan.id)}
-                className={`w-full font-sans ${
+                className={`w-full font-sans btn-neumorphic ${
                   plan.recommended 
-                    ? 'bg-primary hover:bg-primary/90' 
-                    : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
+                    ? 'ring-2 ring-primary' 
+                    : ''
                 }`}
-                variant={plan.recommended ? 'default' : 'secondary'}
               >
                 {currentPlan ? 'Cambiar a este plan' : 'Seleccionar plan'}
               </Button>
