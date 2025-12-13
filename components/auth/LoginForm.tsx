@@ -82,12 +82,7 @@ export const LoginForm = () => {
           </h1>
         </div>
         <div className="space-y-2">
-          <CardTitle className="text-xl font-sans font-medium text-gray-600">
-            Puesto de Mando Clínico
-          </CardTitle>
-          <CardDescription className="text-gray-500 text-base">
-            para Psicólogos Profesionales
-          </CardDescription>
+           {/* Text removed per user request */}
         </div>
       </CardHeader>
       

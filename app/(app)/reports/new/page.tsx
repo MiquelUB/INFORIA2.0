@@ -35,7 +35,7 @@ function ReportWorkspaceContent() {
     }
     
     startGeneration(async () => {
-      const result = await generateReport(transcription, template);
+      const result = await generateReport(transcription, template, patientId || undefined);
       if (result.success) {
         setReportDraft(result.data);
         toast({ title: "Borrador de informe generado" });

@@ -131,24 +131,19 @@ const NeumorphicCalendar: React.FC<NeumorphicCalendarProps> = ({
           className={cn(
             styles.day, 
             isToday && styles.dayToday,
-            isSelected && styles.daySelected
+            isSelected && styles.daySelected,
+            dayEvents.length > 0 && styles.dayHasAppointments // Nueva clase Burdeos
           )}
           onClick={() => handleDayClick(day)}
         >
           <div className={styles.dayNumber}>{day}</div>
-          {dayEvents.length > 0 && (
-            <div className={styles.dayEvents}>
-              {dayEvents.map((evt, idx) => (
-                <div 
-                  key={`${evt.id}-${idx}`} 
-                  className={cn(styles.event, styles[`eventType${evt.color || 1}`])}
-                  title={evt.title}
-                >
-                  {evt.title}
-                </div>
-              ))}
-            </div>
-          )}
+          
+          {/* 
+            Update: Eliminadas las franjas individuales. 
+            Ahora, si hay citas, la celda entera cambia de color (Burdeos Suave).
+            Opcional: Mostramos un pequeño indicador de cantidad si hiciera falta, 
+            pero la petición fue "sustituye por todo el día cambia de color".
+          */}
         </div>
       );
     }

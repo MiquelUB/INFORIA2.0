@@ -18,7 +18,7 @@ export interface DriveCreateResponse {
 }
 
 export class GoogleDriveService {
-  private static readonly FOLDER_NAME = 'INFORIA_INFORMES_PACIENTES';
+  private static readonly FOLDER_NAME = 'INFORIA-INFORMES';
   private static readonly SCOPES = [
     'https://www.googleapis.com/auth/drive.file',
     'https://www.googleapis.com/auth/drive.folders',
@@ -134,7 +134,7 @@ export class GoogleDriveService {
       const baseFolder = await this.getOrCreateInforiaFolder();
       if (!baseFolder) return null;
 
-      const folderName = patientName.replace(/[<>:"/\\|?*]/g, '_').trim();
+      const folderName = patientName.replace(/[<>:"/\\|?*']/g, '_').trim();
       const searchName = `${folderName}_${patientId.substring(0, 8)}`;
 
       const searchResponse = await fetch(

@@ -517,11 +517,34 @@ export default function SessionPage({ params }: PageProps) {
       else if (reportType === 'alta_paciente') openRouterType = 'alta_paciente';
       else openRouterType = 'seguimiento';
 
+      // ---------------------------------------------------------
+      // 🛡️ CAPA DE PRIVACIDAD (Cálculo de Alias)
+      // ---------------------------------------------------------
+      const age = selectedPatient.birth_date ? calculateAge(selectedPatient.birth_date) : '?';
+      const genderMap: Record<string, string> = {
+        'femenino': 'Mujer',
+        'masculino': 'Hombre',
+        'mujer': 'Mujer',
+        'hombre': 'Hombre',
+        'niño': 'Niño',
+        'niña': 'Niña'
+      };
+      // Recuperar género (si existe en objeto paciente, sino fallback)
+      const pGender = (selectedPatient as any).gender || 'Paciente';
+      const genderTerm = genderMap[pGender?.toLowerCase()] || pGender;
+      
+      let finalGender = genderTerm;
+      if (typeof age === 'number' && age < 18) {
+         if (finalGender === 'Mujer') finalGender = 'Niña';
+         if (finalGender === 'Hombre') finalGender = 'Niño';
+      }
+      const anonymizedAlias = `${finalGender} de ${age} años`;
+
       const compiledInfo = await openRouterService.compileReportInfo({
         reportType: openRouterType,
         patientData: {
-          name: selectedPatient.name,
-          age: selectedPatient.birth_date ? calculateAge(selectedPatient.birth_date) : undefined,
+          alias: anonymizedAlias, // ✅ ENVÍO SOLO EL ALIAS
+          age: typeof age === 'number' ? age : undefined,
           previousReports: reportsToAnalyze,
           firstVisitDate: selectedPatient.created_at || undefined,
         },

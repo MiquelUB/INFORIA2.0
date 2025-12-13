@@ -2,15 +2,17 @@
     /* Inforia Brand Integration */
     --bg-color: hsl(var(--inforia-cream));
     --primary-color: hsl(var(--inforia-green));
-    --secondary-color: hsl(var(--muted-foreground)); 
+    --secondary-color: hsl(var(--muted-foreground));
     --text-color: hsl(var(--inforia-graphite));
-    
+
     /* Neumorphic Shadows aligned with .card-neumorphic */
     --light-shadow: rgba(255, 255, 255, 0.9);
-    --dark-shadow: rgba(46, 64, 59, 0.1); 
+    --dark-shadow: rgba(46, 64, 59, 0.1);
 
-    --selected-color: hsl(var(--inforia-burgundy)); /* Burgundy for selection active state */
-    
+    --selected-color: hsl(
+        var(--inforia-burgundy)
+    ); /* Burgundy for selection active state */
+
     /* Event Colors using brand palette or complementary */
     --event-color-1: hsl(var(--inforia-green));
     --event-color-2: hsl(var(--inforia-burgundy));
@@ -208,6 +210,19 @@
 .daySelected .dayNumber {
     background-color: var(--selected-color);
     color: white;
+}
+
+/* User Request: Burdeos suave con sombras neumorficas para días con citas */
+.dayHasAppointments {
+    background-color: hsla(var(--inforia-burgundy), 0.35); /* Increased intensity */
+    box-shadow:
+        inset 5px 5px 10px rgba(164, 42, 42, 0.15),
+        inset -5px -5px 10px rgba(255, 255, 255, 0.7);
+    border: 1px solid hsla(var(--inforia-burgundy), 0.5);
+}
+
+.dayHasAppointments:hover {
+    background-color: hsla(var(--inforia-burgundy), 0.45);
 }
 
 .dayEvents {

@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
@@ -43,10 +43,13 @@ export async function middleware(request: NextRequest) {
 
   // 🚫 BLOCK REMOVED: /auth/callback logic is handled by app/auth/callback/route.ts
 
-  // Verificar sesión para el resto de rutas
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  // Verificar sesión para el resto de rutas (OPTIMIZADO)
+  // Usamos getSession() en lugar de getUser() para que sea LOCAL y RÁPIDO.
+  // La seguridad real está en RLS (Base de datos). El middleware solo enruta.
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+  const user = session?.user
 
-  console.log(`[MIDDLEWARE] getUser result: User=${!!user}, Error=${userError?.message}`);
+  console.log(`[MIDDLEWARE] getSession result: User=${!!user}, Error=${sessionError?.message}`);
 
   if (user) {
      console.log(`[MIDDLEWARE] ✅ User authenticated: ${user.email} (${user.id})`);
@@ -78,50 +81,20 @@ export async function middleware(request: NextRequest) {
 
   // 4. LÓGICA DE USUARIO NO AUTENTICADO
   // Si no es pública (ej. "/") y no hay sesión, redirigimos a /auth/login.
-  if (!user || userError) {
+  if (!user || sessionError) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
   }
 
-  // 5. LÓGICA DE NEGOCIO (Créditos)
-  try {
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('onboarding_completed, credits_limit, credits_used')
-        .eq('id', user.id) 
-        .single()
+  // 5. LÓGICA DE NEGOCIO (Créditos) -> MOVIDO A CLIENT-SIDE (AuthGuard)
+  // Eliminamos la consulta a base de datos bloqueante para acelerar la navegación.
+  // La verificación de créditos se hace en @/components/auth/AuthGuard.tsx
 
-      if (profileError) {
-        console.error('[MIDDLEWARE] Error fetching profile:', profileError)
-      }
-
-      // 5.5 Lógica de Créditos
-      // Verificar que profile existe antes de acceder a credits
-      if (profile) {
-        const availableCredits = (profile.credits_limit || 0) - (profile.credits_used || 0)
-        
-        console.log(`[MIDDLEWARE DEBUG] User: ${user.id} | Limit: ${profile.credits_limit} | Used: ${profile.credits_used} | Available: ${availableCredits} | Path: ${pathname}`)
-
-        // Excluir rutas de API y cuenta del bloqueo para permitir recargas y gestión
-        const isApiRoute = pathname.startsWith('/api')
-        const isAccountPage = pathname.startsWith('/account')
-        const isPricingPage = pathname.startsWith('/pricing')
-        const isActivatePage = pathname.startsWith('/activate')
-
-        // ✅ REGLA ESTRICTA: Si está a 0 créditos, NO entra. Redirigir a recarga.
-        if (availableCredits <= 0 && !isPricingPage && !isApiRoute && !isAccountPage && !isActivatePage) {
-          console.log('[MIDDLEWARE] ⛔ Bloqueo por falta de créditos (0). Redirigiendo a /pricing.')
-          return NextResponse.redirect(new URL('/pricing?reason=no_credits', request.url))
-        }
-      }
-  } catch (err) {
-      console.error('[MIDDLEWARE] Credits logic error:', err)
-  }
 
   return supabaseResponse
 }
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|\\.well-known).*)',
   ],
 }
