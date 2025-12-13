@@ -51,6 +51,7 @@ function Calendar({
         day_hidden: "invisible",
         ...classNames,
       }}
+      /*
       components={{
         PreviousMonthButton: ({ children, ...props }) => (
           <button {...props}>
@@ -64,6 +65,7 @@ function Calendar({
         ),
 
       }}
+      */
       {...props}
     />
   );

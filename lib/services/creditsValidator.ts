@@ -52,8 +52,8 @@ export const creditsValidator = {
       }
 
       // 2. Obtener perfil del usuario
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
+      const { data: profile, error: profileError } = await (supabase
+        .from('profiles') as any)
         .select('id, credits_limit, credits_used, full_name, plan_type')
         .eq('id', user.id)
         .single();
@@ -147,8 +147,8 @@ export const creditsValidator = {
       }
 
       // 2. Obtener créditos actuales
-      const { data: beforeProfile, error: fetchError } = await supabase
-        .from('profiles')
+      const { data: beforeProfile, error: fetchError } = await (supabase
+        .from('profiles') as any)
         .select('credits_limit, credits_used')
         .eq('id', user.id)
         .single();
@@ -190,8 +190,8 @@ export const creditsValidator = {
 
       // 4. Descontar 1 crédito (TEST)
       const newCreditsUsed = beforeCreditsUsed + 1;
-      const { error: decrementError } = await supabase
-        .from('profiles')
+      const { error: decrementError } = await (supabase
+        .from('profiles') as any)
         .update({ credits_used: newCreditsUsed })
         .eq('id', user.id);
 
@@ -216,8 +216,8 @@ export const creditsValidator = {
       }
 
       // 5. Verificar que el descuento se realizó
-      const { data: afterProfile, error: verifyError } = await supabase
-        .from('profiles')
+      const { data: afterProfile, error: verifyError } = await (supabase
+        .from('profiles') as any)
         .select('credits_used')
         .eq('id', user.id)
         .single();
@@ -246,8 +246,8 @@ export const creditsValidator = {
       const isDecremented = afterCreditsUsed === newCreditsUsed;
 
       // 6. REVERTIR EL DESCUENTO (importante para testing)
-      const { error: revertError } = await supabase
-        .from('profiles')
+      const { error: revertError } = await (supabase
+        .from('profiles') as any)
         .update({ credits_used: beforeCreditsUsed })
         .eq('id', user.id);
 
@@ -315,8 +315,8 @@ export const creditsValidator = {
         };
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
+      const { data: profile } = await (supabase
+        .from('profiles') as any)
         .select('full_name, plan_type, credits_limit, credits_used, created_at, updated_at')
         .eq('id', user.id)
         .single();

@@ -19,8 +19,8 @@ export class AppointmentService {
       // Formatear la fecha como YYYY-MM-DD
       const dateStr = request.appointmentDate.toISOString().split('T')[0];
 
-      const { data, error } = await supabase
-        .from('appointments')
+      const { data, error } = await (supabase
+        .from('appointments') as any)
         .insert({
           patient_id: request.patientId,
           user_id: request.userId,

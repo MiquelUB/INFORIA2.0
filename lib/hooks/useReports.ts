@@ -90,7 +90,7 @@ export const usePatientReports = (patientId: string) => {
       try {
         setLoading(true);
         const allReports = await ReportsService.getUserReports();
-        const patientReports = allReports?.filter(r => r.patient_id === patientId) || [];
+        const patientReports = (allReports as any[])?.filter(r => r.patient_id === patientId) || [];
         setReports(processSupabaseReports(patientReports));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error desconocido');

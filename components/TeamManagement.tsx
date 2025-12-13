@@ -43,8 +43,8 @@ export function TeamManagement({ currentProfile }: TeamManagementProps) {
     const fetchAssignments = async () => {
         if (!currentProfile?.id) return;
 
-        const { data, error } = await supabase
-            .from('plan_assignments')
+        const { data, error } = await (supabase
+            .from('plan_assignments') as any)
             .select('*')
             .eq('owner_id', currentProfile.id);
 
@@ -76,7 +76,7 @@ export function TeamManagement({ currentProfile }: TeamManagementProps) {
 
         setLoading(true);
         try {
-            const { error } = await supabase.from('plan_assignments').insert({
+            const { error } = await (supabase.from('plan_assignments') as any).insert({
                 owner_id: currentProfile.id,
                 email: inviteEmail.trim().toLowerCase(),
                 allocated_credits: inviteCredits,
@@ -101,8 +101,8 @@ export function TeamManagement({ currentProfile }: TeamManagementProps) {
         if (!confirm(`¿Estás seguro de que quieres eliminar a ${email}? Perderá el acceso premium inmediatamente.`)) return;
 
         try {
-            const { error } = await supabase
-                .from('plan_assignments')
+            const { error } = await (supabase
+                .from('plan_assignments') as any)
                 .delete()
                 .eq('id', assignmentId);
 

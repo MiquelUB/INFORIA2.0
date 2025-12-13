@@ -30,8 +30,8 @@ export async function inviteTeamMember(formData: FormData) {
   if (!user) return { error: 'No autenticado' }
 
   // 2. Leer datos del Patrocinador (Sponsor)
-  const { data: sponsorProfile } = await supabase
-    .from('profiles')
+  const { data: sponsorProfile } = await (supabase
+    .from('profiles') as any)
     .select('invitations_total, invitations_sent, is_sponsor')
     .eq('id', user.id)
     .single()
@@ -66,8 +66,8 @@ export async function inviteTeamMember(formData: FormData) {
   }
 
   // 4. Actualizar contador de invitaciones usadas
-  await supabaseAdmin
-    .from('profiles')
+  await (supabaseAdmin
+    .from('profiles') as any)
     .update({ invitations_sent: invitationsSent + 1 })
     .eq('id', user.id)
 
@@ -83,8 +83,8 @@ export async function getTeamMembers() {
   if (!user) return { error: 'No autenticado', members: [] }
 
   // Obtener todos los usuarios que fueron invitados por este sponsor
-  const { data: members, error } = await supabase
-    .from('profiles')
+  const { data: members, error } = await (supabase
+    .from('profiles') as any)
     .select('id, email, full_name, plan_type, credits_limit')
     .eq('sponsor_id', user.id)
 

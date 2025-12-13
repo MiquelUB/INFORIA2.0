@@ -99,8 +99,8 @@ export function ProfessionalDataSection() {
 
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
+      const { error } = await (supabase
+        .from('profiles') as any)
         .update({
           full_name: formData.full_name.trim(),
           professional_license: formData.professional_license.trim(),

@@ -85,16 +85,17 @@ export default function AccountPage() {
 
   const handleSaveProfile = async () => {
     if (!user) return;
+    
     setIsSavingProfile(true);
     try {
       // Update Profile
-      const { error: profileError } = await supabase
-        .from('profiles')
+      const { error: profileError } = await (supabase
+        .from('profiles') as any)
         .update({
           full_name: profileData.full_name,
           professional_license: profileData.professional_license,
           clinic_name: profileData.clinic_name,
-        })
+        } as any)
         .eq('id', user.id);
 
       if (profileError) throw profileError;
@@ -108,6 +109,7 @@ export default function AccountPage() {
     } finally {
       setIsSavingProfile(false);
     }
+    
   };
 
   if (authLoading || profileLoading) {

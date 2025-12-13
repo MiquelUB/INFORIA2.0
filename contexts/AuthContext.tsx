@@ -115,12 +115,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const updateProfile = async (updates: any) => {
     if (!user) return;
-    const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
+    const { error } = await (supabase.from('profiles') as any).update(updates).eq('id', user.id);
     if (error) {
       throw error;
     }
     // Refresh profile
-    const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    const { data: profileData } = await (supabase.from('profiles') as any).select('*').eq('id', user.id).single();
     setProfile(profileData);
   };
 

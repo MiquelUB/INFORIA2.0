@@ -20,7 +20,7 @@ export function useUserProfile(userId: string | null) {
         throw error;
       }
 
-      return data as Profile;
+      return (data as any) as Profile;
     },
     enabled: !!userId,
   });
