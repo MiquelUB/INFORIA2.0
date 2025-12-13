@@ -9,7 +9,7 @@ export const useStats = () => {
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return { totalPatients: 0, newThisMonth: 0, activeCases: 0, totalReports: 0, recentReports: [] };
+      if (!user) return { totalPatients: 0, newThisMonth: 0, activeCases: 0, totalReports: 0, recentReports: [], appointmentsToday: 0 };
       
       const [dashboardStats, patientStats] = await Promise.all([
         statsService.getDashboardStats(),

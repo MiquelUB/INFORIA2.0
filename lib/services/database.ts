@@ -167,6 +167,31 @@ export const reportsService = {
   }
 };
 
+// Appointments Service
+export const appointmentsService = {
+  async getByPatient(patientId: string) {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('*')
+      .eq('patient_id', patientId)
+      .order('appointment_date', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  async create(appointment: any) {
+    const { data, error } = await supabase
+      .from('appointments')
+      .insert(appointment)
+      .select()
+      .single();
+      
+    if (error) throw error;
+    return data;
+  }
+};
+
 // Analytics/Stats Service
 export const statsService = {
   async getDashboardStats() {

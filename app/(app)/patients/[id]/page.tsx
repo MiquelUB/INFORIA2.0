@@ -30,7 +30,7 @@ import {
 // Hooks y Servicios
 import { usePatient, useUpdatePatient, useDeletePatient } from "@/lib/hooks/usePatients";
 import { useToast } from "@/lib/hooks/use-toast";
-import { reportsService } from "@/lib/services/database";
+import { reportsService, appointmentsService } from "@/lib/services/database";
 import { googleDriveService } from "@/lib/services/googleDrive";
 import { openRouterService } from "@/lib/services/openrouter";
 import { createClient } from "@/lib/supabase/client";
@@ -59,6 +59,7 @@ export default function PatientDetailedProfile({ params }: PageProps) {
 
   // Datos Reales
   const [realReports, setRealReports] = useState<any[]>([]);
+  const [appointments, setAppointments] = useState<any[]>([]); // New State
   
   const [patientData, setPatientData] = useState({
     name: "", phone: "", email: "", birth_date: "", sexo: "",
@@ -77,19 +78,25 @@ export default function PatientDetailedProfile({ params }: PageProps) {
     getUser();
   }, []);
 
-  // 2. Cargar Informes
+  // 2. Cargar Informes y Citas
   useEffect(() => {
-    const loadReports = async () => {
+    const loadData = async () => {
         if (patientId) {
             try {
-                const reports = await reportsService.getByPatient(patientId);
+                // Parallel fetching
+                const [reports, appts] = await Promise.all([
+                  reportsService.getByPatient(patientId),
+                  appointmentsService.getByPatient(patientId)
+                ]);
+                
                 setRealReports(reports || []);
+                setAppointments(appts || []);
             } catch (error) {
-                console.error("Error cargando informes:", error);
+                console.error("Error cargando datos del paciente:", error);
             }
         }
     };
-    loadReports();
+    loadData();
   }, [patientId]);
 
   // 3. Sincronizar Datos
@@ -110,6 +117,17 @@ export default function PatientDetailedProfile({ params }: PageProps) {
       });
     }
   }, [patient]);
+
+  // Logic for Appointments
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const upcomingAppointments = appointments.filter(a => new Date(a.appointment_date) >= today)
+    .sort((a, b) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime());
+
+  const pastAppointments = appointments.filter(a => new Date(a.appointment_date) < today)
+    .sort((a, b) => new Date(b.appointment_date).getTime() - new Date(a.appointment_date).getTime());
+
 
   // --- LÓGICA ALTA DOSSIER ---
   const handleGenerateDossier = async () => {
@@ -135,6 +153,7 @@ export default function PatientDetailedProfile({ params }: PageProps) {
             reportType: 'alta_paciente',
             patientData: {
                 name: patient.name,
+                alias: `Paciente ${patient.id.slice(0, 4)}`, // Added alias to satisfy interface
                 age: patient.birth_date ? calculateAge(patient.birth_date) : undefined,
                 previousReports: historicalContext,
                 firstVisitDate: patient.created_at || undefined,
@@ -436,8 +455,53 @@ ${historicalContext.join('\n\n------------------------------------------------\n
             </Card>
           </div>
 
-          {/* HISTORIAL */}
+          {/* HISTORIAL & CITAS */}
           <div className="space-y-8">
+             {/* CITAS (NEUMORRHIC STYLE - REFINED) */}
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex gap-2">
+                        <Calendar className="text-gray-500"/> Citas
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    {/* UPCOMING */}
+                    <div>
+                        <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Próximas Sesiones</h4>
+                        <div className="space-y-3">
+                            {upcomingAppointments.length > 0 ? upcomingAppointments.map(app => (
+                                <div key={app.id} className="flex justify-between items-center p-3 rounded-lg border bg-card/50 hover:bg-muted/50 transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                                        <div>
+                                            <p className="font-medium text-sm">{formatDate(app.appointment_date)}</p>
+                                            <p className="text-xs text-muted-foreground">{app.time || '10:00'} - {app.duration || '60min'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )) : <p className="text-sm text-muted-foreground italic pl-2">No hay citas programadas.</p>}
+                        </div>
+                    </div>
+
+                    {/* PAST */}
+                    <div>
+                        <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Historial</h4>
+                        <div className="space-y-2">
+                             {pastAppointments.slice(0, 3).map(app => (
+                                <div key={app.id} className="flex justify-between items-center p-2 opacity-70 hover:opacity-100 transition-opacity">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-gray-400"></div>
+                                        <p className="text-sm text-gray-600 line-through decoration-gray-400">{formatDate(app.appointment_date)}</p>
+                                    </div>
+                                    <Badge variant="outline" className="text-[10px] border-gray-300 text-gray-500">Realizada</Badge>
+                                </div>
+                            ))}
+                            {pastAppointments.length === 0 && <p className="text-sm text-muted-foreground italic pl-2">Sin historial.</p>}
+                        </div>
+                    </div>
+                </CardContent>
+             </Card>
+
              <Card>
                <CardHeader><CardTitle className="flex gap-2"><FileText/> Historial ({realReports.length})</CardTitle></CardHeader>
                <CardContent>

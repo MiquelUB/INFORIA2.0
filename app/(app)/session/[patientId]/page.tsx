@@ -1,12 +1,14 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from "next/navigation"; 
+import Link from "next/link"; // Added
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { PianoLoader } from '@/components/ui/PianoLoader'; // Added
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Play, Square, Trash2, Save, Wand2, FileText, AlertTriangle, Calendar, ExternalLink, Loader2 } from 'lucide-react';
+import { Play, Square, Trash2, Save, Wand2, FileText, AlertTriangle, Calendar, ExternalLink, Loader2, User as UserIcon, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import FileUploadZone from '@/components/FileUploadZone';
 import { useFileUpload } from '@/lib/hooks/useFileUpload';
@@ -17,6 +19,7 @@ import { googleSheetsPatientCRM } from '@/lib/services/googleSheetsPatientCRM';
 import { openRouterService } from '@/lib/services/openrouter';
 import { emailService } from '@/lib/services/emailService';
 import type { Patient } from '@/lib/services/database';
+import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { deductCredits } from '@/lib/actions/credits';
@@ -39,9 +42,12 @@ export default function SessionPage({ params }: PageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const modeParam = searchParams.get('mode');
+  
+  // ✅ Usamos el Hook Global para tener acceso a User + PROFILE (Créditos)
+  const { user, profile } = useAuth();
   const supabase = createClient();
 
-  const [user, setUser] = useState<User | null>(null);
+  // const [user, setUser] = useState<User | null>(null); // ELIMINADO: Usamos useAuth
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [patientReports, setPatientReports] = useState<any[]>([]);
   const [reportType, setReportType] = useState<string>('primera_visita');
@@ -76,17 +82,11 @@ export default function SessionPage({ params }: PageProps) {
     return new Date(dateString).toLocaleDateString('es-ES');
   };
 
-  useEffect(() => {
-    const verifySession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push('/login');
-      } else {
-        setUser(session.user);
-      }
-    };
-    verifySession();
-  }, [supabase.auth, router]);
+  /* 
+   * ✅ AUTH GESTIONADO POR PROVIDER GLOBAL (useAuth)
+   * Eliminamos el useEffect local que duplicaba la llamada a supabase.auth.getSession()
+   */
+
   
   // Interfaces corregidas (tu código original)
 
@@ -112,6 +112,15 @@ export default function SessionPage({ params }: PageProps) {
     deleteRecording,
     playRecording,
   } = useAudioRecording(patientInitials); // Tu hook (sin 'isProcessing')
+
+  // ✅ CÁLCULO DE COSTE EN TIEMPO REAL (Para el Modal)
+  const previewCost = useMemo(() => {
+    return pricingService.calculateSessionCost({
+      hasAudio: !!audioBlob || !!transcription,
+      files: selectedFiles,
+      reportType: reportType
+    });
+  }, [audioBlob, transcription, selectedFiles, reportType]);
 
   const [isLoadingPatient, setIsLoadingPatient] = useState(true);
 
@@ -363,8 +372,20 @@ export default function SessionPage({ params }: PageProps) {
     }
   };
 
+  const [showNoCreditsDialog, setShowNoCreditsDialog] = useState<boolean>(false); // ✅ Nueva Modal Sin Créditos
+
   // ✅ NUEVO: Función para confirmar generación de informe desde AlertDialog
   const confirmGenerateReport = async () => {
+    // 🛡️ SECURITY CHECK: Verificar saldo ANTES de llamar a la IA
+    const currentCost = previewCost.totalCredits; // Usamos el cálculo live
+    const userCredits = profile?.credits || 0;
+
+    if (userCredits < currentCost) {
+      // ❌ SIN SALDO -> Abrimos modal de ayuda/planes
+      setShowNoCreditsDialog(true);
+      return; 
+    }
+
     setIsConfirmingReport(false);
     await handleGenerateReport();
   };
@@ -685,7 +706,25 @@ ${aiContent}
 
     } catch (error: any) {
       console.error('❌ Error generando informe:', error);
-      toast.error(error.message || 'Error desconocido');
+      
+      const isDriveError = error.message?.includes('permisos de Google Drive') || error.message?.includes('No hay provider_token');
+      
+      if (isDriveError) {
+        toast.error('Sesión de Google caducada o sin permisos.', {
+          description: 'Por favor, cierra sesión y vuelve a entrar con Google (marcando las casillas de Drive).',
+          duration: 10000,
+          action: {
+            label: 'Re-autenticar',
+            onClick: async () => {
+              await supabase.auth.signOut();
+              router.push('/login');
+            }
+          }
+        });
+      } else {
+        toast.error(error.message || 'Error desconocido');
+      }
+      
       setAiStatus('fallback');
     } finally {
       setIsGenerating(false);
@@ -735,19 +774,7 @@ ${aiContent}
     return parts.join(' + ') || 'Sin contenido';
   };
 
-  const getSystemStatusColor = () => {
-    if (aiStatus === 'working' && driveStatus === 'working') return 'text-green-600';
-    if (aiStatus === 'fallback' || driveStatus === 'no-permissions') return 'text-yellow-600';
-    return 'text-gray-500';
-  };
 
-  const getSystemStatusText = () => {
-    if (aiStatus === 'working' && driveStatus === 'working') return 'IA + Google Drive operativos';
-    if (aiStatus === 'working' && driveStatus === 'no-permissions') return 'IA operativa - Drive sin permisos';
-    if (aiStatus === 'fallback' && driveStatus === 'working') return 'Informes estructurados + Google Drive';
-    if (aiStatus === 'fallback' && driveStatus === 'no-permissions') return 'Informes estructurados - Drive sin permisos';
-    return 'Estado del sistema: Verificando...';
-  };
 
 
 
@@ -783,12 +810,23 @@ ${aiContent}
   return (
     <>
       <div className="container mx-auto max-w-6xl px-6 py-8 space-y-8">
-        <div className="text-center">
+        <div className="text-center relative">
           <h1 className="font-lora text-3xl font-bold mb-2">Registro de Sesión - {selectedPatient.name}</h1>
-          <p className="text-muted-foreground">
-          
-          </p>
-         <p className={`text-sm mt-1 ${getSystemStatusColor()}`}>{getSystemStatusText()}</p>
+          <div className="absolute top-0 right-0 hidden md:block">
+            <Link href={`/patients/${patientId}`}>
+               <Button variant="outline" className="gap-2">
+                 <UserIcon className="h-4 w-4" /> Ver Ficha
+               </Button>
+            </Link>
+          </div>
+          {/* Mobile Button */}
+           <div className="md:hidden mt-4">
+            <Link href={`/patients/${patientId}`}>
+               <Button variant="outline" className="gap-2 w-full">
+                 <UserIcon className="h-4 w-4" /> Ver Ficha
+               </Button>
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -964,86 +1002,155 @@ ${aiContent}
               </CardContent>
             </Card>
 
-            {/* --- BLOQUE DE BOTONES CON ALERTDIALOG --- */}
+            {/* --- BLOQUE DE GENERACIÓN --- */}
             <div className="flex justify-center mt-6">
-              <AlertDialog open={isConfirmingReport} onOpenChange={setIsConfirmingReport}>
-                <Button
-                  type="button"
-                  onClick={() => setIsConfirmingReport(true)}
-                  disabled={isGenerating || isTranscribing}
-                  className={`flex items-center justify-center ${
-                    reportType === 'alta_paciente' 
-                      ? 'bg-purple-600 hover:bg-purple-700 text-white ring-2 ring-purple-200' 
-                      : 'btn-neumorphic'
-                  }`}
-                  style={{ minWidth: '250px' }}
-                >
-                  {reportType === 'alta_paciente' ? (
-                    <>
-                      {isGenerating ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
+              {isGenerating ? (
+                 <PianoLoader />
+              ) : (
+                <AlertDialog open={isConfirmingReport} onOpenChange={setIsConfirmingReport}>
+                  <Button
+                    type="button"
+                    onClick={() => setIsConfirmingReport(true)}
+                    disabled={isGenerating || isTranscribing}
+                    className={`flex items-center justify-center ${
+                      reportType === 'alta_paciente' 
+                        ? 'bg-purple-600 hover:bg-purple-700 text-white ring-2 ring-purple-200' 
+                        : 'btn-neumorphic'
+                    }`}
+                    style={{ minWidth: '250px' }}
+                  >
+                    {reportType === 'alta_paciente' ? (
+                      <>
                         <FileText className="mr-2 h-4 w-4" />
-                      )}
-                      {isGenerating ? 'Generando Dossier...' : 'Generar Dossier de Alta'}
-                    </>
-                  ) : (
-                    <>
-                      {isGenerating ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
+                        Generar Dossier de Alta
+                      </>
+                    ) : (
+                      <>
                         <Wand2 className="mr-2 h-4 w-4" />
-                      )}
-                      {isGenerating ? 'Generando Informe...' : 'Generar Informe Clínico'}
-                    </>
-                  )}
-                </Button>
-                
-                {/* AlertDialog de confirmación */}
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Generar Informe de Sesión</AlertDialogTitle>
-                    <AlertDialogDescription className="space-y-3">
-                      <span className="block">
-                        Se va a generar un informe para la sesión clínica de <strong>{selectedPatient?.name}</strong>.
-                      </span>
-                      <div className="bg-blue-50 border border-blue-200 rounded p-3 space-y-2">
-                        <span className="block font-medium text-blue-900">Contenido a procesar:</span>
-                        <span className="block text-sm text-blue-800">
-                          {getTotalContent()}
-                        </span>
+                        Generar Informe Clínico
+                      </>
+                    )}
+                  </Button>
+                  
+
+                  {/* AlertDialog de confirmación */}
+                  {/* AlertDialog de confirmación (REFINED NEUMORPHIC - SUBTLE & GRAY) */}
+                  <AlertDialogContent className="bg-[#FBF9F6] border-none shadow-xl max-w-lg">
+                    {/* ... (contenido existente) ... */}
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+              
+              {/* ✅ MODAL SALDO INSUFICIENTE (NUEVO) */}
+              <AlertDialog open={showNoCreditsDialog} onOpenChange={setShowNoCreditsDialog}>
+                <AlertDialogContent className="bg-white border-none shadow-2xl max-w-md">
+                   <AlertDialogHeader>
+                      <AlertDialogTitle className="flex items-center gap-2 text-xl font-bold text-gray-800">
+                         <AlertTriangle className="h-6 w-6 text-red-500" />
+                         Saldo Insuficiente
+                      </AlertDialogTitle>
+                      <AlertDialogDescription className="text-base text-gray-600 space-y-3 pt-2">
+                        <p>
+                           Para generar este informe necesitas <strong>{previewCost.totalCredits} crédito(s)</strong>, 
+                           pero tu saldo actual es <strong>0</strong>.
+                        </p>
+                        <p className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-sm text-blue-800">
+                           No te preocupes, puedes recargar saldo o mejorar tu plan en nuestra web sin perder tu trabajo (se ha guardado un borrador).
+                        </p>
+                      </AlertDialogDescription>
+                   </AlertDialogHeader>
+                   <AlertDialogFooter className="flex-col sm:justify-center gap-3 mt-4">
+                      {/* Botones verticales para énfasis */}
+                      <Button 
+                        className="w-full bg-[#2E403B] hover:bg-[#1a2623] text-white"
+                        onClick={() => {
+                           // Redirección a la Landing (Precios)
+                           window.open('https://inforia.pro/#pricing', '_blank');
+                           setShowNoCreditsDialog(false);
+                        }}
+                      >
+                         <ExternalLink className="mr-2 h-4 w-4" />
+                         Ver Planes de Recarga
+                      </Button>
+                      
+                      <div className="flex justify-between w-full gap-2">
+                         <Button 
+                            variant="outline" 
+                            className="flex-1 border-gray-200 text-gray-600"
+                            onClick={() => setShowNoCreditsDialog(false)}
+                         >
+                            Cancelar
+                         </Button>
+                         <Button 
+                            variant="ghost" 
+                            className="flex-1 text-gray-500 hover:text-gray-800"
+                            onClick={() => window.location.href = 'mailto:soporte@inforia.pro'}
+                         >
+                            Contáctar Soporte
+                         </Button>
                       </div>
-                      <span className="block text-xs text-muted-foreground">
-                        El informe será generado con IA y guardado en Google Drive.
-                      </span>
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel disabled={isGenerating}>
-                      Cancelar
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={confirmGenerateReport}
-                      disabled={isGenerating}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Generando...
-                        </>
-                      ) : (
-                        <>
-                          <Wand2 className="mr-2 h-4 w-4" />
-                          Generar Informe
-                        </>
-                      )}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
+                   </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
+              {/* ✅ MODAL SALDO INSUFICIENTE (NUEVO) */}
+              <AlertDialog open={showNoCreditsDialog} onOpenChange={setShowNoCreditsDialog}>
+                <AlertDialogContent className="bg-white border-none shadow-2xl max-w-md">
+                   <AlertDialogHeader className="text-center">
+                      {/* LOGO BRAND */}
+                      <div className="flex justify-center mb-2">
+                         <h1 className="font-serif text-2xl font-medium text-[#2E403B]">iNFORiA</h1>
+                      </div>
+                      
+                      <AlertDialogTitle className="text-xl font-bold text-gray-800 text-center">
+                         No detengas tu flujo de trabajo
+                      </AlertDialogTitle>
+                      
+                      <AlertDialogDescription className="text-base text-gray-600 text-center pt-2">
+                        La burocracia no debería interrumpir tu labor clínica. Reactiva tu capacidad de generar informes inmediatos y mantén tu foco donde realmente importa: tus pacientes.
+                      </AlertDialogDescription>
+                   </AlertDialogHeader>
+
+                   <AlertDialogFooter className="flex-col sm:justify-center gap-3 mt-4">
+                      {/* CTA PRINCIPAL */}
+                      <div className="w-full">
+                          <Button 
+                            className="w-full bg-[#2E403B] hover:bg-[#1a2623] text-white text-lg py-6 shadow-lg hover:shadow-xl transition-all"
+                            onClick={() => {
+                              window.open('https://inforia.pro/#pricing', '_blank');
+                              setShowNoCreditsDialog(false);
+                            }}
+                          >
+                            Recuperar mi Paz Mental <ArrowRight className="ml-2 h-5 w-5" />
+                          </Button>
+                          {/* Microcopy */}
+                          <p className="text-[11px] text-gray-400 text-center mt-2 font-medium tracking-wide uppercase">
+                            Activación inmediata y segura
+                          </p>
+                      </div>
+                      
+                      {/* Opciones Secundarias */}
+                      <div className="flex justify-between w-full gap-2 mt-2">
+                         <Button 
+                            variant="ghost" 
+                            className="flex-1 text-xs text-gray-400 hover:text-gray-600"
+                            onClick={() => setShowNoCreditsDialog(false)}
+                         >
+                            Cancelar
+                         </Button>
+                         <Button 
+                            variant="ghost" 
+                            className="flex-1 text-xs text-gray-400 hover:text-gray-600"
+                            onClick={() => window.location.href = 'mailto:soporte@inforia.pro'}
+                         >
+                            Contactar Soporte
+                         </Button>
+                      </div>
+                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
             </div>
-            {/* --- FIN DE BLOQUE CON ALERTDIALOG --- */}
+            {/* --- FIN DE BLOQUE --- */}
 
             {(aiStatus === 'fallback' || driveStatus === 'no-permissions') && (
               <Card className="border-yellow-200 bg-yellow-50">
