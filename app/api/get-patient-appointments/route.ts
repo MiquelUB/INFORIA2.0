@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   const supabase = createClient(); // Cliente RLS (para obtener el usuario)

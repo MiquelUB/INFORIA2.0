@@ -1,5 +1,6 @@
 // API endpoint to get occupied appointment slots for a specific date
 import { createClient } from '@/lib/supabase/server';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   const supabase = createClient();
