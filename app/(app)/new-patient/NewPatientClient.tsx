@@ -54,7 +54,9 @@ export default function NewPatientClient() {
   const router = useRouter();
   const { toast } = useToast();
   const [supabase] = useState(() => createClient());
-  const [user, setUser] = useState<User | null>(null);
+  // -- OPTIMIZACIÓN: Eliminada la verificación bloqueante de getUser() --
+  // El middleware ya protege la ruta.
+  // const [user, setUser] = useState<User | null>(null);
   
   const [patientData, setPatientData] = useState<PatientData>({
     firstName: "",
@@ -78,18 +80,11 @@ export default function NewPatientClient() {
   const [newTag, setNewTag] = useState("");
   const [birthDateInput, setBirthDateInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
+  // const [authLoading, setAuthLoading] = useState(true); // ELIMINADO
   const [occupiedSlots, setOccupiedSlots] = useState<string[]>([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      setAuthLoading(false);
-    };
-    fetchUser();
-  }, [supabase]);
+  // useEffect(() => { ... } ELIMINADO
 
   // Sincronizar birthDateInput cuando cambia patientData.birthDate
   useEffect(() => {
@@ -251,13 +246,7 @@ export default function NewPatientClient() {
     patientData.birthDate
   );
 
-  if (authLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  // if (authLoading) ... BLOQUE ELIMINADO para carga instantánea
 
   return (
     <div className="min-h-screen bg-background">
@@ -458,7 +447,8 @@ export default function NewPatientClient() {
                         <NeumorphicCalendar
                           selectedDate={patientData.appointmentDate}
                           onDateSelect={(date) => setPatientData(prev => ({ ...prev, appointmentDate: date }))}
-                          className="w-full max-w-[350px]" 
+                          className="w-full"
+                          compact={true} 
                         />
                       </PopoverContent>
                     </Popover>

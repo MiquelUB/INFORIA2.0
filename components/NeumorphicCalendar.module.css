@@ -214,7 +214,10 @@
 
 /* User Request: Burdeos suave con sombras neumorficas para días con citas */
 .dayHasAppointments {
-    background-color: hsla(var(--inforia-burgundy), 0.35); /* Increased intensity */
+    background-color: hsla(
+        var(--inforia-burgundy),
+        0.35
+    ); /* Increased intensity */
     box-shadow:
         inset 5px 5px 10px rgba(164, 42, 42, 0.15),
         inset -5px -5px 10px rgba(255, 255, 255, 0.7);
@@ -305,4 +308,65 @@
     .weekday {
         font-size: 0.75rem;
     }
+}
+
+/* Compact Mode Overrides */
+.compact {
+    padding-bottom: 5px;
+    border-radius: 20px;
+}
+
+.compact .header,
+.compact .monthSelector {
+    padding: 10px;
+}
+
+.compact .calendarGrid {
+    gap: 4px; /* Tighter gap */
+    padding: 5px 10px;
+}
+
+.compact .day {
+    min-height: 28px; /* Significantly reduced */
+    aspect-ratio: 1;
+    padding: 0;
+    border-radius: 8px;
+    justify-content: center; /* Center number vertically */
+    box-shadow:
+        2px 2px 4px var(--dark-shadow),
+        -2px -2px 4px var(--light-shadow);
+}
+
+.compact .day:hover {
+    transform: translateY(-1px);
+}
+
+.compact .dayNumber {
+    font-size: 0.85rem;
+    width: 24px;
+    height: 24px;
+    margin-bottom: 0;
+}
+
+.compact .month {
+    font-size: 1rem;
+}
+
+.compact .year {
+    font-size: 0.9rem;
+}
+
+.compact .weekday {
+    font-size: 0.7rem;
+    padding: 2px;
+}
+
+.compact .navButton {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+}
+
+.compact .addEventBtn {
+    display: none; /* Hide 'Add Event' button in compact date picker */
 }

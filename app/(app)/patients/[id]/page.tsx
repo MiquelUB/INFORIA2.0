@@ -34,6 +34,7 @@ import { reportsService, appointmentsService } from "@/lib/services/database";
 import { googleDriveService } from "@/lib/services/googleDrive";
 import { openRouterService } from "@/lib/services/openrouter";
 import { createClient } from "@/lib/supabase/client";
+import { generateReportAction } from "@/app/actions/generate-report";
 
 interface PageProps {
   params: {
@@ -148,12 +149,12 @@ export default function PatientDetailedProfile({ params }: PageProps) {
 
         const dateStr = new Date().toISOString().split('T')[0];
         
-        // 1. IA
+        // 1. IA - Compilación en cliente (Prompt)
         const compiledInfo = await openRouterService.compileReportInfo({
             reportType: 'alta_paciente',
             patientData: {
                 name: patient.name,
-                alias: `Paciente ${patient.id.slice(0, 4)}`, // Added alias to satisfy interface
+                alias: `Paciente ${patient.id.slice(0, 4)}`,
                 age: patient.birth_date ? calculateAge(patient.birth_date) : undefined,
                 previousReports: historicalContext,
                 firstVisitDate: patient.created_at || undefined,
@@ -165,9 +166,16 @@ export default function PatientDetailedProfile({ params }: PageProps) {
             }
         });
 
-        const aiContent = await openRouterService.generateReport(compiledInfo);
+        // 2. IA - Generación en Servidor (Secure Action)
+        const aiResult = await generateReportAction(compiledInfo, 'alta_paciente');
+        
+        if (!aiResult.success || !aiResult.text) {
+             throw new Error(aiResult.error || "Error generando el informe");
+        }
+        
+        const aiContent = aiResult.text;
 
-        // 2. Documento
+        // 3. Documento
         const finalDocument = `
 # DOSSIER CLÍNICO DE ALTA
 Paciente: ${patient.name}
@@ -184,7 +192,7 @@ PARTE II: ANEXO DOCUMENTAL (HISTORIAL COMPLETO)
 ${historicalContext.join('\n\n------------------------------------------------\n\n')}
 `;
 
-        // 3. Drive
+        // 4. Drive
         const reportTitle = `DOSSIER DE ALTA - ${patient.name} - ${dateStr}`;
         const driveResult = await googleDriveService.createPatientReport(
             reportTitle,
@@ -195,7 +203,7 @@ ${historicalContext.join('\n\n------------------------------------------------\n
 
         if (!driveResult.success) throw new Error("Fallo Drive");
 
-        // 4. DB
+        // 5. DB
         await reportsService.create({
             user_id: currentUser.id,
             patient_id: patientId,
@@ -207,7 +215,7 @@ ${historicalContext.join('\n\n------------------------------------------------\n
             status: 'completed'
         });
 
-        // 5. Limpieza
+        // 6. Limpieza
         toast({ title: "Limpiando", description: "Eliminando informes antiguos..." });
         const deletePromises = realReports.map(async (r) => {
             if (r.google_drive_file_id) {
@@ -341,11 +349,10 @@ ${historicalContext.join('\n\n------------------------------------------------\n
                     <AlertDialogTitle className="flex items-center gap-2 text-destructive">
                       <AlertTriangle /> Confirmar Alta Clínica
                     </AlertDialogTitle>
-                    <AlertDialogDescription asChild>
-                        <div className="text-sm text-muted-foreground space-y-2">
-                            <p>Se generará el Dossier unificado y se eliminarán los <strong>{realReports.length} informes parciales</strong> de Drive.</p>
-                            <p>Esta acción es irreversible.</p>
-                        </div>
+                    <AlertDialogDescription>
+                        Se generará el Dossier unificado y se eliminarán los <strong>{realReports.length} informes parciales</strong> de Drive.
+                        <br/><br/>
+                        Esta acción es irreversible.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>

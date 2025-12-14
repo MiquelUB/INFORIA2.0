@@ -38,9 +38,22 @@ export default function Dashboard() {
       if (!response.ok) throw new Error(`Error HTTP! status: ${response.status}`);
       
       const data: Appointment[] = await response.json();
+      
+      // -- DEDUPLICACIÓN: Filtrar citas visualmente idénticas --
+      // Puede ocurrir si hubo errores de doble envío o inconsistencias en DB.
+      // Criterio: misma fecha, hora, paciente y status.
+      const uniqueData = data.filter((app, index, self) => 
+        index === self.findIndex((t) => (
+          t.appointment_date === app.appointment_date &&
+          t.appointment_time === app.appointment_time &&
+          t.status === app.status &&
+          t.patients?.id === app.patients?.id
+        ))
+      );
+
       const map: Record<number, Appointment[]> = {};
 
-      data.forEach((appointment) => {
+      uniqueData.forEach((appointment) => {
         const dateObj = new Date(appointment.appointment_date + 'T00:00:00');
         if (dateObj.getMonth() === month && dateObj.getFullYear() === year) {
           const day = dateObj.getDate();

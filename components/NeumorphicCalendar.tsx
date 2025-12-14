@@ -15,13 +15,15 @@ interface CalendarEvent {
 }
 
 interface NeumorphicCalendarProps {
-  className?: string;
+  className?: string; // Additional classes
   selectedDate?: Date;
   onDateSelect?: (date: Date) => void;
   events?: CalendarEvent[];
   onAddEvent?: () => void;
   viewDate?: Date;
   onViewDateChange?: (date: Date) => void;
+  // Compact mode for small popovers
+  compact?: boolean;
 }
 
 const NeumorphicCalendar: React.FC<NeumorphicCalendarProps> = ({
@@ -31,7 +33,8 @@ const NeumorphicCalendar: React.FC<NeumorphicCalendarProps> = ({
   events = [],
   onAddEvent,
   viewDate,
-  onViewDateChange
+  onViewDateChange,
+  compact = false
 }) => {
   const [internalDate, setInternalDate] = useState(new Date());
   
@@ -165,7 +168,7 @@ const NeumorphicCalendar: React.FC<NeumorphicCalendarProps> = ({
   };
 
   return (
-    <div className={cn(styles.container, className)}>
+    <div className={cn(styles.container, compact && styles.compact, className)}>
       <div className={styles.monthSelector}>
         <div className={styles.monthYear}>
             <button onClick={handlePrevMonth} className={styles.navButton}>

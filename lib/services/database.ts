@@ -222,7 +222,8 @@ export const statsService = {
     // First day of current month (e.g., 2025-11-01)
     const today = new Date();
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
-    const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+    // CORRECCIÓN: Usar hora local para determinar "hoy", evitando que a las 00:30 (UTC-x) siga contando el día anterior.
+    const todayStr = today.toLocaleDateString('en-CA'); // YYYY-MM-DD en local
 
     // Query for total patients
     const { count: totalPatients, error: totalError } = await supabase
