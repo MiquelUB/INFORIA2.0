@@ -52,7 +52,12 @@ function PatientDetailedProfileContent() {
     persona_rescate_email: null,
     notes: null,
     tags: [],
-    created_at: null,
+    labels: [],
+    gender: null,
+    address: null,
+    emergency_contact_name: null,
+    emergency_contact_phone: null,
+    created_at: "",
     updated_at: null,
     user_id: "", // Initialize with empty string or a default user ID
     google_sheet_id: null,
@@ -113,7 +118,7 @@ function PatientDetailedProfileContent() {
         Cita3: patient.Cita3 || null,
         Cita4: patient.Cita4 || null,
         Cita5: patient.Cita5 || null,
-      });
+      } as any);
     }
   }, [patient]);
 

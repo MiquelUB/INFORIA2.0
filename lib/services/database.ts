@@ -28,7 +28,7 @@ export const profileService = {
   async upsert(profile: Partial<Profile> & { id: string }): Promise<Profile> {
     const { data, error } = await supabase
       .from('profiles')
-      .upsert(profile as any)
+      .upsert(profile)
       .select()
       .single();
     
@@ -40,8 +40,8 @@ export const profileService = {
 // Patients Service
 export const patientsService = {
   async getAll(): Promise<Patient[]> {
-    const { data, error } = await (supabase
-      .from('patients') as any)
+    const { data, error } = await supabase
+      .from('patients')
       .select('*')
       .order('created_at', { ascending: false });
     
@@ -50,8 +50,8 @@ export const patientsService = {
   },
 
   async getById(id: string): Promise<Patient | null> {
-    const { data, error } = await (supabase
-      .from('patients') as any)
+    const { data, error } = await supabase
+      .from('patients')
       .select('*')
       .eq('id', id)
       .maybeSingle();
@@ -61,8 +61,8 @@ export const patientsService = {
   },
 
   async create(patient: PatientInsert): Promise<Patient> {
-    const { data, error } = await (supabase
-      .from('patients') as any)
+    const { data, error } = await supabase
+      .from('patients')
       .insert(patient)
       .select()
       .single();
@@ -72,8 +72,8 @@ export const patientsService = {
   },
 
   async update(id: string, updates: PatientUpdate): Promise<Patient> {
-    const { data, error } = await (supabase
-      .from('patients') as any)
+    const { data, error } = await supabase
+      .from('patients')
       .update(updates)
       .eq('id', id)
       .select()
@@ -135,8 +135,8 @@ export const reportsService = {
   },
 
   async create(report: ReportInsert): Promise<Report> {
-    const { data, error } = await (supabase
-      .from('reports') as any)
+    const { data, error } = await supabase
+      .from('reports')
       .insert(report)
       .select()
       .single();
@@ -146,8 +146,8 @@ export const reportsService = {
   },
 
   async update(id: string, updates: Partial<Report>): Promise<Report> {
-    const { data, error } = await (supabase
-      .from('reports') as any)
+    const { data, error } = await supabase
+      .from('reports')
       .update(updates)
       .eq('id', id)
       .select()
@@ -181,8 +181,8 @@ export const appointmentsService = {
   },
 
   async create(appointment: any) {
-    const { data, error } = await (supabase
-      .from('appointments') as any)
+    const { data, error } = await supabase
+      .from('appointments')
       .insert(appointment)
       .select()
       .single();

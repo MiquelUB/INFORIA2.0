@@ -79,8 +79,8 @@ export async function createPatientAction(
 
   try {
     // 3. Crear paciente en Supabase
-    const { data, error } = await supabase
-      .from('patients')
+    const { data, error } = await (supabase
+      .from('patients') as any)
       .insert([
         {
           user_id: user.id,
@@ -96,7 +96,7 @@ export async function createPatientAction(
           persona_rescate_telefono: patientData.emergencyPhone || null,
           persona_rescate_email: patientData.emergencyEmail || null,
         }
-      ])
+      ] as any)
       .select()
       .single();
 
@@ -108,8 +108,8 @@ export async function createPatientAction(
     // 4. Crear la cita en Supabase (si aplica)
     if (patientData.appointmentDate && patientData.appointmentTime) {
 
-      const { error: appointmentError } = await supabase
-        .from('appointments')
+      const { error: appointmentError } = await (supabase
+        .from('appointments') as any)
         .insert({
           patient_id: patientId,
           user_id: user.id, // <-- El user_id del servidor

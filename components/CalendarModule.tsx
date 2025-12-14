@@ -62,7 +62,7 @@ const CalendarModule = () => {
         const dateMap = new Map<string, Appointment[]>();
         const uniqueDates: Date[] = [];
 
-        data?.forEach((apt: Appointment) => {
+        data?.forEach((apt: any) => {
           const date = new Date(apt.appointment_date);
           const dateStr = date.toDateString();
           
@@ -103,7 +103,7 @@ const CalendarModule = () => {
         .eq("appointment_date", format(selectedDate, "yyyy-MM-dd"));
 
       if (!error) {
-        setAppointments(data || []);
+        setAppointments((data as any) || []);
       }
     };
 

@@ -3,6 +3,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { Database } from '@/lib/types'
 
 // Cliente Admin para operaciones privilegiadas (INVITAR)
 const supabaseAdmin = createClient(
@@ -30,8 +31,8 @@ export async function inviteTeamMember(formData: FormData) {
   if (!user) return { error: 'No autenticado' }
 
   // 2. Leer datos del Patrocinador (Sponsor)
-  const { data: sponsorProfile } = await (supabase
-    .from('profiles') as any)
+  const { data: sponsorProfile } = await supabase
+    .from('profiles')
     .select('invitations_total, invitations_sent, is_sponsor')
     .eq('id', user.id)
     .single()
@@ -66,8 +67,8 @@ export async function inviteTeamMember(formData: FormData) {
   }
 
   // 4. Actualizar contador de invitaciones usadas
-  await (supabaseAdmin
-    .from('profiles') as any)
+  await supabaseAdmin
+    .from('profiles')
     .update({ invitations_sent: invitationsSent + 1 })
     .eq('id', user.id)
 
@@ -83,8 +84,8 @@ export async function getTeamMembers() {
   if (!user) return { error: 'No autenticado', members: [] }
 
   // Obtener todos los usuarios que fueron invitados por este sponsor
-  const { data: members, error } = await (supabase
-    .from('profiles') as any)
+  const { data: members, error } = await supabase
+    .from('profiles')
     .select('id, email, full_name, plan_type, credits_limit')
     .eq('sponsor_id', user.id)
 

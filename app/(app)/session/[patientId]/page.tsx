@@ -25,6 +25,7 @@ import { User } from '@supabase/supabase-js';
 import { deductCredits } from '@/lib/actions/credits';
 import { pricingService } from '@/lib/services/pricing';
 import { transcribeAudioAction } from '@/app/actions/transcribe'; // Server Action
+import { generateReportAction } from '@/app/actions/generate-report'; // Server Action
 
 // Constantes para el "Límite Inteligente"
 const MAX_NOTES_LENGTH = 20000;
@@ -572,10 +573,16 @@ export default function SessionPage({ params }: PageProps) {
         sessionData,
       });
 
-      const aiContent = await openRouterService.generateReport(compiledInfo, openRouterType);
+      const actionResult = await generateReportAction(compiledInfo, openRouterType);
+
+      if (!actionResult.success || !actionResult.text) {
+        throw new Error(actionResult.error || "La IA no devolvió resultados.");
+      }
       
-      if (!aiContent || aiContent.length < 100) {
-        throw new Error('La IA devolvió un informe vacío.');
+      const aiContent = actionResult.text;
+      
+      if (aiContent.length < 100) {
+        throw new Error('La IA devolvió un informe demasiado corto o vacío.');
       }
       
       setAiStatus('working');

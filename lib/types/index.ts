@@ -1,3 +1,7 @@
+// Export Database types
+export * from './database.types';
+export * from './billing';
+
 export interface UserProfile {
   id: string;
   full_name: string | null;
