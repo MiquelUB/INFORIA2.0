@@ -144,7 +144,7 @@ export async function POST(req: Request) {
       const activationLink = `${saasUrl}/login?token=${token}`;
 
       await resend.emails.send({
-        from: 'Inforia <onboarding@mail.inforia.pro>',
+        from: process.env.SENDER_EMAIL || 'Inforia <onboarding@mail.inforia.pro>',
         to: emailPago,
         subject: '🚀 Activa tu cuenta de Inforia',
         html: `

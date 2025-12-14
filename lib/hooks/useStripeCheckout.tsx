@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 // Asegúrate de que esta URL base apunte a tu backend SaaS
 // Deberías definirla en .env (por ejemplo, NEXT_PUBLIC_SAAS_API_URL)
-const SAAS_API_BASE_URL = process.env.NEXT_PUBLIC_SAAS_API_URL || 'http://localhost:8080'; // Puerto por defecto de Vite, cámbialo si es diferente para tu API SaaS
+const SAAS_API_BASE_URL = process.env.NEXT_PUBLIC_SAAS_API_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
 
 /**
  * Hook para iniciar el proceso de checkout de Stripe a través del backend SaaS.

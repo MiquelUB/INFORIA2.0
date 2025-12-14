@@ -1043,62 +1043,48 @@ ${aiContent}
                   {/* AlertDialog de confirmación */}
                   {/* AlertDialog de confirmación (REFINED NEUMORPHIC - SUBTLE & GRAY) */}
                   <AlertDialogContent className="bg-[#FBF9F6] border-none shadow-xl max-w-lg">
-                    {/* ... (contenido existente) ... */}
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="font-lora text-xl text-[#2E403B]">
+                        Confirmar Generación de Informe
+                      </AlertDialogTitle>
+                      <AlertDialogDescription className="text-muted-foreground space-y-4 pt-2">
+                        <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+                          <p className="font-medium text-gray-900 mb-2">Resumen de la sesión:</p>
+                          <ul className="space-y-1 text-sm">
+                            {details.map((detail, index) => (
+                              <li key={index} className="flex items-start gap-2">
+                                <span className="text-green-600 mt-0.5">•</span>
+                                <span>{detail}</span>
+                              </li>
+                            ))}
+                          </ul>
+                          <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
+                            <span className="font-bold text-gray-700">Coste Total:</span>
+                            <Badge variant="secondary" className="bg-[#2E403B] text-white hover:bg-[#1a2623] px-3">
+                              {totalCredits} Créditos
+                            </Badge>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          Al confirmar, se procesará la información y se descontarán los créditos de tu saldo.
+                        </p>
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="gap-2 mt-4">
+                      <AlertDialogCancel onClick={() => setIsConfirmingReport(false)}>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={confirmGenerateReport}
+                        className="bg-[#2E403B] hover:bg-[#1a2623] text-white font-medium"
+                      >
+                        Confirmar y Generar
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
               )}
               
               {/* ✅ MODAL SALDO INSUFICIENTE (NUEVO) */}
-              <AlertDialog open={showNoCreditsDialog} onOpenChange={setShowNoCreditsDialog}>
-                <AlertDialogContent className="bg-white border-none shadow-2xl max-w-md">
-                   <AlertDialogHeader>
-                      <AlertDialogTitle className="flex items-center gap-2 text-xl font-bold text-gray-800">
-                         <AlertTriangle className="h-6 w-6 text-red-500" />
-                         Saldo Insuficiente
-                      </AlertDialogTitle>
-                      <AlertDialogDescription className="text-base text-gray-600 space-y-3 pt-2">
-                        <p>
-                           Para generar este informe necesitas <strong>{previewCost.totalCredits} crédito(s)</strong>, 
-                           pero tu saldo actual es <strong>0</strong>.
-                        </p>
-                        <p className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-sm text-blue-800">
-                           No te preocupes, puedes recargar saldo o mejorar tu plan en nuestra web sin perder tu trabajo (se ha guardado un borrador).
-                        </p>
-                      </AlertDialogDescription>
-                   </AlertDialogHeader>
-                   <AlertDialogFooter className="flex-col sm:justify-center gap-3 mt-4">
-                      {/* Botones verticales para énfasis */}
-                      <Button 
-                        className="w-full bg-[#2E403B] hover:bg-[#1a2623] text-white"
-                        onClick={() => {
-                           // Redirección a la Landing (Precios)
-                           window.open('https://inforia.pro/#pricing', '_blank');
-                           setShowNoCreditsDialog(false);
-                        }}
-                      >
-                         <ExternalLink className="mr-2 h-4 w-4" />
-                         Ver Planes de Recarga
-                      </Button>
-                      
-                      <div className="flex justify-between w-full gap-2">
-                         <Button 
-                            variant="outline" 
-                            className="flex-1 border-gray-200 text-gray-600"
-                            onClick={() => setShowNoCreditsDialog(false)}
-                         >
-                            Cancelar
-                         </Button>
-                         <Button 
-                            variant="ghost" 
-                            className="flex-1 text-gray-500 hover:text-gray-800"
-                            onClick={() => window.location.href = 'mailto:soporte@inforia.pro'}
-                         >
-                            Contáctar Soporte
-                         </Button>
-                      </div>
-                   </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+
 
               {/* ✅ MODAL SALDO INSUFICIENTE (NUEVO) */}
               <AlertDialog open={showNoCreditsDialog} onOpenChange={setShowNoCreditsDialog}>

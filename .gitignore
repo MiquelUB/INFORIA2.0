@@ -46,3 +46,6 @@ coverage/
 
 # Vercel
 .vercel/
+
+# Security
+app/mcp.json

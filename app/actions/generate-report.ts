@@ -25,7 +25,7 @@ export async function generateReportAction(
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://inforia.pro', // Hardcoded or from env
+        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://inforia.pro', // Hardcoded or from env
         'X-Title': 'INFORIA Clinical Assistant'
       },
       body: JSON.stringify({
