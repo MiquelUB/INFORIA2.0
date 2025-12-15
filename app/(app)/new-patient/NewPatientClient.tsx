@@ -162,8 +162,19 @@ export default function NewPatientClient() {
   };
 
   const handleSavePatient = async (redirectTo: 'patient-list' | 'session-workspace') => {
+    console.log('🔘 [NewPatient] handleSavePatient clicked. Redirect to:', redirectTo);
+    console.log('📝 [NewPatient] Form Validity:', isFormValid, 'Submitting:', isSubmitting);
+    
     // Validaciones del lado del cliente (rápidas)
     if (!isFormValid) {
+      console.warn('⚠️ [NewPatient] Form invalid. Missing fields:', {
+        firstName: !patientData.firstName,
+        lastName: !patientData.lastName,
+        email: !patientData.email,
+        phone: !patientData.phone,
+        gender: !patientData.gender,
+        birthDate: !patientData.birthDate
+      });
       toast({
         title: "Faltan datos",
         description: "Por favor completa todos los campos obligatorios marcados con *",
