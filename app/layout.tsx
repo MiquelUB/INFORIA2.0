@@ -23,7 +23,7 @@ export const runtime = "nodejs";
 export const metadata: Metadata = {
   title: {
     template: '%s | iNFORiA',
-    default: 'iNFORiA - Asistente Clínico y de Negocio',
+    default: 'iNFORiA',
   },
   description: 'Asistente clínico con IA para psicólogos. Informes automatizados y gestión segura.',
   icons: {
