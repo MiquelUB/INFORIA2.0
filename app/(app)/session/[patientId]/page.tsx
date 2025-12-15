@@ -26,6 +26,7 @@ import { deductCredits } from '@/lib/actions/credits';
 import { pricingService } from '@/lib/services/pricing';
 import { transcribeAudioAction } from '@/app/actions/transcribe'; // Server Action
 import { generateReportAction } from '@/app/actions/generate-report'; // Server Action
+import { checkUserCreditsAction } from '@/app/actions/check-credits'; // Server Action
 
 // Constantes para el "Límite Inteligente"
 const MAX_NOTES_LENGTH = 20000;
@@ -375,39 +376,43 @@ export default function SessionPage({ params }: PageProps) {
 
   const [showNoCreditsDialog, setShowNoCreditsDialog] = useState<boolean>(false); // ✅ Nueva Modal Sin Créditos
 
+
+
   // ✅ NUEVO: Función para confirmar generación de informe desde AlertDialog
   const confirmGenerateReport = async () => {
     // 🛡️ SECURITY CHECK: Verificar saldo ANTES de llamar a la IA
     const currentCost = previewCost.totalCredits; // Usamos el cálculo live
     
-    // ✅ FIX CRÍTICO: Consultar saldo REAL en Base de Datos (bypassing Context/Cache stale)
-    // El usuario reportó que el sistema le bloqueaba teniendo créditos. 
-    // Esto asegura que leemos el valor fresco directamente de Supabase.
+    // ✅ FIX CRÍTICO FINAL: Server Action para consultar saldo
+    // Evita problemas de RLS, Tokens locales o Cache.
     
     let realCredits = 0;
     
     try {
-      const { data: freshProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('credits')
-        .eq('id', user?.id)
-        .single();
-        
-      if (profileError || !freshProfile) {
-         console.warn('⚠️ No se pudo verificar saldo en tiempo real, usando fallback de contexto:', profileError);
-         // Fallback al contexto si falla la query directa (mejor que bloquear)
-         realCredits = profile?.credits || 0;
+      const result = await checkUserCreditsAction();
+      
+      if (result.success && typeof result.credits === 'number') {
+        realCredits = result.credits;
+        console.log('💰 Saldo verificado en SERVER:', realCredits);
       } else {
-         realCredits = freshProfile.credits;
-         console.log('💰 Saldo verificado en DB:', realCredits);
+        console.warn('⚠️ Fallo verificación Server:', result.error);
+        // Fallback: Si falla el server, usamos profile local, y si no, 0.
+        // PERO: Si falla el server, es arriesgado bloquear. Daremos beneficio de duda si profile tiene algo?
+        // No, mejor safe: 
+        realCredits = profile?.credits || 0;
       }
     } catch (err) {
-       console.error('Error verificando saldo:', err);
-       realCredits = profile?.credits || 0; // Fallback
+       console.error('Error invocando Server Action:', err);
+       realCredits = profile?.credits || 0; 
     }
 
     if (realCredits < currentCost) {
       // ❌ SIN SALDO -> Abrimos modal de ayuda/planes
+      // 🐛 DEBUG: Mostramos por qué falló para que el usuario nos lo diga
+      toast.error(`Bloqueo de Seguridad: Saldo Insuficiente`, {
+        description: `Sistema detecta: ${realCredits} créditos. Coste operación: ${currentCost}.`,
+        duration: 5000,
+      });
       setShowNoCreditsDialog(true);
       return; 
     }
