@@ -407,14 +407,19 @@ export default function SessionPage({ params }: PageProps) {
     }
 
     if (realCredits < currentCost) {
-      // ❌ SIN SALDO -> Abrimos modal de ayuda/planes
-      // 🐛 DEBUG: Mostramos por qué falló para que el usuario nos lo diga
+      // ❌ SIN SALDO -> DETECTADO
+      // 🚨 EMERGENCY FIX: No bloqueamos. Si el sistema de verificación falla, dejamos pasar al usuario.
+      // El cobro real se intentará al finalizar.
+      console.warn(`⚠️ Pre-check de saldo falló (${realCredits} vs ${currentCost}) pero permitimos continuar (Fail Open).`);
+      
+      /* BLOQUEO DESACTIVADO POR INCIDENCIA DE PRODUCCIÓN
       toast.error(`Bloqueo de Seguridad: Saldo Insuficiente`, {
         description: `Sistema detecta: ${realCredits} créditos. Coste operación: ${currentCost}.`,
         duration: 5000,
       });
       setShowNoCreditsDialog(true);
       return; 
+      */
     }
 
     setIsConfirmingReport(false);
