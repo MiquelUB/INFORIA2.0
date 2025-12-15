@@ -379,9 +379,34 @@ export default function SessionPage({ params }: PageProps) {
   const confirmGenerateReport = async () => {
     // 🛡️ SECURITY CHECK: Verificar saldo ANTES de llamar a la IA
     const currentCost = previewCost.totalCredits; // Usamos el cálculo live
-    const userCredits = profile?.credits || 0;
+    
+    // ✅ FIX CRÍTICO: Consultar saldo REAL en Base de Datos (bypassing Context/Cache stale)
+    // El usuario reportó que el sistema le bloqueaba teniendo créditos. 
+    // Esto asegura que leemos el valor fresco directamente de Supabase.
+    
+    let realCredits = 0;
+    
+    try {
+      const { data: freshProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('credits')
+        .eq('id', user?.id)
+        .single();
+        
+      if (profileError || !freshProfile) {
+         console.warn('⚠️ No se pudo verificar saldo en tiempo real, usando fallback de contexto:', profileError);
+         // Fallback al contexto si falla la query directa (mejor que bloquear)
+         realCredits = profile?.credits || 0;
+      } else {
+         realCredits = freshProfile.credits;
+         console.log('💰 Saldo verificado en DB:', realCredits);
+      }
+    } catch (err) {
+       console.error('Error verificando saldo:', err);
+       realCredits = profile?.credits || 0; // Fallback
+    }
 
-    if (userCredits < currentCost) {
+    if (realCredits < currentCost) {
       // ❌ SIN SALDO -> Abrimos modal de ayuda/planes
       setShowNoCreditsDialog(true);
       return; 
@@ -412,23 +437,15 @@ export default function SessionPage({ params }: PageProps) {
        return;
     }
 
-    // 3. Confirmación de coste (si > 1 crédito)
-    if (totalCredits > 1) {
-      const confirmed = window.confirm(
-        `Esta sesión compleja costará ${totalCredits} créditos.\n\nDesglose:\n${details.map(d => `- ${d}`).join('\n')}\n\n¿Deseas continuar?`
-      );
-      if (!confirmed) return;
-    }
-
+    // 3. Confirmación de coste - ELIMINADO (Ya se hace en el Dialog previo)
+    
     setIsGenerating(true);
     setAiStatus('working');
 
     try {
       // 4. (COBRO MOVIDO AL FINAL)
-      // Validaremos el saldo al final del proceso exitoso o usaremos 'checkCredits' si quisiéramos validar antes sin cobrar.
       if (totalCredits > 0) {
-         // Opcional: Podríamos verificar si tiene saldo SUFICIENTE antes de empezar para no gastar recursos de IA
-         // pero sin cobrar. Por ahora, confiamos en el check del Middleware/UI y cobramos al éxito.
+         // Verificación de saldo final (si hubiese condiciones de carrera)
       }
 
       console.log(`🚀 Iniciando generación. Modo: ${reportType}`);
@@ -1050,8 +1067,17 @@ ${aiContent}
                       <AlertDialogDescription className="text-muted-foreground space-y-4 pt-2">
                         <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
                           <p className="font-medium text-gray-900 mb-2">Resumen de la sesión:</p>
+                          
+                          {/* Resumen de Archivos */}
+                          {selectedFiles.length > 0 && (
+                            <div className="flex items-center gap-2 mb-2 text-sm text-blue-700 bg-blue-50 p-2 rounded">
+                               <FileText className="w-4 h-4" />
+                               <span>{selectedFiles.length} archivo(s) adjunto(s)</span>
+                            </div>
+                          )}
+
                           <ul className="space-y-1 text-sm">
-                            {details.map((detail, index) => (
+                            {previewCost.details.map((detail, index) => (
                               <li key={index} className="flex items-start gap-2">
                                 <span className="text-green-600 mt-0.5">•</span>
                                 <span>{detail}</span>
@@ -1061,7 +1087,7 @@ ${aiContent}
                           <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
                             <span className="font-bold text-gray-700">Coste Total:</span>
                             <Badge variant="secondary" className="bg-[#2E403B] text-white hover:bg-[#1a2623] px-3">
-                              {totalCredits} Créditos
+                              {previewCost.totalCredits} Créditos
                             </Badge>
                           </div>
                         </div>
@@ -1076,7 +1102,7 @@ ${aiContent}
                         onClick={confirmGenerateReport}
                         className="bg-[#2E403B] hover:bg-[#1a2623] text-white font-medium"
                       >
-                        Confirmar y Generar
+                        Confirmar y Generar (-{previewCost.totalCredits} uds)
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
