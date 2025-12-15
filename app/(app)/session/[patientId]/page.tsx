@@ -399,11 +399,11 @@ export default function SessionPage({ params }: PageProps) {
         // Fallback: Si falla el server, usamos profile local, y si no, 0.
         // PERO: Si falla el server, es arriesgado bloquear. Daremos beneficio de duda si profile tiene algo?
         // No, mejor safe: 
-        realCredits = profile?.credits || 0;
+        realCredits = profile ? (profile.credits_limit || 0) - (profile.credits_used || 0) : 0;
       }
     } catch (err) {
        console.error('Error invocando Server Action:', err);
-       realCredits = profile?.credits || 0; 
+       realCredits = profile ? (profile.credits_limit || 0) - (profile.credits_used || 0) : 0; 
     }
 
     if (realCredits < currentCost) {
