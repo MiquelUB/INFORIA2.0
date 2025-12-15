@@ -165,16 +165,8 @@ export default function NewPatientClient() {
     console.log('🔘 [NewPatient] handleSavePatient clicked. Redirect to:', redirectTo);
     console.log('📝 [NewPatient] Form Validity:', isFormValid, 'Submitting:', isSubmitting);
     
-    // Validaciones del lado del cliente (rápidas)
+    // Validaciones del lado del cliente
     if (!isFormValid) {
-      console.warn('⚠️ [NewPatient] Form invalid. Missing fields:', {
-        firstName: !patientData.firstName,
-        lastName: !patientData.lastName,
-        email: !patientData.email,
-        phone: !patientData.phone,
-        gender: !patientData.gender,
-        birthDate: !patientData.birthDate
-      });
       toast({
         title: "Faltan datos",
         description: "Por favor completa todos los campos obligatorios marcados con *",
@@ -182,84 +174,53 @@ export default function NewPatientClient() {
       });
       return;
     }
-    console.log('🔹 Checkpoint 1: Form Validated');
     if (!isValidEmail(patientData.email)) {
-      console.warn('⚠️ [NewPatient] Invalid email:', patientData.email);
       toast({ title: "Email inválido", variant: "destructive" });
       return;
     }
-    console.log('🔹 Checkpoint 2: Email Valid');
     if (!isValidPhone(patientData.phone)) {
-      console.warn('⚠️ [NewPatient] Invalid phone:', patientData.phone);
       toast({ title: "Teléfono inválido", variant: "destructive" });
       return;
     }
-    console.log('🔹 Checkpoint 3: Phone Valid. Starting Auth...');
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('✅ Validaciones de cliente OK. Obteniendo token...');
-    }
-
-    console.log('🔄 [NewPatient] Getting session...');
-    // Obtener el token del cliente antes de llamar a la Server Action
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError) {
-       console.error('❌ [NewPatient] Session error:', sessionError);
-       toast({ title: "Error de sesión", description: sessionError.message, variant: "destructive" });
-       return;
-    }
-
-    const googleToken = session?.provider_token;
-    console.log('🔑 [NewPatient] Session retrieved. Has Google Token:', !!googleToken);
-
-    if (!googleToken) {
-      console.error('❌ [NewPatient] No Google Token found.');
-      toast({
-        title: "Error de autenticación",
-        description: "No se encontró el token de Google. Por favor cierra sesión y vuelve a iniciar sesión.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log('✅ Token obtenido. Llamando a Server Action...');
-    }
-
-    console.log('🚀 [NewPatient] Calling Server Action...');
     setIsSubmitting(true);
 
     try {
-      // Llamar a la Server Action pasando el token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) throw new Error(sessionError.message);
+      
+      const googleToken = session?.provider_token;
+      if (!googleToken) {
+        throw new Error("No se encontró el token de Google. Reinicia sesión.");
+      }
+
       const result = await createPatientAction(googleToken, patientData, redirectTo);
 
       if (result.success) {
         toast({
           title: "Éxito",
-          description: "Paciente y datos asociados creados correctamente"
+          description: "Paciente creado correctamente. Redirigiendo..."
         });
 
-        // Redireccionar según la acción
         if (redirectTo === 'session-workspace' && result.patientId) {
           router.push(`/session/${result.patientId}`);
         } else {
           router.push('/patient-list');
         }
+        // NO desactivamos isSubmitting aquí para mantener el spinner durante la redirección
       } else {
-        // Mostrar error devuelto por el servidor
         throw new Error(result.message);
       }
 
     } catch (error) {
-      console.error('❌ ERROR CRÍTICO creando paciente (Client):', error);
+      console.error('Error creating patient:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "No se pudo crear el paciente. Intenta de nuevo.",
+        description: error instanceof Error ? error.message : "Error desconocido",
         variant: "destructive"
       });
-    } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false); // Solo restauramos el botón si falló
     }
   };
 
