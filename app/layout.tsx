@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Nunito_Sans, Lora } from "next/font/google";
 import "./globals.css";
 import QueryProvider from "@/components/QueryProvider";
@@ -19,7 +20,16 @@ const lora = Lora({
 
 export const runtime = "nodejs";
 
-export const metadata = { title: "INFORIA" };
+export const metadata: Metadata = {
+  title: {
+    template: '%s | iNFORiA',
+    default: 'iNFORiA - Asistente Clínico y de Negocio',
+  },
+  description: 'Asistente clínico con IA para psicólogos. Informes automatizados y gestión segura.',
+  icons: {
+    icon: '/icon.png',
+  },
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
