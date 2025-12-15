@@ -17,6 +17,14 @@ export async function checkUserCreditsAction() {
       .eq('id', user.id)
       .single();
 
+    console.log('🔍 [ServerAction] CheckCredits:', { 
+      userId: user.id, 
+      email: user.email, 
+      profileFound: !!profile, 
+      credits: profile?.credits,
+      error: profileError?.message 
+    });
+
     if (profileError) {
       return { success: false, error: profileError.message };
     }

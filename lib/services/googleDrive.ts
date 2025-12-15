@@ -190,6 +190,7 @@ export class GoogleDriveService {
     patientName: string,
     patientId: string
   ): Promise<DriveCreateResponse> {
+    console.log('🚀 [DriveService] createPatientReport iniciado:', { title, patientName, patientId });
     try {
       const token = await this.getAccessToken();
       if (!token) {
