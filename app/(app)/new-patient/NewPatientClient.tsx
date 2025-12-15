@@ -182,16 +182,19 @@ export default function NewPatientClient() {
       });
       return;
     }
+    console.log('🔹 Checkpoint 1: Form Validated');
     if (!isValidEmail(patientData.email)) {
       console.warn('⚠️ [NewPatient] Invalid email:', patientData.email);
       toast({ title: "Email inválido", variant: "destructive" });
       return;
     }
+    console.log('🔹 Checkpoint 2: Email Valid');
     if (!isValidPhone(patientData.phone)) {
       console.warn('⚠️ [NewPatient] Invalid phone:', patientData.phone);
       toast({ title: "Teléfono inválido", variant: "destructive" });
       return;
     }
+    console.log('🔹 Checkpoint 3: Phone Valid. Starting Auth...');
 
     if (process.env.NODE_ENV === 'development') {
       console.log('✅ Validaciones de cliente OK. Obteniendo token...');
