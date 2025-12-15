@@ -183,10 +183,12 @@ export default function NewPatientClient() {
       return;
     }
     if (!isValidEmail(patientData.email)) {
+      console.warn('⚠️ [NewPatient] Invalid email:', patientData.email);
       toast({ title: "Email inválido", variant: "destructive" });
       return;
     }
     if (!isValidPhone(patientData.phone)) {
+      console.warn('⚠️ [NewPatient] Invalid phone:', patientData.phone);
       toast({ title: "Teléfono inválido", variant: "destructive" });
       return;
     }
@@ -195,11 +197,21 @@ export default function NewPatientClient() {
       console.log('✅ Validaciones de cliente OK. Obteniendo token...');
     }
 
+    console.log('🔄 [NewPatient] Getting session...');
     // Obtener el token del cliente antes de llamar a la Server Action
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+       console.error('❌ [NewPatient] Session error:', sessionError);
+       toast({ title: "Error de sesión", description: sessionError.message, variant: "destructive" });
+       return;
+    }
+
     const googleToken = session?.provider_token;
+    console.log('🔑 [NewPatient] Session retrieved. Has Google Token:', !!googleToken);
 
     if (!googleToken) {
+      console.error('❌ [NewPatient] No Google Token found.');
       toast({
         title: "Error de autenticación",
         description: "No se encontró el token de Google. Por favor cierra sesión y vuelve a iniciar sesión.",
@@ -212,6 +224,7 @@ export default function NewPatientClient() {
       console.log('✅ Token obtenido. Llamando a Server Action...');
     }
 
+    console.log('🚀 [NewPatient] Calling Server Action...');
     setIsSubmitting(true);
 
     try {
