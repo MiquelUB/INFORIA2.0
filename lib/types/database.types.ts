@@ -39,6 +39,8 @@ export interface Database {
           sponsor_id: string | null
           billing_owner_id: string | null
           seats_allowed: number
+          terms_accepted_at: string | null
+          terms_version: string | null
         }
         Insert: {
           id: string
@@ -68,6 +70,8 @@ export interface Database {
           sponsor_id?: string | null
           billing_owner_id?: string | null
           seats_allowed?: number
+          terms_accepted_at?: string | null
+          terms_version?: string | null
         }
         Update: {
           id?: string
@@ -97,6 +101,8 @@ export interface Database {
           sponsor_id?: string | null
           billing_owner_id?: string | null
           seats_allowed?: number
+          terms_accepted_at?: string | null
+          terms_version?: string | null
         }
       }
       patients: {

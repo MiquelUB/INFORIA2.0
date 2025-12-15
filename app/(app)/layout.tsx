@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation"; // Hook para leer la ruta
 import DashboardHeader from "@/components/DashboardHeader";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AuthGuard } from "@/components/auth/AuthGuard";
+import LegalNoticeModal from "@/components/LegalNoticeModal";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -23,6 +24,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {children}
           </main>
         </div>
+        <LegalNoticeModal />
       </AuthGuard>
     </AuthProvider>
   );

@@ -4,15 +4,9 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
 
-type Profile = {
-  id: string;
-  plan_type: string | null;
-  credits: number;
-  credits_limit: number;
-  credits_used: number;
-  subscription_status: string | null;
-  // Add other profile fields as needed
-};
+import { Profile } from '@/lib/types/database.types';
+
+// Removed local Profile definition in favor of imported one
 
 type AuthContextType = {
   user: User | null;
