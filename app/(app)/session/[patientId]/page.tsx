@@ -1076,17 +1076,20 @@ ${aiContent}
                       </AlertDialogTitle>
                       <AlertDialogDescription className="text-muted-foreground space-y-4 pt-2">
                         <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
-                          {/* Resumen de Archivos - SOLO si hay archivos */}
-                          {selectedFiles.length > 0 ? (
-                            <div className="flex items-center gap-2 text-sm text-blue-700 bg-blue-50 p-2 rounded">
+                          {/* Resumen de Archivos y Coste - Diseño unificado */}
+                          <div className="flex items-center justify-between text-sm bg-blue-50 p-3 rounded-md">
+                            <div className="flex items-center gap-2 text-blue-800">
                                <FileText className="w-4 h-4" />
-                               <span>{selectedFiles.length} archivo(s) adjunto(s)</span>
+                               <span>
+                                 {selectedFiles.length > 0 
+                                   ? `${selectedFiles.length} archivo(s) adjunto(s)` 
+                                   : 'Sin archivos adjuntos'}
+                               </span>
                             </div>
-                          ) : (
-                             <p className="text-gray-600 italic text-sm">Sin archivos adjuntos. Se generará el informe basado en el contexto seleccionado.</p>
-                          )}
-                          
-                          {/* Eliminamos lista de detalles y Coste Total según feedback */}
+                            <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-none font-semibold">
+                              {previewCost.totalCredits} Crédito{previewCost.totalCredits !== 1 ? 's' : ''}
+                            </Badge>
+                          </div>
                         </div>
                         <p className="text-xs text-gray-500">
                           Al confirmar, se procesará la información y se descontarán los créditos de tu saldo.
@@ -1099,7 +1102,7 @@ ${aiContent}
                         onClick={confirmGenerateReport}
                         className="bg-[#2E403B] hover:bg-[#1a2623] text-white font-medium"
                       >
-                        Confirmar y Generar (-{previewCost.totalCredits} uds)
+                        Confirmar
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
