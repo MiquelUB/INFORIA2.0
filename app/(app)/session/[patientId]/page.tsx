@@ -1066,30 +1066,17 @@ ${aiContent}
                       </AlertDialogTitle>
                       <AlertDialogDescription className="text-muted-foreground space-y-4 pt-2">
                         <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
-                          <p className="font-medium text-gray-900 mb-2">Resumen de la sesión:</p>
-                          
-                          {/* Resumen de Archivos */}
-                          {selectedFiles.length > 0 && (
-                            <div className="flex items-center gap-2 mb-2 text-sm text-blue-700 bg-blue-50 p-2 rounded">
+                          {/* Resumen de Archivos - SOLO si hay archivos */}
+                          {selectedFiles.length > 0 ? (
+                            <div className="flex items-center gap-2 text-sm text-blue-700 bg-blue-50 p-2 rounded">
                                <FileText className="w-4 h-4" />
                                <span>{selectedFiles.length} archivo(s) adjunto(s)</span>
                             </div>
+                          ) : (
+                             <p className="text-gray-600 italic text-sm">Sin archivos adjuntos. Se generará el informe basado en el contexto seleccionado.</p>
                           )}
-
-                          <ul className="space-y-1 text-sm">
-                            {previewCost.details.map((detail, index) => (
-                              <li key={index} className="flex items-start gap-2">
-                                <span className="text-green-600 mt-0.5">•</span>
-                                <span>{detail}</span>
-                              </li>
-                            ))}
-                          </ul>
-                          <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
-                            <span className="font-bold text-gray-700">Coste Total:</span>
-                            <Badge variant="secondary" className="bg-[#2E403B] text-white hover:bg-[#1a2623] px-3">
-                              {previewCost.totalCredits} Créditos
-                            </Badge>
-                          </div>
+                          
+                          {/* Eliminamos lista de detalles y Coste Total según feedback */}
                         </div>
                         <p className="text-xs text-gray-500">
                           Al confirmar, se procesará la información y se descontarán los créditos de tu saldo.
