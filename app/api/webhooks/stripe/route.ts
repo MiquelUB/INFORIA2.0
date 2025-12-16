@@ -141,7 +141,7 @@ export async function POST(req: Request) {
       if (dbError) throw dbError;
 
       // 5. Enviar Email con Enlace Mágico
-      const saasUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const saasUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.inforia.pro';
       const activationLink = `${saasUrl}/login?token=${token}`;
 
       await resend.emails.send({
