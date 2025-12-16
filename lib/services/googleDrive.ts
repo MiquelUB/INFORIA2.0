@@ -20,9 +20,7 @@ export interface DriveCreateResponse {
 export class GoogleDriveService {
   private static readonly FOLDER_NAME = 'INFORIA-INFORMES';
   private static readonly SCOPES = [
-    'https://www.googleapis.com/auth/drive.file',
-    'https://www.googleapis.com/auth/drive.folders',
-    'https://www.googleapis.com/auth/documents'
+    'https://www.googleapis.com/auth/drive.file'
   ];
 
   async getAccessToken(): Promise<string | null> {

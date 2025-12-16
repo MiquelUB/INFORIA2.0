@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       redirectTo: redirectTo,
       
       // Funcionalidad preservada:
-      scopes: 'https://www.googleapis.com/auth/drive.file',
+          scopes: 'https://www.googleapis.com/auth/drive.file',
     },
   });
 

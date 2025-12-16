@@ -61,7 +61,7 @@ export const LoginForm = () => {
             access_type: 'offline',
             prompt: 'consent',
           },
-          scopes: 'openid email profile https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets',
+          scopes: 'openid email profile https://www.googleapis.com/auth/drive.file',
         },
       });
 
