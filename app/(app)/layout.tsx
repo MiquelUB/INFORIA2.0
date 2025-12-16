@@ -24,7 +24,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {children}
           </main>
         </div>
-        <LegalNoticeModal />
+        {!isAuthPage && <LegalNoticeModal />}
       </AuthGuard>
     </AuthProvider>
   );

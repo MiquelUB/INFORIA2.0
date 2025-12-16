@@ -12,7 +12,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!loading) {
-      const isPublicPage = ['/login', '/auth/login', '/signup', '/auth/signup', '/activate', '/pricing', '/account', '/auth/callback', '/auth/auth-code-error'].some(path => pathname?.startsWith(path));
+      const isPublicPage = ['/login', '/auth/login', '/signup', '/auth/signup', '/activate', '/pricing', '/account', '/auth/callback', '/auth/auth-code-error', '/legal'].some(path => pathname?.startsWith(path));
 
       // 1. Si no está logueado -> Login (solo si no es página pública)
       if (!user) {
@@ -49,7 +49,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   // Si no hay usuario y no es pública, no renderizamos nada (esperamos redirect)
   // Si es pública, renderizamos
   if (!user) {
-     const isPublicPage = ['/login', '/auth/login', '/signup', '/auth/signup', '/activate', '/pricing', '/account', '/auth/callback'].some(path => pathname?.startsWith(path));
+     const isPublicPage = ['/login', '/auth/login', '/signup', '/auth/signup', '/activate', '/pricing', '/account', '/auth/callback', '/legal'].some(path => pathname?.startsWith(path));
      if (!isPublicPage) return null;
   }
 
