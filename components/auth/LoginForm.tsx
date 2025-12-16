@@ -7,6 +7,7 @@ import { Loader2, AlertTriangle, Key } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/lib/hooks/use-toast';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -154,13 +155,13 @@ export const LoginForm = () => {
         <div className="text-xs text-muted-foreground text-center space-y-1 pt-4">
           <p>
             Al continuar, aceptas nuestros{' '}
-            <a href="/legal/terms" className="underline hover:text-primary transition-colors">
+            <Link href="/legal/terms" className="underline hover:text-primary transition-colors">
               Términos de Servicio
-            </a>{' '}
+            </Link>{' '}
             y{' '}
-            <a href="/legal/privacy" className="underline hover:text-primary transition-colors">
+            <Link href="/legal/privacy" className="underline hover:text-primary transition-colors">
               Política de Privacidad
-            </a>
+            </Link>
           </p>
         </div>
       </CardContent>
