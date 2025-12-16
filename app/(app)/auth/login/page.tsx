@@ -1,16 +1,22 @@
-'use client'; // LoginForm (que usa hooks) requiere 'use client'
+'use client';
 
+import { Suspense } from 'react';
+import { Loader2 } from 'lucide-react';
 import { LoginForm } from '@/components/auth/LoginForm';
-// import { AuthGuard } from '@/components/auth/AuthGuard'; // ELIMINADO (Protocolo ERROR0)
 
 const Auth = () => {
-  return (
-    // El <AuthGuard> se ha eliminado, el middleware maneja la protección
-    <div className="flex h-screen items-center justify-center bg-background p-8">
-      <LoginForm />
-    </div>
-  );
+  return (
+    <div className="flex h-screen items-center justify-center bg-background p-8">
+      <Suspense fallback={
+        <div className="flex flex-col items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="mt-2 text-sm text-muted-foreground">Cargando...</span>
+        </div>
+      }>
+        <LoginForm />
+      </Suspense>
+    </div>
+  );
 };
 
-// CORRECCIÓN: Añadido el 'export default' que faltaba
 export default Auth;
