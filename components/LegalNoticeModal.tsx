@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { acceptLegalTerms } from '@/app/actions/user';
 import { toast } from '@/components/ui/use-toast';
-import { ExternalLink } from 'lucide-react';
+// import { ExternalLink } from 'lucide-react';
 
 const CURRENT_TERMS_VERSION = 'v1.0-2025-12-15';
 
@@ -75,7 +75,7 @@ export default function LegalNoticeModal() {
               <p className="font-medium">Última actualización: 15/12/2025</p>
               
               <div className="space-y-2">
-                <p>En INFORIA, la privacidad no es una opción, es la base de nuestra arquitectura. Esta política describe cómo recopilamos, usamos y protegemos tu información y la de tus pacientes al utilizar nuestro software de asistencia clínica bajo el modelo de "Zero-Knowledge" (Cero Conocimiento).</p>
+                <p>En INFORIA, la privacidad no es una opción, es la base de nuestra arquitectura. Esta política describe cómo recopilamos, usamos y protegemos tu información y la de tus pacientes al utilizar nuestro software de asistencia clínica bajo el modelo de &quot;Zero-Knowledge&quot; (Cero Conocimiento).</p>
                 
                  <h4 className="text-foreground font-semibold mt-4">1. Responsable del Tratamiento</h4>
                  <ul className="list-disc pl-5">
@@ -93,7 +93,7 @@ export default function LegalNoticeModal() {
                    <li><strong>Datos de Google User:</strong> Para el funcionamiento de la integración, accedemos a tu email y perfil básico de Google para verificar tu identidad.</li>
                  </ul>
 
-                 <h4 className="text-foreground font-semibold mt-4">3. Arquitectura "Zero-Knowledge" y Datos Clínicos</h4>
+                 <h4 className="text-foreground font-semibold mt-4">3. Arquitectura &quot;Zero-Knowledge&quot; y Datos Clínicos</h4>
                  <p>INFORIA se distingue por su arquitectura de privacidad por diseño:</p>
                  <ul className="list-disc pl-5">
                    <li><strong>Soberanía del Dato (Google Drive):</strong> Los informes clínicos (Google Docs) y las fichas de pacientes (Google Sheets) nunca se almacenan en las bases de datos de INFORIA. Estos archivos residen exclusivamente en tu cuenta de Google Drive.</li>
@@ -102,7 +102,7 @@ export default function LegalNoticeModal() {
                  </ul>
 
                  <h4 className="text-foreground font-semibold mt-4">4. Uso de APIs de Google (Cláusula de Uso Limitado)</h4>
-                 <p>El uso y la transferencia de la información recibida de las APIs de Google a cualquier otra aplicación cumplirán con la Política de Datos de Usuario de los Servicios de API de Google, incluidos los requisitos de "Uso Limitado".</p>
+                 <p>El uso y la transferencia de la información recibida de las APIs de Google a cualquier otra aplicación cumplirán con la Política de Datos de Usuario de los Servicios de API de Google, incluidos los requisitos de &quot;Uso Limitado&quot;.</p>
                  <ul className="list-disc pl-5">
                    <li><strong>Alcance del Acceso:</strong> INFORIA solicita acceso a tu Google Drive (drive.file) únicamente para crear, editar y organizar los archivos generados por la aplicación (Informes y Hojas de Cálculo).</li>
                    <li><strong>No Lectura General:</strong> No accedemos, leemos ni analizamos archivos de tu Google Drive que no hayan sido creados por o vinculados explícitamente a INFORIA.</li>
@@ -142,7 +142,7 @@ export default function LegalNoticeModal() {
                 <h4 className="text-foreground font-semibold mt-4">1. Información Legal e Identificación</h4>
                 <p>El servicio es operado por:</p>
                 <ul className="list-disc pl-5">
-                  <li><strong>Titular:</strong> INFORIA (en adelante, "La Plataforma" o "Nosotros").</li>
+                  <li><strong>Titular:</strong> INFORIA (en adelante, &quot;La Plataforma&quot; o &quot;Nosotros&quot;).</li>
                   <li><strong>NIF:</strong> 43726721H</li>
                   <li><strong>Domicilio Social:</strong> Mayor, 11; 25560, SORT, Lleida.</li>
                   <li><strong>Contacto:</strong> inforia@inforia.pro</li>
@@ -162,8 +162,8 @@ export default function LegalNoticeModal() {
                   - INFORIA no ofrece diagnósticos médicos automatizados ni tratamientos directos a pacientes.
                 </p>
 
-                <h4 className="text-foreground font-semibold mt-4">3. Arquitectura "Zero-Knowledge" y Responsabilidad de Datos</h4>
-                <p>El Usuario reconoce y acepta que INFORIA opera bajo un modelo de "Cero Conocimiento":</p>
+                <h4 className="text-foreground font-semibold mt-4">3. Arquitectura &quot;Zero-Knowledge&quot; y Responsabilidad de Datos</h4>
+                <p>El Usuario reconoce y acepta que INFORIA opera bajo un modelo de &quot;Cero Conocimiento&quot;:</p>
                 <ul className="list-disc pl-5">
                   <li><strong>Almacenamiento:</strong> Los datos clínicos sensibles (informes, fichas de pacientes) se almacenan directamente en la cuenta de Google Drive del Usuario, no en los servidores de INFORIA.</li>
                   <li><strong>Copias de Seguridad:</strong> Dado que INFORIA no custodia los archivos finales, es responsabilidad exclusiva del Usuario gestionar la seguridad, acceso y copias de seguridad de su propia cuenta de Google Drive.</li>
@@ -197,14 +197,14 @@ export default function LegalNoticeModal() {
 
                 <h4 className="text-foreground font-semibold mt-4">7. Propiedad Intelectual</h4>
                 <ul className="list-disc pl-5">
-                  <li><strong>Del Software:</strong> INFORIA retiene todos los derechos de propiedad intelectual sobre el código, diseño, algoritmos y marca "iNFORiA".</li>
+                  <li><strong>Del Software:</strong> INFORIA retiene todos los derechos de propiedad intelectual sobre el código, diseño, algoritmos y marca &quot;iNFORiA&quot;.</li>
                   <li><strong>De los Datos:</strong> El Usuario conserva la propiedad total e intelectual de los informes y datos de pacientes generados y almacenados en su Google Drive.</li>
                 </ul>
 
                 <h4 className="text-foreground font-semibold mt-4">8. Limitación de Responsabilidad</h4>
                 <p>En la máxima medida permitida por la ley aplicable:</p>
                 <ul className="list-disc pl-5">
-                  <li>INFORIA se proporciona "tal cual" (as-is). No garantizamos que el servicio sea ininterrumpido o libre de errores puntuales.</li>
+                  <li>INFORIA se proporciona &quot;tal cual&quot; (as-is). No garantizamos que el servicio sea ininterrumpido o libre de errores puntuales.</li>
                   <li>INFORIA no será responsable por daños indirectos, lucro cesante o pérdida de datos derivada de fallos en servicios de terceros (Google API, OpenAI API, Stripe) o mal uso de la herramienta por parte del Usuario.</li>
                   <li>La responsabilidad total de INFORIA ante cualquier reclamación no excederá el monto pagado por el Usuario en los últimos 3 meses de servicio.</li>
                 </ul>
@@ -223,7 +223,7 @@ export default function LegalNoticeModal() {
           <div className="flex-1 text-xs text-muted-foreground mr-4 flex items-center">
             <p>
               Debes leer hasta el final para aceptar. <br/>
-              Haciendo clic en "Aceptar y Continuar", confirmas que has leído y aceptas nuestra Política de Privacidad y Términos de Uso.
+              Haciendo clic en &quot;Aceptar y Continuar&quot;, confirmas que has leído y aceptas nuestra Política de Privacidad y Términos de Uso.
             </p>
           </div>
           <Button 

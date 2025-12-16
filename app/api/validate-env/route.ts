@@ -1,8 +1,28 @@
 import { createClient } from '@/lib/supabase/server';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
-  const results: Record<string, any> = {};
+interface ValidationResults {
+  [key: string]: {
+    status?: string;
+    connection?: string;
+    url?: string;
+    anonKey?: string;
+    serviceRole?: string;
+    apiKey?: string;
+    message?: string;
+    modelsAvailable?: number;
+    clientId?: string;
+    serviceAccount?: string;
+    privateKey?: string;
+    publishableKey?: string;
+    secretKey?: string;
+    webhookSecret?: string;
+    accountType?: string;
+  };
+}
+
+export async function GET() {
+  const results: ValidationResults = {};
 
   try {
     // 1. Validar Supabase
@@ -16,19 +36,21 @@ export async function GET(request: NextRequest) {
     // Intentar conectar a Supabase
     try {
       const supabase = await createClient();
-      const { data, error } = await supabase.auth.getUser();
+      const { error } = await supabase.auth.getUser();
       if (error && error.status !== 400) {
         results.supabase.connection = `⚠️ Error: ${error.message}`;
       } else {
         results.supabase.connection = '✅ Conectado';
       }
-    } catch (e: any) {
-      results.supabase.connection = `❌ Error de conexión: ${e.message}`;
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      results.supabase.connection = `❌ Error de conexión: ${msg}`;
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
     results.supabase = {
       status: 'error',
-      message: error.message
+      message: msg
     };
   }
 
@@ -56,14 +78,16 @@ export async function GET(request: NextRequest) {
         } else {
           results.openrouter.connection = `❌ HTTP ${response.status}`;
         }
-      } catch (e: any) {
-        results.openrouter.connection = `❌ Error: ${e.message}`;
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        results.openrouter.connection = `❌ Error: ${msg}`;
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
     results.openrouter = {
       status: 'error',
-      message: error.message
+      message: msg
     };
   }
 
@@ -75,10 +99,11 @@ export async function GET(request: NextRequest) {
       serviceAccount: process.env.NEXT_GOOGLE_SERVICE_ACCOUNT_EMAIL ? '✅ Configurada' : '❌ No configurada',
       privateKey: process.env.NEXT_GOOGLE_ACCOUNT_PRIVATE_KEY ? '✅ Configurada' : '❌ No configurada',
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
     results.google = {
       status: 'error',
-      message: error.message
+      message: msg
     };
   }
 
@@ -104,14 +129,16 @@ export async function GET(request: NextRequest) {
         } else {
           results.openai.connection = `❌ HTTP ${response.status}`;
         }
-      } catch (e: any) {
-        results.openai.connection = `❌ Error: ${e.message}`;
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        results.openai.connection = `❌ Error: ${msg}`;
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
     results.openai = {
       status: 'error',
-      message: error.message
+      message: msg
     };
   }
 
@@ -141,14 +168,16 @@ export async function GET(request: NextRequest) {
         } else {
           results.stripe.connection = `❌ HTTP ${response.status}`;
         }
-      } catch (e: any) {
-        results.stripe.connection = `❌ Error: ${e.message}`;
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        results.stripe.connection = `❌ Error: ${msg}`;
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
     results.stripe = {
       status: 'error',
-      message: error.message
+      message: msg
     };
   }
 

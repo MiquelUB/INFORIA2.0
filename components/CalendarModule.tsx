@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import NeumorphicCalendar from "./NeumorphicCalendar";
 import { Badge } from "./ui/badge";
-import { CalendarIcon, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarIcon, Plus } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -23,7 +23,7 @@ const CalendarModule = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [appointmentDates, setAppointmentDates] = useState<Date[]>([]);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ id: string } | null>(null);
 
   useEffect(() => {
@@ -40,7 +40,7 @@ const CalendarModule = () => {
   useEffect(() => {
     const fetchAppointments = async () => {
       if (!user?.id) {
-        setLoading(false);
+        // setLoading(false);
         return;
       }
 
@@ -54,7 +54,7 @@ const CalendarModule = () => {
 
         if (error) {
           console.error("Error fetching appointments:", error);
-          setLoading(false);
+          // setLoading(false);
           return;
         }
 
@@ -62,7 +62,8 @@ const CalendarModule = () => {
         const dateMap = new Map<string, Appointment[]>();
         const uniqueDates: Date[] = [];
 
-        data?.forEach((apt: any) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (data as unknown as any[])?.forEach((apt: any) => {
           const date = new Date(apt.appointment_date);
           const dateStr = date.toDateString();
           
@@ -83,12 +84,12 @@ const CalendarModule = () => {
       } catch (error) {
         console.error("Error in fetchAppointments:", error);
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     };
 
     fetchAppointments();
-  }, [user?.id]);
+  }, [user?.id, selectedDate]);
 
   // Update appointments when selected date changes
   useEffect(() => {
@@ -103,6 +104,7 @@ const CalendarModule = () => {
         .eq("appointment_date", format(selectedDate, "yyyy-MM-dd"));
 
       if (!error) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setAppointments((data as any) || []);
       }
     };
@@ -110,11 +112,7 @@ const CalendarModule = () => {
     fetchSelectedDateAppointments();
   }, [selectedDate, user?.id]);
 
-  const hasAppointments = (date: Date) => {
-    return appointmentDates.some(appointmentDate => 
-      appointmentDate.toDateString() === date.toDateString()
-    );
-  };
+
 
   return (
     <Card className="border-module-border bg-module-background hover:shadow-md transition-calm">

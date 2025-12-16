@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Loader2, AlertTriangle, Key } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/lib/hooks/use-toast';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -16,7 +16,7 @@ export const LoginForm = () => {
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   
   const { toast } = useToast();
-  const router = useRouter();
+  // const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
 
@@ -65,9 +65,10 @@ export const LoginForm = () => {
       });
 
       if (error) throw error;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error Google:', err);
-      toast({ variant: 'destructive', title: 'Error', description: err.message });
+      const errMsg = err instanceof Error ? err.message : String(err);
+      toast({ variant: 'destructive', title: 'Error', description: errMsg });
       setIsLoadingGoogle(false);
     }
   };

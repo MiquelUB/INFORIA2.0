@@ -6,7 +6,7 @@ import { Resend } from 'resend';
 
 // 1. Configuración de Clientes
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16' as any,
+  apiVersion: '2024-04-10',
   typescript: true,
 });
 
@@ -32,8 +32,9 @@ export async function POST(req: Request) {
 
   try {
     event = stripe.webhooks.constructEvent(body, signature, WEBHOOK_SECRET);
-  } catch (err: any) {
-    console.error(`❌ Error Webhook Signature: ${err.message}`);
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error(`❌ Error Webhook Signature: ${errorMsg}`);
     return NextResponse.json({ error: 'Webhook signature verification failed' }, { status: 400 });
   }
 

@@ -15,7 +15,7 @@ export default function TermsPage() {
           <h2 className="text-2xl font-semibold text-foreground">1. Información Legal e Identificación</h2>
           <p>El servicio es operado por:</p>
           <ul className="list-disc pl-6 space-y-2">
-            <li><strong>Titular:</strong> INFORIA (en adelante, "La Plataforma" o "Nosotros").</li>
+            <li><strong>Titular:</strong> INFORIA (en adelante, &quot;La Plataforma&quot; o &quot;Nosotros&quot;).</li>
             <li><strong>NIF:</strong> 43726721H</li>
             <li><strong>Domicilio Social:</strong> Mayor, 11; 25560, SORT, Lleida.</li>
             <li><strong>Contacto:</strong> <a href="mailto:inforia@inforia.pro" className="text-primary hover:underline">inforia@inforia.pro</a></li>
@@ -43,8 +43,8 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-2xl font-semibold text-foreground">3. Arquitectura "Zero-Knowledge" y Responsabilidad de Datos</h2>
-          <p>El Usuario reconoce y acepta que INFORIA opera bajo un modelo de "Cero Conocimiento":</p>
+          <h2 className="text-2xl font-semibold text-foreground">3. Arquitectura &quot;Zero-Knowledge&quot; y Responsabilidad de Datos</h2>
+          <p>El Usuario reconoce y acepta que INFORIA opera bajo un modelo de &quot;Cero Conocimiento&quot;:</p>
           <ul className="list-disc pl-6 space-y-2">
             <li><strong>Almacenamiento:</strong> Los datos clínicos sensibles (informes, fichas de pacientes) se almacenan directamente en la cuenta de Google Drive del Usuario, no en los servidores de INFORIA.</li>
             <li><strong>Copias de Seguridad:</strong> Dado que INFORIA no custodia los archivos finales, es responsabilidad exclusiva del Usuario gestionar la seguridad, acceso y copias de seguridad de su propia cuenta de Google Drive.</li>
@@ -86,7 +86,7 @@ export default function TermsPage() {
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold text-foreground">7. Propiedad Intelectual</h2>
           <ul className="list-disc pl-6 space-y-2">
-            <li><strong>Del Software:</strong> INFORIA retiene todos los derechos de propiedad intelectual sobre el código, diseño, algoritmos y marca "iNFORiA".</li>
+            <li><strong>Del Software:</strong> INFORIA retiene todos los derechos de propiedad intelectual sobre el código, diseño, algoritmos y marca &quot;iNFORiA&quot;.</li>
             <li><strong>De los Datos:</strong> El Usuario conserva la propiedad total e intelectual de los informes y datos de pacientes generados y almacenados en su Google Drive.</li>
           </ul>
         </section>
@@ -95,7 +95,7 @@ export default function TermsPage() {
           <h2 className="text-2xl font-semibold text-foreground">8. Limitación de Responsabilidad</h2>
           <p>En la máxima medida permitida por la ley aplicable:</p>
           <ul className="list-disc pl-6 space-y-2">
-            <li>INFORIA se proporciona "tal cual" (as-is). No garantizamos que el servicio sea ininterrumpido o libre de errores puntuales.</li>
+            <li>INFORIA se proporciona &quot;tal cual&quot; (as-is). No garantizamos que el servicio sea ininterrumpido o libre de errores puntuales.</li>
             <li>INFORIA no será responsable por daños indirectos, lucro cesante o pérdida de datos derivada de fallos en servicios de terceros (Google API, OpenAI API, Stripe) o mal uso de la herramienta por parte del Usuario.</li>
             <li>La responsabilidad total de INFORIA ante cualquier reclamación no excederá el monto pagado por el Usuario en los últimos 3 meses de servicio.</li>
           </ul>

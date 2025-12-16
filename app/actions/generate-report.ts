@@ -53,9 +53,9 @@ export async function generateReportAction(
 
     return { success: true, text: content };
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error generating report (Server Action):', error);
-    // Fallback logic could go here, for now return error
-    return { success: false, error: error.message };
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return { success: false, error: errorMessage };
   }
 }

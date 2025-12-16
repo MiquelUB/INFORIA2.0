@@ -45,13 +45,13 @@ export default function OnboardingPage() {
     setIsSubmitting(true);
 
     // 3. Actualizar la tabla 'profiles'
-    const { error } = await (supabase
-      .from('profiles') as any)
+    const { error } = await supabase
+      .from('profiles')
       .update({
         full_name: fullName,
         specialty: specialty,
         onboarding_completed: true, 
-      } as any)
+      })
       .eq('id', user.id);
 
     if (error) {

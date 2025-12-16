@@ -8,20 +8,17 @@ import { PianoLoader } from '@/components/ui/PianoLoader'; // Added
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Play, Square, Trash2, Save, Wand2, FileText, AlertTriangle, Calendar, ExternalLink, Loader2, User as UserIcon, ArrowRight } from 'lucide-react';
+import { Play, Square, Trash2, Wand2, FileText, AlertTriangle, Calendar, ExternalLink, Loader2, User as UserIcon, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import FileUploadZone from '@/components/FileUploadZone';
 import { useFileUpload } from '@/lib/hooks/useFileUpload';
 import { useAudioRecording } from '@/lib/hooks/useAudioRecording';
 import { patientsService, reportsService } from '@/lib/services/database';
 import { googleDriveService } from '@/lib/services/googleDrive';
-import { googleSheetsPatientCRM } from '@/lib/services/googleSheetsPatientCRM';
 import { openRouterService } from '@/lib/services/openrouter';
-import { emailService } from '@/lib/services/emailService';
 import type { Patient } from '@/lib/services/database';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
-import { User } from '@supabase/supabase-js';
 import { deductCredits } from '@/lib/actions/credits';
 import { pricingService } from '@/lib/services/pricing';
 import { transcribeAudioAction } from '@/app/actions/transcribe'; // Server Action
@@ -51,20 +48,37 @@ export default function SessionPage({ params }: PageProps) {
 
   // const [user, setUser] = useState<User | null>(null); // ELIMINADO: Usamos useAuth
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [patientReports, setPatientReports] = useState<any[]>([]);
+  
+  interface Report {
+    id: string;
+    created_at: string;
+    title: string;
+    content?: string | null;
+    report_type?: string;
+    google_drive_file_id?: string | null;
+    status?: string | null; // Added status
+  }
+  
+  const [patientReports, setPatientReports] = useState<Report[]>([]);
   const [reportType, setReportType] = useState<string>('primera_visita');
   const [notes, setNotes] = useState<string>('');
   const [transcription, setTranscription] = useState<string>('');
   const [aiStatus, setAiStatus] = useState<string>('idle');
-  const [driveStatus, setDriveStatus] = useState<string>('working');
+  const [driveStatus, setDriveStatus] = useState<string>('working'); // Restored
+  
   const [isTranscribing, setIsTranscribing] = useState<boolean>(false);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [isConfirmingReport, setIsConfirmingReport] = useState<boolean>(false);
-  const [generatedReportId, setGeneratedReportId] = useState<string | null>(null);
-  const [hasGoogleToken, setHasGoogleToken] = useState<boolean>(true); 
-  const [skipCharge, setSkipCharge] = useState<boolean>(false);
-  const [totalCredits, setTotalCredits] = useState<number>(0);
-  const [details, setDetails] = useState<string[]>([]);
+  
+  // Derived state or unused
+  // const [generatedReportId, setGeneratedReportId] = useState<string | null>(null); // Unused read
+  // const [hasGoogleToken, setHasGoogleToken] = useState<boolean>(true); // Derived below
+  
+  // const hasGoogleToken = !!user?.app_metadata?.provider_token;
+
+  // const [skipCharge, setSkipCharge] = useState<boolean>(false); // Unused
+  // const [totalCredits, setTotalCredits] = useState<number>(0); // Unused read
+  // const [details, setDetails] = useState<string[]>([]); // Unused read
 
   const getReportTypeLabel = (type: string) => {
     const labels = {
@@ -276,103 +290,20 @@ export default function SessionPage({ params }: PageProps) {
       console.log('✅ Transcripción completada:', result.text.substring(0, 100) + '...');
       return result.text;
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error transcribing audio:', error);
       setAiStatus('fallback');
-      toast.error(`Error al transcribir el audio: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : "Error desconocido";
+      toast.error(`Error al transcribir el audio: ${errorMessage}`);
       return null;
     } finally {
       setIsTranscribing(false); // Usando tu estado original
     }
   };
 
-  const testOpenRouterConnectivity = async () => {
-    console.log('🧪 Testing OpenRouter connectivity...');
-    // --- CORRECCIÓN: Usar sintaxis Next.js ---
-    const apiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
-    // ----------------------------------------
-    console.log('🔑 API Key debug info:', {
-      exists: !!apiKey,
-      length: apiKey?.length,
-      firstChars: apiKey?.substring(0, 15),
-      lastChars: apiKey?.substring(apiKey?.length - 5),
-      hasNewlines: apiKey?.includes('\n'),
-      hasSpaces: apiKey?.includes(' '),
-      hasTabs: apiKey?.includes('\t'),
-      isString: typeof apiKey,
-    });
-    try {
-      console.log('🌐 Attempting fetch to OpenRouter...');
-      const cleanApiKey = apiKey?.trim();
-      const headers = {
-        Authorization: `Bearer ${cleanApiKey}`,
-        'Content-Type': 'application/json',
-      };
-      console.log('📋 Headers debug:', {
-        authHeaderLength: headers.Authorization?.length,
-        authStarts: headers.Authorization?.substring(0, 20),
-        contentType: headers['Content-Type'],
-      });
-      const response = await fetch('https://openrouter.ai/api/v1/models', {
-        method: 'GET',
-        headers,
-      });
-      console.log('📡 OpenRouter response:', {
-        status: response.status,
-        ok: response.ok,
-        statusText: response.statusText,
-      });
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ OpenRouter conectado - Modelos:', data.data?.length || 0);
-        return true;
-      } else {
-        const errorText = await response.text();
-        console.log('❌ OpenRouter error response:', errorText);
-        return false;
-      }
-    } catch (fetchError) {
-      const err = fetchError as Error;
-      console.log('❌ Fetch exception details:', {
-        name: err.name,
-        message: err.message,
-        stack: err.stack?.substring(0, 200),
-      });
-      return false;
-    }
-  };
 
-  // ✅ NUEVO: Guardar audio directamente a Google Drive sin transcripción
-  const handleSaveAudioOnly = async () => {
-    if (!audioBlob || !selectedPatient) return;
-    
-    // ✅ NUEVO: Verificar token de Google antes de intentar guardar
-    if (!hasGoogleToken) {
-      toast.error('❌ No tienes autorización de Google Drive. Por favor, inicia sesión con Google.');
-      console.warn('⚠️ Intento de guardar audio sin token de Google');
-      return;
-    }
-    
-    toast.info('Subiendo audio a Drive...');
-    try {
-      const fileName = `${new Date().toISOString().split('T')[0]} - Audio Sesión - ${selectedPatient.name}.wav`;
-      const result = await googleDriveService.uploadFile(
-        audioBlob,
-        fileName,
-        selectedPatient.name,
-        selectedPatient.id
-      );
-      
-      if (result?.id) {
-        toast.success('✅ Audio guardado en la carpeta del paciente');
-      } else {
-        throw new Error('Fallo en la subida');
-      }
-    } catch (error) {
-      console.error('❌ Error al guardar audio:', error);
-      toast.error('Error al guardar el audio. Verifica tu conexión o que hayas iniciado sesión con Google.');
-    }
-  };
+
+
 
   const [showNoCreditsDialog, setShowNoCreditsDialog] = useState<boolean>(false); // ✅ Nueva Modal Sin Créditos
 
@@ -433,13 +364,13 @@ export default function SessionPage({ params }: PageProps) {
     // FASE 0: CÁLCULO DE COSTES Y VALIDACIÓN
     // ---------------------------------------------------------
     
-    const { totalCredits, details } = pricingService.calculateSessionCost({
+    const { totalCredits } = pricingService.calculateSessionCost({
       hasAudio: !!audioBlob || !!transcription,
       files: selectedFiles,
       reportType: reportType
     });
-    setTotalCredits(totalCredits);
-    setDetails(details);
+    // setTotalCredits(totalCredits); // State removed
+    // setDetails(details); // State removed
 
     // 2. Validación básica de contenido (excepto Alta que usa historial)
     if (totalCredits === 0 && !notes.trim() && reportType !== 'alta_paciente') {
@@ -542,7 +473,7 @@ export default function SessionPage({ params }: PageProps) {
       // ---------------------------------------------------------
       // FASE 2: HISTORIAL CLÍNICO (Diferenciado)
       // ---------------------------------------------------------
-      let reportsToAnalyze = [];
+      let reportsToAnalyze: string[] = [];
       
       if (reportType === 'alta_paciente') {
         // ALTA: Recuperamos TODO el historial ordenado
@@ -579,7 +510,7 @@ export default function SessionPage({ params }: PageProps) {
         'niña': 'Niña'
       };
       // Recuperar género (si existe en objeto paciente, sino fallback)
-      const pGender = (selectedPatient as any).gender || 'Paciente';
+      const pGender = (selectedPatient as unknown as { gender?: string }).gender || 'Paciente'; 
       const genderTerm = genderMap[pGender?.toLowerCase()] || pGender;
       
       let finalGender = genderTerm;
@@ -670,7 +601,7 @@ ${aiContent}
       if (!driveResult.success) throw new Error(`Fallo Drive: ${driveResult.message}`);
 
       console.log('💽 Guardando en Supabase...');
-      const newReport = await reportsService.create({
+      await reportsService.create({
         user_id: user!.id,
         patient_id: selectedPatient.id,
         title: reportTitle,
@@ -732,18 +663,20 @@ ${aiContent}
       }
 
       // Limpieza de formulario
-      setGeneratedReportId(newReport.id);
+      // setGeneratedReportId(newReport.id); // State removed
       setNotes('');
       setTranscription('');
       clearFiles();
       if (deleteRecording) deleteRecording();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Error generando informe:', error);
       
-      const isDriveError = error.message?.includes('permisos de Google Drive') || error.message?.includes('No hay provider_token');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isDriveError = errorMessage.includes('permisos de Google Drive') || errorMessage.includes('No hay provider_token');
       
       if (isDriveError) {
+        setDriveStatus('no-permissions'); // Set status
         toast.error('Sesión de Google caducada o sin permisos.', {
           description: 'Por favor, cierra sesión y vuelve a entrar con Google (marcando las casillas de Drive).',
           duration: 10000,
@@ -756,7 +689,7 @@ ${aiContent}
           }
         });
       } else {
-        toast.error(error.message || 'Error desconocido');
+        toast.error(errorMessage || 'Error desconocido');
       }
       
       setAiStatus('fallback');
@@ -765,37 +698,7 @@ ${aiContent}
     }
   };
 
-  const handleSaveDraft = () => {
-    const draftData = {
-      patient_id: selectedPatient?.id,
-      patient_name: selectedPatient?.name,
-      notes,
-      transcription,
-      files: selectedFiles.map((f) => f.name),
-      hasRecording: !!audioBlob,
-      recordingDuration: recordingTime,
-      timestamp: new Date().toISOString(),
-    };
-    localStorage.setItem('session_draft', JSON.stringify(draftData));
-    toast.success('Borrador guardado localmente');
-  };
 
-  const loadDraft = () => {
-    try {
-      const draft = localStorage.getItem('session_draft');
-      if (draft) {
-        const draftData = JSON.parse(draft);
-        if (draftData.notes) setNotes(draftData.notes);
-        if (draftData.transcription) setTranscription(draftData.transcription);
-        toast.success('Borrador cargado');
-      } else {
-        toast.error('No hay borrador guardado');
-      }
-    } catch (error) {
-      console.error('Error loading draft:', error);
-      toast.error('Error al cargar el borrador');
-    }
-  };
 
 
 
@@ -876,7 +779,7 @@ ${aiContent}
                   <div className="flex items-center gap-4">
                     <button
                       onClick={isRecording ?
-                      stopRecording : startRecording}
+                      stopRecording : handleStartRecording}
                       disabled={isTranscribing}
                       className="btn-neumorphic flex items-center justify-center"
                       style={{ minWidth: '250px' }}

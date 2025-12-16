@@ -37,8 +37,9 @@ export async function transcribeAudioAction(formData: FormData) {
     });
 
     return { success: true, text: text.trim() };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error en transcripción (Server Action):', error);
-    return { success: false, error: error.message };
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return { success: false, error: errorMessage };
   }
 }

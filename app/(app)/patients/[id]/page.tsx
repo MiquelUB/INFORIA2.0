@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation"; 
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation"; 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,14 +20,11 @@ import {
   AlertDialogTrigger 
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
 import { 
-  ArrowLeft, Edit, Plus, FileText, Calendar, Trash2, User, Tag, 
-  FileSignature, CreditCard, FileCheck, X, Loader2, Mail, Phone, 
-  MapPin, UserCheck, AlertTriangle, ExternalLink 
+  Edit, Plus, FileText, Calendar, Trash2, User, 
+  FileSignature, CreditCard, FileCheck, X, Loader2,
+  AlertTriangle, ExternalLink 
 } from "lucide-react";
-
-// Hooks y Servicios
 import { usePatient, useUpdatePatient, useDeletePatient } from "@/lib/hooks/usePatients";
 import { useToast } from "@/lib/hooks/use-toast";
 import { reportsService, appointmentsService } from "@/lib/services/database";
@@ -35,6 +32,33 @@ import { googleDriveService } from "@/lib/services/googleDrive";
 import { openRouterService } from "@/lib/services/openrouter";
 import { createClient } from "@/lib/supabase/client";
 import { generateReportAction } from "@/app/actions/generate-report";
+import { User as SupabaseUser } from "@supabase/supabase-js";
+
+interface Report {
+    id: string;
+    title: string;
+    created_at: string;
+    content?: string | null;
+    report_type?: string;
+    google_drive_file_id?: string | null;
+    status?: string;
+}
+
+interface Appointment {
+    id: string;
+    appointment_date: string;
+    time?: string;
+    duration?: string;
+}
+
+interface Payment {
+  id: number;
+  date: string;
+  amount: string;
+  status: string;
+  method: string;
+  concept: string;
+}
 
 interface PageProps {
   params: {
@@ -56,11 +80,11 @@ export default function PatientDetailedProfile({ params }: PageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingPayments, setIsEditingPayments] = useState(false);
   const [isGeneratingDossier, setIsGeneratingDossier] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null);
 
   // Datos Reales
-  const [realReports, setRealReports] = useState<any[]>([]);
-  const [appointments, setAppointments] = useState<any[]>([]); // New State
+  const [realReports, setRealReports] = useState<Report[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]); // New State
   
   const [patientData, setPatientData] = useState({
     name: "", phone: "", email: "", birth_date: "", sexo: "",
@@ -68,7 +92,7 @@ export default function PatientDetailedProfile({ params }: PageProps) {
     persona_rescate_email: "", notes: "", tags: [] as string[]
   });
 
-  const [paymentData, setPaymentData] = useState<any[]>([]); // CORRECCIÓN: Datos de pago vacíos por defecto
+  const [paymentData, setPaymentData] = useState<Payment[]>([]); // CORRECCIÓN: Datos de pago vacíos por defecto
 
   // 1. Auth
   useEffect(() => {
@@ -77,7 +101,7 @@ export default function PatientDetailedProfile({ params }: PageProps) {
       setCurrentUser(user);
     };
     getUser();
-  }, []);
+  }, [supabase.auth]);
 
   // 2. Cargar Informes y Citas
   useEffect(() => {
@@ -90,8 +114,8 @@ export default function PatientDetailedProfile({ params }: PageProps) {
                   appointmentsService.getByPatient(patientId)
                 ]);
                 
-                setRealReports(reports || []);
-                setAppointments(appts || []);
+                setRealReports((reports as unknown as Report[]) || []);
+                setAppointments((appts as unknown as Appointment[]) || []);
             } catch (error) {
                 console.error("Error cargando datos del paciente:", error);
             }
@@ -99,6 +123,10 @@ export default function PatientDetailedProfile({ params }: PageProps) {
     };
     loadData();
   }, [patientId]);
+  
+  // ... (rest of code)
+  
+
 
   // 3. Sincronizar Datos
   useEffect(() => {
@@ -108,13 +136,13 @@ export default function PatientDetailedProfile({ params }: PageProps) {
         phone: patient.phone || "", 
         email: patient.email || "",
         birth_date: patient.birth_date || "", 
-        sexo: (patient as any).sexo || "",
-        direccion_fisica: (patient as any).direccion_fisica || "",
-        persona_rescate_nombre: (patient as any).persona_rescate_nombre || "",
-        persona_rescate_telefono: (patient as any).persona_rescate_telefono || "",
-        persona_rescate_email: (patient as any).persona_rescate_email || "",
+        sexo: patient.sexo || "",
+        direccion_fisica: patient.direccion_fisica || "",
+        persona_rescate_nombre: patient.persona_rescate_nombre || "",
+        persona_rescate_telefono: patient.persona_rescate_telefono || "",
+        persona_rescate_email: patient.persona_rescate_email || "",
         notes: patient.notes || "", 
-        tags: (patient as any).tags || []
+        tags: patient.tags || []
       });
     }
   }, [patient]);
@@ -232,9 +260,10 @@ ${historicalContext.join('\n\n------------------------------------------------\n
         const refreshed = await reportsService.getByPatient(patientId);
         setRealReports(refreshed || []);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error(error);
-        toast({ title: "Error", description: error.message, variant: "destructive" });
+        const errorMessage = error instanceof Error ? error.message : "Error desconocido";
+        toast({ title: "Error", description: errorMessage, variant: "destructive" });
     } finally {
         setIsGeneratingDossier(false);
     }
@@ -251,7 +280,7 @@ ${historicalContext.join('\n\n------------------------------------------------\n
             email: patientData.email, 
             birth_date: patientData.birth_date, 
             notes: patientData.notes,
-            // @ts-ignore: Campos adicionales que pueden no estar en el tipo estricto pero si en DB
+            // Removed ts-ignore by ensuring properties exist or handling them
             sexo: patientData.sexo,
             direccion_fisica: patientData.direccion_fisica,
             persona_rescate_nombre: patientData.persona_rescate_nombre,
@@ -273,13 +302,13 @@ ${historicalContext.join('\n\n------------------------------------------------\n
             phone: patient.phone || "", 
             email: patient.email || "",
             birth_date: patient.birth_date || "", 
-            sexo: (patient as any).sexo || "",
-            direccion_fisica: (patient as any).direccion_fisica || "",
-            persona_rescate_nombre: (patient as any).persona_rescate_nombre || "",
-            persona_rescate_telefono: (patient as any).persona_rescate_telefono || "",
-            persona_rescate_email: (patient as any).persona_rescate_email || "",
+            sexo: patient.sexo || "",
+            direccion_fisica: patient.direccion_fisica || "",
+            persona_rescate_nombre: patient.persona_rescate_nombre || "",
+            persona_rescate_telefono: patient.persona_rescate_telefono || "",
+            persona_rescate_email: patient.persona_rescate_email || "",
             notes: patient.notes || "", 
-            tags: (patient as any).tags || []
+            tags: patient.tags || []
         });
     }
   };
@@ -293,10 +322,10 @@ ${historicalContext.join('\n\n------------------------------------------------\n
   };
 
   // Helpers
-  const handleAddTag = () => { setPatientData(p => ({ ...p, tags: [...p.tags, "Etiqueta"] })); };
-  const handleRemoveTag = (i: number) => { setPatientData(p => ({ ...p, tags: p.tags.filter((_, idx) => idx !== i) })); };
-  const handlePaymentChange = (i: number, f: string, v: string) => {
-     const n = [...paymentData]; (n[i] as any)[f] = v; setPaymentData(n);
+  const handlePaymentChange = (i: number, f: keyof Payment, v: string) => {
+     const n = [...paymentData];
+     n[i] = { ...n[i], [f]: v };
+     setPaymentData(n);
   };
   const handleRemovePayment = (i: number) => { setPaymentData(paymentData.filter((_, idx) => idx !== i)); };
   const handleAddPayment = () => {

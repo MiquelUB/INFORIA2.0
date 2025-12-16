@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
-import { usePatients } from "@/lib/hooks/usePatients";
 import NeumorphicCalendar from "@/components/NeumorphicCalendar";
 
 // 1. INTERFAZ ACTUALIZADA: Coincide con la respuesta de la API de 'appointments'
@@ -21,7 +20,6 @@ interface Appointment {
 
 export default function Dashboard() {
   const router = useRouter();
-  const { data: patients = [], isLoading } = usePatients();
   const [selectedDate, setSelectedDate] = useState<number>(new Date().getDate());
   const [currentMonth, setCurrentMonth] = useState<number>(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState<number>(new Date().getFullYear());

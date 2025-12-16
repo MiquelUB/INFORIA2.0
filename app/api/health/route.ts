@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
 
+interface HealthCheckResult {
+  [key: string]: {
+    [key: string]: string;
+  };
+}
+
 export async function GET() {
-  const results: Record<string, any> = {};
+  const results: HealthCheckResult = {};
 
   // 1. Supabase
   results.supabase = {
@@ -26,8 +32,8 @@ export async function GET() {
         },
       });
       results.openrouter.connection = response.ok ? '✅ Connected' : `❌ Status ${response.status}`;
-    } catch (e: any) {
-      results.openrouter.connection = `❌ ${e.message}`;
+    } catch (e: unknown) {
+      results.openrouter.connection = `❌ ${e instanceof Error ? e.message : String(e)}`;
     }
   }
 
@@ -52,8 +58,8 @@ export async function GET() {
         },
       });
       results.openai.connection = response.ok ? '✅ Connected' : `❌ Status ${response.status}`;
-    } catch (e: any) {
-      results.openai.connection = `❌ ${e.message}`;
+    } catch (e: unknown) {
+      results.openai.connection = `❌ ${e instanceof Error ? e.message : String(e)}`;
     }
   }
 
@@ -72,8 +78,8 @@ export async function GET() {
         },
       });
       results.stripe.connection = response.ok ? '✅ Connected' : `❌ Status ${response.status}`;
-    } catch (e: any) {
-      results.stripe.connection = `❌ ${e.message}`;
+    } catch (e: unknown) {
+      results.stripe.connection = `❌ ${e instanceof Error ? e.message : String(e)}`;
     }
   }
 

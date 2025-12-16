@@ -81,7 +81,7 @@ function PatientDetailedProfileContent() {
   const [paymentData, setPaymentData] = useState<Payment[]>([]);
 
   // Cargar informes y pagos reales desde las APIs
-  const { reports: loadedReports, payments: loadedPayments, loading: dataLoading } = usePatientReportsAndPayments(patientId || '');
+  const { reports: loadedReports } = usePatientReportsAndPayments(patientId || '');
 
   // Usar los informes cargados, o un array vacío si está cargando
   const mockReports = loadedReports.map((report) => ({
@@ -108,7 +108,12 @@ function PatientDetailedProfileContent() {
         persona_rescate_email: patient.persona_rescate_email || null,
         notes: patient.notes || null,
         tags: patient.tags || [],
-        created_at: patient.created_at || null,
+        gender: null,
+        address: null,
+        emergency_contact_name: null,
+        emergency_contact_phone: null,
+        labels: [],
+        created_at: patient.created_at || "",
         updated_at: patient.updated_at || null,
         user_id: patient.user_id, // Assuming user_id is always present
         google_sheet_id: patient.google_sheet_id || null,
@@ -118,7 +123,7 @@ function PatientDetailedProfileContent() {
         Cita3: patient.Cita3 || null,
         Cita4: patient.Cita4 || null,
         Cita5: patient.Cita5 || null,
-      } as any);
+      });
     }
   }, [patient]);
 

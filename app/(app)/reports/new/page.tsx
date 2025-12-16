@@ -17,7 +17,7 @@ function ReportWorkspaceContent() {
   const patientId = searchParams.get('patientId'); // Lee el paciente de la URL
 
   // 2. Añadir estados de transición para la carga
-  const [isTranscribing, _startTranscription] = useTransition();
+  const [isTranscribing] = useTransition();
   const [isGenerating, startGeneration] = useTransition();
   const [isSaving, startSaving] = useTransition();
 

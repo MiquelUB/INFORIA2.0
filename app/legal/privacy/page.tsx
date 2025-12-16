@@ -9,7 +9,7 @@ export default function PrivacyPage() {
       </div>
 
       <div className="prose prose-slate dark:prose-invert max-w-none space-y-6">
-        <p>En INFORIA, la privacidad no es una opción, es la base de nuestra arquitectura. Esta política describe cómo recopilamos, usamos y protegemos tu información y la de tus pacientes al utilizar nuestro software de asistencia clínica bajo el modelo de "Zero-Knowledge" (Cero Conocimiento).</p>
+        <p>En INFORIA, la privacidad no es una opción, es la base de nuestra arquitectura. Esta política describe cómo recopilamos, usamos y protegemos tu información y la de tus pacientes al utilizar nuestro software de asistencia clínica bajo el modelo de &quot;Zero-Knowledge&quot; (Cero Conocimiento).</p>
 
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold text-foreground">1. Responsable del Tratamiento</h2>
@@ -32,7 +32,7 @@ export default function PrivacyPage() {
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-2xl font-semibold text-foreground">3. Arquitectura "Zero-Knowledge" y Datos Clínicos</h2>
+          <h2 className="text-2xl font-semibold text-foreground">3. Arquitectura &quot;Zero-Knowledge&quot; y Datos Clínicos</h2>
           <p>INFORIA se distingue por su arquitectura de privacidad por diseño:</p>
           <ul className="list-disc pl-6 space-y-2">
             <li><strong>Soberanía del Dato (Google Drive):</strong> Los informes clínicos (Google Docs) y las fichas de pacientes (Google Sheets) nunca se almacenan en las bases de datos de INFORIA. Estos archivos residen exclusivamente en tu cuenta de Google Drive.</li>
@@ -43,7 +43,7 @@ export default function PrivacyPage() {
 
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold text-foreground">4. Uso de APIs de Google (Cláusula de Uso Limitado)</h2>
-          <p>El uso y la transferencia de la información recibida de las APIs de Google a cualquier otra aplicación cumplirán con la Política de Datos de Usuario de los Servicios de API de Google, incluidos los requisitos de "Uso Limitado".</p>
+          <p>El uso y la transferencia de la información recibida de las APIs de Google a cualquier otra aplicación cumplirán con la Política de Datos de Usuario de los Servicios de API de Google, incluidos los requisitos de &quot;Uso Limitado&quot;.</p>
           <ul className="list-disc pl-6 space-y-2">
             <li><strong>Alcance del Acceso:</strong> INFORIA solicita acceso a tu Google Drive (drive.file) únicamente para crear, editar y organizar los archivos generados por la aplicación (Informes y Hojas de Cálculo).</li>
             <li><strong>No Lectura General:</strong> No accedemos, leemos ni analizamos archivos de tu Google Drive que no hayan sido creados por o vinculados explícitamente a INFORIA.</li>

@@ -3,7 +3,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { Database } from '@/lib/types'
+// import { Database } from '@/lib/types'
 
 // Cliente Admin para operaciones privilegiadas (INVITAR)
 const supabaseAdmin = createClient(
@@ -49,7 +49,7 @@ export async function inviteTeamMember(formData: FormData) {
   }
 
   // 3. ENVIAR INVITACIÓN (Usando la API de Admin)
-  const { data: invitation, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+  const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
     email,
     {
       data: {

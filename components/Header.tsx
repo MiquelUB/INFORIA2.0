@@ -27,9 +27,10 @@ export const Header = () => {
       toast.success('Has cerrado sesión exitosamente.');
       router.push('/login'); // Redirigir al login
       router.refresh(); // Forzar actualización del estado
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
       toast.error('Error al cerrar sesión', {
-        description: error.message,
+        description: msg,
       });
     }
   };

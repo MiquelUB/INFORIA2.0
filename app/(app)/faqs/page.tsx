@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { NavigationHeader } from "@/components/NavigationHeader";
 
 // Contenido de src/pages/FAQs.tsx
 // No se requieren cambios de hooks, solo se copia el contenido

@@ -1,7 +1,7 @@
 'use client';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Eye, Edit, MoreVertical, Loader2, Play } from "lucide-react";
+import { Plus, Eye, MoreVertical, Loader2, Play } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { usePatients } from "@/lib/hooks/usePatients";
 import { useRouter, useSearchParams } from 'next/navigation';

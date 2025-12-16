@@ -1,6 +1,6 @@
 'use client'; // Este componente interactúa con hooks (useRouter, useState, useEffect)
 
-import { Search, Menu, UserCircle, Calendar, Users, Plus, HelpCircle, LogOut, FileText } from "lucide-react";
+import { Search, Menu, UserCircle, Calendar, Users, Plus, HelpCircle, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -51,7 +51,7 @@ const DashboardHeader = () => {
       setUser(user);
     };
     fetchUser();
-  }, []); // Dependencia vacía para evitar bucle infinito
+  }, [supabase]); // Dependencia vacía para evitar bucle infinito
 
   const handleSignOut = async () => {
     try {

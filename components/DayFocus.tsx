@@ -4,10 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Calendar, Clock, MapPin, Plus, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { usePatients } from "@/lib/hooks/usePatients";
+// import { usePatients } from "@/lib/hooks/usePatients";
 
 const DayFocus = () => {
-  const { data: patients = [] } = usePatients();
+  // const { data: patients = [] } = usePatients();
   
   const today = new Date().toLocaleDateString('es-ES', {
     weekday: 'long',

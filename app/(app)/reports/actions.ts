@@ -176,7 +176,12 @@ export async function saveReportToGoogleDrive(
     }
 
     // 2. Crear si no existe
-    const createBody: any = {
+    interface GoogleDriveFolderBody {
+        name: string;
+        mimeType: string;
+        parents?: string[];
+    }
+    const createBody: GoogleDriveFolderBody = {
         name: folderName,
         mimeType: 'application/vnd.google-apps.folder'
     };
@@ -234,7 +239,12 @@ export async function saveReportToGoogleDrive(
     }
 
     // 3. Crear los metadatos del archivo
-    const metadata: any = {
+    interface GoogleDriveFileMetadata {
+        name: string;
+        mimeType: string;
+        parents?: string[];
+    }
+    const metadata: GoogleDriveFileMetadata = {
       name: finalFileName,
       mimeType: mimeType,
     };

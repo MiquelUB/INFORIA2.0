@@ -17,11 +17,7 @@ import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useToast } from '@/components/ui/use-toast';
 import { createClient } from "@/lib/supabase/client";
-import { appointmentService } from "@/lib/services/appointmentService";
-import { googleDriveService } from "@/lib/services/googleDrive";
-import { googleSheetsPatientCRM } from "@/lib/services/googleSheetsPatientCRM";
 import { createPatientAction } from "./actions";
-import { User } from "@supabase/supabase-js";
 
 // Generate an array with all hours of the day in 30-minute intervals
 // (e.g., ["00:00", "00:30", "01:00", ..., "23:30"])
@@ -195,7 +191,7 @@ export default function NewPatientClient() {
         throw new Error("No se encontró el token de Google. Reinicia sesión.");
       }
 
-      const result = await createPatientAction(googleToken, patientData, redirectTo);
+      const result = await createPatientAction(googleToken, patientData);
 
       if (result.success) {
         toast({

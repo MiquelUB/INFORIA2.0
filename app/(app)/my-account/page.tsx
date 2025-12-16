@@ -89,13 +89,13 @@ export default function AccountPage() {
     setIsSavingProfile(true);
     try {
       // Update Profile
-      const { error: profileError } = await (supabase
-        .from('profiles') as any)
+      const { error: profileError } = await supabase
+        .from('profiles')
         .update({
           full_name: profileData.full_name,
           professional_license: profileData.professional_license,
           clinic_name: profileData.clinic_name,
-        } as any)
+        })
         .eq('id', user.id);
 
       if (profileError) throw profileError;

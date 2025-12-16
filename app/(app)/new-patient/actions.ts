@@ -52,8 +52,7 @@ interface ActionResult {
 
 export async function createPatientAction(
   googleToken: string,
-  patientData: PatientData,
-  redirectTo: 'patient-list' | 'session-workspace'
+  patientData: PatientData
 ): Promise<ActionResult> {
   
   const supabase = createClient();
@@ -79,8 +78,8 @@ export async function createPatientAction(
 
   try {
     // 3. Crear paciente en Supabase
-    const { data, error } = await (supabase
-      .from('patients') as any)
+    const { data, error } = await supabase
+      .from('patients')
       .insert([
         {
           user_id: user.id,
@@ -96,7 +95,7 @@ export async function createPatientAction(
           persona_rescate_telefono: patientData.emergencyPhone || null,
           persona_rescate_email: patientData.emergencyEmail || null,
         }
-      ] as any)
+      ])
       .select()
       .single();
 
@@ -108,8 +107,8 @@ export async function createPatientAction(
     // 4. Crear la cita en Supabase (si aplica)
     if (patientData.appointmentDate && patientData.appointmentTime) {
 
-      const { error: appointmentError } = await (supabase
-        .from('appointments') as any)
+      const { error: appointmentError } = await supabase
+        .from('appointments')
         .insert({
           patient_id: patientId,
           user_id: user.id, // <-- El user_id del servidor
