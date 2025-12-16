@@ -5,12 +5,13 @@ import DashboardHeader from "@/components/DashboardHeader";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import LegalNoticeModal from "@/components/LegalNoticeModal";
+import CookieBanner from "@/components/CookieBanner";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   
-  // Lógica: Si la ruta contiene "/login" o está en (auth), no mostramos el header
-  const isAuthPage = pathname?.includes('/login') || pathname?.includes('/(auth)');
+  // Lógica: Definición estricta de páginas de autenticación/públicas
+  const isAuthPage = ['/login', '/signup', '/auth/', '/auth/login', '/auth/signup'].some(path => pathname?.startsWith(path));
 
   return (
     <AuthProvider>
@@ -24,7 +25,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {children}
           </main>
         </div>
-        {!isAuthPage && <LegalNoticeModal />}
+        {!isAuthPage && (
+          <>
+            <LegalNoticeModal />
+            <CookieBanner />
+          </>
+        )}
       </AuthGuard>
     </AuthProvider>
   );
