@@ -3,6 +3,7 @@ import { Nunito_Sans, Lora } from "next/font/google";
 import "./globals.css";
 import QueryProvider from "@/components/QueryProvider";
 import { Toaster } from "@/components/ui/toaster";
+import CookieBanner from '@/components/CookieBanner';
 
 const nunitoSans = Nunito_Sans({
   subsets: ["latin"],
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es" className={`${nunitoSans.variable} ${lora.variable}`}>
       <body className="font-sans">
         <QueryProvider>{children}</QueryProvider>
+        <CookieBanner />
         <Toaster />
       </body>
     </html>
