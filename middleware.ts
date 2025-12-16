@@ -74,7 +74,8 @@ export async function middleware(request: NextRequest) {
   
   if (
     publicPaths.includes(pathname) ||
-    pathname.startsWith('/auth/') // Para /auth/callback, /auth/auth-code-error
+    pathname.startsWith('/auth/') || // Para /auth/callback, /auth/auth-code-error
+    pathname.startsWith('/legal/') // Permitir acceso a Términos y Privacidad
   ) {
     return supabaseResponse
   }
