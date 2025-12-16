@@ -10,8 +10,8 @@ import CookieBanner from "@/components/CookieBanner";
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   
-  // Lógica: Definición estricta de páginas de autenticación/públicas
-  const isAuthPage = ['/login', '/signup', '/auth/', '/auth/login', '/auth/signup'].some(path => pathname?.startsWith(path));
+  // Lógica: Si la ruta contiene "/login", "/auth" o "/signup", es auth page
+  const isAuthPage = pathname?.includes('/login') || pathname?.includes('/auth') || pathname?.includes('/signup');
 
   return (
     <AuthProvider>
