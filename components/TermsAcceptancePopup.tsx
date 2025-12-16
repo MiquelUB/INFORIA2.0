@@ -33,14 +33,25 @@ export default function TermsAcceptancePopup() {
   const handleAccept = async () => {
     setIsSubmitting(true);
     try {
-      await acceptLegalTerms(CURRENT_TERMS_VERSION);
+      const result = await acceptLegalTerms(CURRENT_TERMS_VERSION) as any;
+      
+      if (result?.error) {
+        throw new Error(result.error);
+      }
+      
       await refreshProfile();
       setIsVisible(false);
       toast({
         title: "Términos aceptados",
         description: "Gracias por aceptar nuestras políticas.",
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Terms acceptance error:', error);
+      toast({
+        title: "Error de base de datos",
+        description: error.message || "Hubo un problema al guardar tu aceptación.",
+        variant: "destructive",
+      });
       toast({
         title: "Error",
         description: "Hubo un problema al guardar tu aceptación. Inténtalo de nuevo.",

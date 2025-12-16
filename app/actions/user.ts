@@ -21,7 +21,8 @@ export async function acceptLegalTerms(version: string = 'v1.0') {
 
   if (error) {
     console.error('Error accepting terms:', error);
-    throw new Error('Failed to accept terms');
+    // Return the error to the client instead of throwing (which causes 500)
+    return { success: false, error: error.message };
   }
 
   revalidatePath('/', 'layout');
