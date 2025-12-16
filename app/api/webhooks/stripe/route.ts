@@ -142,7 +142,7 @@ export async function POST(req: Request) {
 
       // 5. Enviar Email con Enlace Mágico
       const saasUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.inforia.cat';
-      const activationLink = `${saasUrl}/login?token=${token}`;
+      const activationLink = `${saasUrl}/auth/login?token=${token}`;
 
       await resend.emails.send({
         from: process.env.SENDER_EMAIL || 'Inforia <onboarding@mail.inforia.pro>',
