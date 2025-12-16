@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation"; // Hook para leer la ruta
 import DashboardHeader from "@/components/DashboardHeader";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AuthGuard } from "@/components/auth/AuthGuard";
-import LegalNoticeModal from "@/components/LegalNoticeModal";
+import TermsAcceptancePopup from "@/components/TermsAcceptancePopup";
 import CookieBanner from "@/components/CookieBanner";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -27,7 +27,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
         {!isAuthPage && (
           <>
-            <LegalNoticeModal />
+            <TermsAcceptancePopup />
             <CookieBanner />
           </>
         )}
