@@ -79,7 +79,7 @@ const PatientList = () => {
 
         {/* Patients List */}
         <Card className="mt-8 border-0 shadow-lg">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardHeader className="pb-4">
             <div>
               <h2 className="text-2xl font-serif font-semibold text-foreground">
                 {filteredPatients.length} Pacientes
@@ -88,13 +88,6 @@ const PatientList = () => {
                 Administra y supervisa todos tus pacientes
               </p>
             </div>
-            
-            <Link href="/new-patient">
-              <Button className="btn-neumorphic font-sans">
-                <Plus className="mr-2 h-4 w-4" />
-                Nuevo Paciente
-              </Button>
-            </Link>
           </CardHeader>
           <CardContent className="p-0">
             {displayedPatients.length === 0 ? (
