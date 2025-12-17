@@ -74,12 +74,24 @@ class RateLimiter {
   /**
    * Clean up expired entries
    */
+  private cleanupRunning = false;
+  
   private cleanup(): void {
-    const now = Date.now();
-    for (const [key, entry] of this.requests.entries()) {
-      if (now > entry.resetTime) {
-        this.requests.delete(key);
+    // Prevent overlapping cleanup operations
+    if (this.cleanupRunning) {
+      return;
+    }
+    
+    this.cleanupRunning = true;
+    try {
+      const now = Date.now();
+      for (const [key, entry] of this.requests.entries()) {
+        if (now > entry.resetTime) {
+          this.requests.delete(key);
+        }
       }
+    } finally {
+      this.cleanupRunning = false;
     }
   }
 
@@ -116,12 +128,28 @@ export const apiRateLimiter = new RateLimiter(60000, 100); // 100 requests per m
 /**
  * Get client identifier from request
  * Uses IP address or user-agent as fallback
+ * Note: In production behind a proxy, ensure proxy is trusted and properly configured
  */
 export function getClientIdentifier(request: Request): string {
   // Try to get IP from headers (works with most proxies)
+  // Note: X-Forwarded-For can be spoofed. In production, ensure you're behind
+  // a trusted proxy (Vercel, CloudFlare, etc.) that sanitizes these headers
   const forwarded = request.headers.get('x-forwarded-for');
   const realIp = request.headers.get('x-real-ip');
-  const ip = forwarded?.split(',')[0] || realIp || 'unknown';
+  
+  // Take the first IP from X-Forwarded-For (client IP)
+  const ip = forwarded?.split(',')[0]?.trim() || realIp || 'unknown';
+  
+  // Basic IP format validation (IPv4 or IPv6)
+  const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+  const ipv6Regex = /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/;
+  
+  if (ip !== 'unknown' && !ipv4Regex.test(ip) && !ipv6Regex.test(ip)) {
+    // If IP format is invalid, fall back to a hash of user-agent
+    const userAgent = request.headers.get('user-agent') || 'unknown-agent';
+    // Simple hash for identifier purposes
+    return `ua-${userAgent.length}-${userAgent.charCodeAt(0)}`;
+  }
   
   return ip;
 }
