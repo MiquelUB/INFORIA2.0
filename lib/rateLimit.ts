@@ -140,11 +140,8 @@ export function getClientIdentifier(request: Request): string {
   // Take the first IP from X-Forwarded-For (client IP)
   const ip = forwarded?.split(',')[0]?.trim() || realIp || 'unknown';
   
-  // Basic IP format validation (IPv4 or IPv6)
-  const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
-  const ipv6Regex = /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/;
-  
-  if (ip !== 'unknown' && !ipv4Regex.test(ip) && !ipv6Regex.test(ip)) {
+  // Validate IP format
+  if (ip !== 'unknown' && !isValidIP(ip)) {
     // If IP format is invalid, fall back to a hash of user-agent
     const userAgent = request.headers.get('user-agent') || 'unknown-agent';
     // Simple hash for identifier purposes
@@ -152,6 +149,39 @@ export function getClientIdentifier(request: Request): string {
   }
   
   return ip;
+}
+
+/**
+ * Validate if a string is a valid IPv4 or IPv6 address
+ */
+function isValidIP(ip: string): boolean {
+  // IPv4 validation: each octet must be 0-255
+  const ipv4Parts = ip.split('.');
+  if (ipv4Parts.length === 4) {
+    return ipv4Parts.every(part => {
+      const num = parseInt(part, 10);
+      return num >= 0 && num <= 255 && part === num.toString();
+    });
+  }
+  
+  // IPv6 validation: basic check for valid hex groups separated by colons
+  // This handles standard IPv6 format and compressed format (::)
+  if (ip.includes(':')) {
+    // Remove compressed notation temporarily for validation
+    const hasCompression = ip.includes('::');
+    const parts = ip.split(':').filter(p => p !== '');
+    
+    // IPv6 can have at most 8 groups
+    if (!hasCompression && parts.length !== 8) return false;
+    if (hasCompression && parts.length > 7) return false;
+    
+    // Each part must be valid hex (0-4 chars)
+    return parts.every(part => 
+      /^[0-9a-fA-F]{1,4}$/.test(part)
+    );
+  }
+  
+  return false;
 }
 
 /**
