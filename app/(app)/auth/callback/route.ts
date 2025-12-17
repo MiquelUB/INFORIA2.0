@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
           console.log('💾 [CALLBACK] Guardando Google tokens en la base de datos...');
           
           const { error: updateError } = await supabase
-            .from('users')
+            .from('profiles')
             .update({
               google_access_token: provider_token,
               google_refresh_token: provider_refresh_token || null,

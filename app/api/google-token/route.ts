@@ -19,7 +19,7 @@ export async function GET() {
 
     // Recuperar el token de Google desde la base de datos
     const { data: userData, error: dbError } = await supabase
-      .from('users')
+      .from('profiles')
       .select('google_access_token, google_refresh_token')
       .eq('id', user.id)
       .single();
