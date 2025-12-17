@@ -182,13 +182,32 @@ export default function NewPatientClient() {
     setIsSubmitting(true);
 
     try {
+      // 1. Intentar obtener sesión desde cliente
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) throw new Error(sessionError.message);
       
-      const googleToken = session?.provider_token;
+      let googleToken = session?.provider_token;
+      
+      // 2. Si no hay token en sesión de cliente (común en recargas), intentar desde servidor
       if (!googleToken) {
-        throw new Error("No se encontró el token de Google. Reinicia sesión.");
+        console.log('⚠️ [NewPatient] Token no en sesión LOCAL, intentando recuperar del SERVER...');
+        try {
+          const response = await fetch('/api/google-token');
+          if (response.ok) {
+            const data = await response.json();
+            if (data.token) {
+              googleToken = data.token;
+              console.log('✅ [NewPatient] Token recuperado del SERVER');
+            }
+          }
+        } catch (serverErr) {
+          console.error('Error fetching server token:', serverErr);
+        }
+      }
+
+      if (!googleToken) {
+        throw new Error("No se encontró el token de Google. Por favor, ve a 'Mi Cuenta' y verifica los permisos o reinicia sesión.");
       }
 
       const result = await createPatientAction(googleToken, patientData);
