@@ -22,9 +22,7 @@ class RateLimiter {
     this.cleanupIntervalId = setInterval(() => this.cleanup(), 60000);
     
     // Prevent the interval from keeping the process alive
-    if (this.cleanupIntervalId.unref) {
-      this.cleanupIntervalId.unref();
-    }
+    this.cleanupIntervalId.unref();
   }
 
   /**

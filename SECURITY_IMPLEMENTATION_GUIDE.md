@@ -47,9 +47,11 @@ const loginSchema = z.object({
   - `Strict-Transport-Security`: Forces HTTPS
   - `X-Frame-Options`: Prevents clickjacking
   - `X-Content-Type-Options`: Prevents MIME sniffing
-  - `X-XSS-Protection`: Enables XSS filter
   - `Referrer-Policy`: Controls referrer information
   - `Permissions-Policy`: Restricts browser features
+  - `X-DNS-Prefetch-Control`: Controls DNS prefetching
+
+**Note:** The deprecated `X-XSS-Protection` header is intentionally NOT included as modern browsers have better built-in XSS protection.
 
 ### 3. Data Protection ✅
 
