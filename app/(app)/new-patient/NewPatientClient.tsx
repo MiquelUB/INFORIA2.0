@@ -594,7 +594,7 @@ export default function NewPatientClient() {
                   type="button"
                   onClick={() => handleSavePatient('session-workspace')}
                   disabled={isSubmitting}
-                  className={`btn-neumorphic flex items-center justify-center ${!isFormValid ? 'opacity-70' : ''}`}
+                  className="btn-neumorphic flex items-center justify-center"
                 >
                   {isSubmitting ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -608,7 +608,7 @@ export default function NewPatientClient() {
                   type="button"
                   onClick={() => handleSavePatient('patient-list')}
                   disabled={isSubmitting}
-                  className={`btn-neumorphic flex items-center justify-center ${!isFormValid ? 'opacity-70' : ''}`}
+                  className="btn-neumorphic flex items-center justify-center"
                 >
                   {isSubmitting ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
