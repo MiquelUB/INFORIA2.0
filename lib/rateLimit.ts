@@ -159,26 +159,32 @@ function isValidIP(ip: string): boolean {
   const ipv4Parts = ip.split('.');
   if (ipv4Parts.length === 4) {
     return ipv4Parts.every(part => {
+      // Check if part is a valid number without leading zeros (except '0' itself)
+      if (!/^\d+$/.test(part)) return false;
+      if (part.length > 1 && part[0] === '0') return false; // Reject leading zeros like '010'
       const num = parseInt(part, 10);
-      return num >= 0 && num <= 255 && part === num.toString();
+      return num >= 0 && num <= 255;
     });
   }
   
-  // IPv6 validation: basic check for valid hex groups separated by colons
-  // This handles standard IPv6 format and compressed format (::)
+  // IPv6 validation: simplified check for valid hex groups
+  // For production use, consider using a library like 'is-ip' for comprehensive validation
   if (ip.includes(':')) {
-    // Remove compressed notation temporarily for validation
-    const hasCompression = ip.includes('::');
-    const parts = ip.split(':').filter(p => p !== '');
+    // Handle ::1 (loopback), :: (all zeros), and standard formats
+    if (ip === '::1' || ip === '::') return true;
     
-    // IPv6 can have at most 8 groups
-    if (!hasCompression && parts.length !== 8) return false;
-    if (hasCompression && parts.length > 7) return false;
+    // Split by :: to handle compressed notation
+    const parts = ip.split('::');
+    if (parts.length > 2) return false; // Can only have one ::
     
-    // Each part must be valid hex (0-4 chars)
-    return parts.every(part => 
-      /^[0-9a-fA-F]{1,4}$/.test(part)
-    );
+    // Validate each part contains valid hex groups
+    const validateGroups = (str: string) => {
+      if (!str) return true; // Empty is valid (represents compressed zeros)
+      const groups = str.split(':');
+      return groups.every(g => /^[0-9a-fA-F]{1,4}$/.test(g));
+    };
+    
+    return parts.every(validateGroups);
   }
   
   return false;

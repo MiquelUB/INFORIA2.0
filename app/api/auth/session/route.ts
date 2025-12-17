@@ -30,10 +30,10 @@ export async function POST(request: Request) {
     // Validate input
     const validation = loginSchema.safeParse(body);
     if (!validation.success) {
-      // In production, return generic error; in development, include details for debugging
-      const errorDetails = process.env.NODE_ENV === 'production' 
-        ? undefined 
-        : validation.error.issues;
+      // Only expose detailed errors in local development
+      // Staging and production get generic errors for security
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      const errorDetails = isDevelopment ? validation.error.issues : undefined;
       
       // Log detailed validation errors server-side for debugging
       console.error('Login validation failed:', validation.error.issues);
