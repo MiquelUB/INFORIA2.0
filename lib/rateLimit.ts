@@ -12,13 +12,19 @@ class RateLimiter {
   private requests: Map<string, RateLimitEntry> = new Map();
   private readonly windowMs: number;
   private readonly maxRequests: number;
+  private cleanupIntervalId?: NodeJS.Timeout;
 
   constructor(windowMs: number = 60000, maxRequests: number = 100) {
     this.windowMs = windowMs;
     this.maxRequests = maxRequests;
 
     // Clean up expired entries every minute
-    setInterval(() => this.cleanup(), 60000);
+    this.cleanupIntervalId = setInterval(() => this.cleanup(), 60000);
+    
+    // Prevent the interval from keeping the process alive
+    if (this.cleanupIntervalId.unref) {
+      this.cleanupIntervalId.unref();
+    }
   }
 
   /**
@@ -78,6 +84,24 @@ class RateLimiter {
   reset(identifier: string): void {
     this.requests.delete(identifier);
   }
+
+  /**
+   * Get the maximum number of requests allowed
+   */
+  getMaxRequests(): number {
+    return this.maxRequests;
+  }
+
+  /**
+   * Cleanup and stop the interval timer
+   */
+  destroy(): void {
+    if (this.cleanupIntervalId) {
+      clearInterval(this.cleanupIntervalId);
+      this.cleanupIntervalId = undefined;
+    }
+    this.requests.clear();
+  }
 }
 
 // Different rate limiters for different endpoints
@@ -115,7 +139,7 @@ export function checkRateLimit(
   return {
     ...result,
     headers: {
-      'X-RateLimit-Limit': String(limiter['maxRequests']),
+      'X-RateLimit-Limit': String(limiter.getMaxRequests()),
       'X-RateLimit-Remaining': String(result.remaining),
       'X-RateLimit-Reset': new Date(result.resetTime).toISOString(),
     },
