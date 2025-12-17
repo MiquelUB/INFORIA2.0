@@ -13,13 +13,20 @@ class RateLimiter {
   private readonly windowMs: number;
   private readonly maxRequests: number;
   private cleanupIntervalId?: NodeJS.Timeout;
+  private readonly cleanupIntervalMs: number;
 
-  constructor(windowMs: number = 60000, maxRequests: number = 100) {
+  constructor(
+    windowMs: number = 60000, 
+    maxRequests: number = 100,
+    cleanupIntervalMs?: number
+  ) {
     this.windowMs = windowMs;
     this.maxRequests = maxRequests;
+    // Default cleanup interval is the same as window, but can be customized
+    this.cleanupIntervalMs = cleanupIntervalMs ?? windowMs;
 
-    // Clean up expired entries every minute
-    this.cleanupIntervalId = setInterval(() => this.cleanup(), 60000);
+    // Clean up expired entries periodically
+    this.cleanupIntervalId = setInterval(() => this.cleanup(), this.cleanupIntervalMs);
     
     // Prevent the interval from keeping the process alive
     this.cleanupIntervalId.unref();

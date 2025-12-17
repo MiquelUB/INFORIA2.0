@@ -30,8 +30,19 @@ export async function POST(request: Request) {
     // Validate input
     const validation = loginSchema.safeParse(body);
     if (!validation.success) {
+      // In production, return generic error; in development, include details for debugging
+      const errorDetails = process.env.NODE_ENV === 'production' 
+        ? undefined 
+        : validation.error.issues;
+      
+      // Log detailed validation errors server-side for debugging
+      console.error('Login validation failed:', validation.error.issues);
+      
       return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.issues },
+        { 
+          error: 'Invalid input',
+          ...(errorDetails && { details: errorDetails })
+        },
         { status: 400 }
       );
     }
