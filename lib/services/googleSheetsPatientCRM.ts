@@ -521,6 +521,105 @@ export class GoogleSheetsPatientCRMService {
     }
   }
 
+  async deletePatientFromCRM(token: string | null, patientId: string, sheetId?: string): Promise<boolean> {
+    try {
+      if (!token) {
+        console.warn('⚠️ No token provided for deleting patient from CRM');
+        return false;
+      }
+
+      const crmSheetId = sheetId || await this.getOrCreateCRMSheet(token);
+      if (!crmSheetId) {
+        console.warn('⚠️ No CRM sheet found');
+        return false;
+      }
+
+      // 1. Buscar la fila del paciente en la pestaña 'Pacientes'
+      const searchResponse = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${crmSheetId}/values/Pacientes!A:A`,
+        { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } }
+      );
+
+      if (!searchResponse.ok) {
+        throw new Error('Error buscando paciente en CRM');
+      }
+
+      const searchData: { values?: string[][] } = await searchResponse.json();
+      const existingRows = searchData.values || [];
+
+      // Buscar el índice de la fila que contiene el patientId
+      let targetRowIndex = -1;
+      for (let i = 1; i < existingRows.length; i++) { // Empezamos en 1 para saltar la cabecera
+        if (existingRows[i][0] === patientId) {
+          targetRowIndex = i;
+          break;
+        }
+      }
+
+      if (targetRowIndex === -1) {
+        console.warn(`⚠️ Paciente ${patientId} no encontrado en CRM`);
+        return false; // No encontrado, pero no es un error crítico
+      }
+
+      // 2. Obtener el sheetId numérico de la pestaña 'Pacientes'
+      const sheetMetadataResponse = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${crmSheetId}?fields=sheets(properties)`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+
+      if (!sheetMetadataResponse.ok) {
+        throw new Error('Error obteniendo metadata del sheet');
+      }
+
+      const sheetMetadata: { sheets: Array<{ properties: { title: string; sheetId: number } }> } = await sheetMetadataResponse.json();
+      const patientsSheet = sheetMetadata.sheets.find(s => s.properties.title === 'Pacientes');
+      
+      if (!patientsSheet) {
+        throw new Error('Pestaña Pacientes no encontrada');
+      }
+
+      const sheetNumericId = patientsSheet.properties.sheetId;
+
+      // 3. Eliminar la fila usando batchUpdate
+      const deleteResponse = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${crmSheetId}:batchUpdate`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            requests: [
+              {
+                deleteDimension: {
+                  range: {
+                    sheetId: sheetNumericId,
+                    dimension: 'ROWS',
+                    startIndex: targetRowIndex,
+                    endIndex: targetRowIndex + 1
+                  }
+                }
+              }
+            ]
+          })
+        }
+      );
+
+      if (!deleteResponse.ok) {
+        const errorData = await deleteResponse.json();
+        throw new Error(`Error eliminando fila del CRM: ${JSON.stringify(errorData)}`);
+      }
+
+      console.log(`✅ Paciente ${patientId} eliminado del CRM en fila ${targetRowIndex + 1}`);
+      return true;
+
+    } catch (err: unknown) {
+      console.error('❌ Error eliminando paciente del CRM:', err);
+      return false;
+    }
+  }
+
   getCRMViewUrl(sheetId: string): string {
     return `https://docs.google.com/spreadsheets/d/${sheetId}/edit`;
   }
