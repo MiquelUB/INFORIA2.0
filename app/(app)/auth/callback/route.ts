@@ -1,8 +1,8 @@
 // en app/auth/callback/route.ts
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { NextResponse, type NextRequest } from 'next/server';
-import { cookies } from 'next/headers';
 import { claimService } from '@/lib/services/claimService';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { NextResponse, type NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -38,9 +38,36 @@ export async function GET(request: NextRequest) {
     );
 
     // 2. INTERCAMBIAR CÓDIGO POR SESIÓN
-    const { data: { user }, error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data: { session, user }, error } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (!error && user) {
+    if (!error && user && session) {
+      // 2.1. GUARDAR TOKENS DE GOOGLE EN LA BASE DE DATOS
+      try {
+        const { provider_token, provider_refresh_token } = session;
+        
+        if (provider_token) {
+          console.log('💾 [CALLBACK] Guardando Google tokens en la base de datos...');
+          
+          const { error: updateError } = await supabase
+            .from('users')
+            .update({
+              google_access_token: provider_token,
+              google_refresh_token: provider_refresh_token || null,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', user.id);
+
+          if (updateError) {
+            console.error('❌ [CALLBACK] Error guardando tokens:', updateError);
+          } else {
+            console.log('✅ [CALLBACK] Tokens guardados exitosamente');
+          }
+        }
+      } catch (tokenError) {
+        console.error('❌ [CALLBACK] Error procesando tokens:', tokenError);
+        // No bloqueamos el flujo si falla el guardado de tokens
+      }
+
       // 3. LÓGICA DE RECLAMACIÓN (CLAIM)
       if (token) {
         console.log('🎟️ Callback detectó token de compra:', token);
