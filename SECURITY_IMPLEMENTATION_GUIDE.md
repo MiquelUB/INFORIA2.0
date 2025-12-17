@@ -48,10 +48,12 @@ const loginSchema = z.object({
   - `X-Frame-Options`: Prevents clickjacking
   - `X-Content-Type-Options`: Prevents MIME sniffing
   - `Referrer-Policy`: Controls referrer information
-  - `Permissions-Policy`: Restricts browser features
+  - `Permissions-Policy`: Restricts browser features (camera, microphone, geolocation, payment, usb, display-capture, fullscreen, autoplay, encrypted-media)
   - `X-DNS-Prefetch-Control`: Controls DNS prefetching
 
 **Note:** The deprecated `X-XSS-Protection` header is intentionally NOT included as modern browsers have better built-in XSS protection.
+
+**Permissions-Policy Note:** If your application requires fullscreen or autoplay features (e.g., for video reports or imaging), change the policy to `fullscreen=(self)` and `autoplay=(self)` instead of `()`.
 
 ### 3. Data Protection ✅
 

@@ -73,6 +73,9 @@ class RateLimiter {
 
   /**
    * Clean up expired entries
+   * Note: The cleanup flag provides basic synchronization for the Node.js event loop.
+   * This is sufficient for single-threaded Node.js applications.
+   * For multi-threaded environments (worker threads), consider using atomic operations.
    */
   private cleanupRunning = false;
   
@@ -153,6 +156,13 @@ export function getClientIdentifier(request: Request): string {
 
 /**
  * Validate if a string is a valid IPv4 or IPv6 address
+ * 
+ * NOTE: This implementation makes specific security-focused decisions:
+ * - IPv4: Rejects leading zeros (e.g., '010') to prevent octal interpretation ambiguity
+ * - IPv6: Simplified validation that handles common formats; does not cover all edge cases
+ * 
+ * For production use with complex IPv6 scenarios, consider using a library like 'is-ip'
+ * or implementing more comprehensive validation.
  */
 function isValidIP(ip: string): boolean {
   // IPv4 validation: each octet must be 0-255
@@ -160,6 +170,7 @@ function isValidIP(ip: string): boolean {
   if (ipv4Parts.length === 4) {
     return ipv4Parts.every(part => {
       // Check if part is a valid number without leading zeros (except '0' itself)
+      // This is a security-focused approach to prevent octal interpretation
       if (!/^\d+$/.test(part)) return false;
       if (part.length > 1 && part[0] === '0') return false; // Reject leading zeros like '010'
       const num = parseInt(part, 10);
@@ -168,7 +179,8 @@ function isValidIP(ip: string): boolean {
   }
   
   // IPv6 validation: simplified check for valid hex groups
-  // For production use, consider using a library like 'is-ip' for comprehensive validation
+  // Handles common formats like ::1, ::, 2001:db8::1, fe80::1
+  // For comprehensive validation in production, consider using 'is-ip' library
   if (ip.includes(':')) {
     // Handle ::1 (loopback), :: (all zeros), and standard formats
     if (ip === '::1' || ip === '::') return true;
