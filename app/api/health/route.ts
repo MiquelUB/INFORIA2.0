@@ -7,6 +7,15 @@ interface HealthCheckResult {
 }
 
 export async function GET() {
+  // Security: This endpoint exposes configuration information
+  // Only allow in development or require authentication
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { error: 'This endpoint is disabled in production' },
+      { status: 403 }
+    );
+  }
+
   const results: HealthCheckResult = {};
 
   // 1. Supabase
