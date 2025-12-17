@@ -1,22 +1,16 @@
 'use client';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import StatsOverview from "@/components/StatsOverview";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Eye, Edit, MoreVertical, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { usePatients } from "@/lib/hooks/usePatients";
-import { useState } from "react";
-import { useDebounce } from "@/lib/hooks/useDebounce"; 
-import { SearchModule } from "@/components/SearchModule"; 
-import StatsOverview from "@/components/StatsOverview";
+import { Edit, Eye, Loader2, MoreVertical, Plus } from "lucide-react";
+import Link from "next/link";
 
 const PatientList = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const debouncedSearchQuery = useDebounce(searchQuery, 500); 
-
-  const { data: patients, isLoading, error } = usePatients(debouncedSearchQuery); 
+  const { data: patients, isLoading, error } = usePatients(); 
 
   const displayedPatients = patients || [];
   const filteredPatients = displayedPatients;
@@ -79,21 +73,6 @@ const PatientList = () => {
           </Link>
         </div>
 
-        {/* Search and Filters */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <SearchModule 
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                placeholder="Buscar por nombre, email o teléfono..."
-              />
-              <Button variant="outline" className="font-sans">
-                Filtros
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Stats Overview */}
         <StatsOverview />
