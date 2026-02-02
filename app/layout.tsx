@@ -1,8 +1,9 @@
-import type { Metadata } from 'next';
-import { Nunito_Sans, Lora } from "next/font/google";
-import "./globals.css";
+import AutoLogout from "@/components/AutoLogout";
 import QueryProvider from "@/components/QueryProvider";
 import { Toaster } from "@/components/ui/toaster";
+import type { Metadata } from 'next';
+import { Lora, Nunito_Sans } from "next/font/google";
+import "./globals.css";
 
 const nunitoSans = Nunito_Sans({
   subsets: ["latin"],
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans">
         <QueryProvider>{children}</QueryProvider>
         <Toaster />
+        <AutoLogout />
       </body>
     </html>
   );
