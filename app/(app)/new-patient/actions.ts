@@ -1,10 +1,10 @@
 // Contenido para: app/(app)/new-patient/actions.ts
 'use server';
 
-import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
 import { googleSheetsPatientCRM } from "@/lib/services/googleSheetsPatientCRM";
+import { createClient } from "@/lib/supabase/server";
 import { format } from "date-fns";
+import { revalidatePath } from "next/cache";
 
 // Definimos la interfaz aquí ya que el formulario la necesita
 interface PatientData {
@@ -125,8 +125,11 @@ export async function createPatientAction(
       appointmentCreated = true;
     }
 
-    // 5. Añadir Paciente al CRM de Google Sheets
-    // Aquí pasamos el token de servidor
+    // 5. Añadir Paciente al CRM de Google Sheets (NO BLOQUEANTE)
+    // ⚠️ FIX: CRM se ejecuta en background. Si falla, NO afecta el resultado al usuario.
+    // El paciente YA está creado en Supabase (source of truth).
+    const crmPromises: Promise<boolean>[] = [];
+
     const patientRowData: PatientCRMData = {
       id: patientId,
       name: patientName,
@@ -144,29 +147,46 @@ export async function createPatientAction(
       drive_folder_url: '' 
     };
 
-    // Pasamos el token del servidor al servicio
-    const crmPatientResult = await googleSheetsPatientCRM.upsertPatientInCRM(googleToken, patientRowData);
-    if (!crmPatientResult) {
-      throw new Error("PASO 3 (CRM): No se pudo guardar el paciente en Google Sheets.");
-    }
+    crmPromises.push(
+      googleSheetsPatientCRM.upsertPatientInCRM(googleToken, patientRowData)
+        .catch((err: unknown) => {
+          console.error('⚠️ CRM Patient Sync deferred:', err);
+          return false; // No fallar la operación principal
+        })
+    );
 
-    // 6. Añadir Cita al CRM de Google Sheets (si aplica)
+    // 6. Añadir Cita al CRM de Google Sheets (si aplica) (NO BLOQUEANTE)
     if (appointmentCreated) {
-      await googleSheetsPatientCRM.addCitaToCRM(
-        googleToken, // Pasamos el token del servidor
-        {
-          date: format(patientData.appointmentDate!, 'yyyy-MM-dd'),
-          time: patientData.appointmentTime,
-          patientId: patientId,
-          patientName: patientName,
-          sessionType: 'Primera Visita',
-          status: 'Programada',
-          notes: patientData.notes || ''
-        }
+      crmPromises.push(
+        googleSheetsPatientCRM.addCitaToCRM(
+          googleToken,
+          {
+            date: format(patientData.appointmentDate!, 'yyyy-MM-dd'),
+            time: patientData.appointmentTime,
+            patientId: patientId,
+            patientName: patientName,
+            sessionType: 'Primera Visita',
+            status: 'Programada',
+            notes: patientData.notes || ''
+          }
+        ).catch((err: unknown) => {
+          console.error('⚠️ CRM Appointment Sync deferred:', err);
+          return false;
+        })
       );
     }
+
+    // Ejecutar promesas de CRM en paralelo sin esperar (fire-and-forget con logging)
+    Promise.all(crmPromises).then(results => {
+      const allSucceeded = results.every(r => r === true);
+      if (allSucceeded) {
+        console.log('✅ CRM sincronizado exitosamente en background');
+      } else {
+        console.warn('⚠️ Algunas operaciones de CRM fallaron. Se reintentarán en próxima sincronización.');
+      }
+    });
     
-    // 7. Refrescar la caché y devolver éxito
+    // 7. Refrescar la caché y devolver éxito SIEMPRE si Supabase fue exitoso
     revalidatePath('/patient-list');
     revalidatePath('/dashboard');
     

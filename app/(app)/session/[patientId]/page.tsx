@@ -1,29 +1,29 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
-import { useRouter, useSearchParams } from "next/navigation"; 
-import Link from "next/link"; // Added
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { checkUserCreditsAction } from '@/app/actions/check-credits'; // Server Action
+import { generateReportAction } from '@/app/actions/generate-report'; // Server Action
+import { transcribeAudioAction } from '@/app/actions/transcribe'; // Server Action
+import FileUploadZone from '@/components/FileUploadZone';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PianoLoader } from '@/components/ui/PianoLoader'; // Added
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Play, Square, Trash2, Wand2, FileText, AlertTriangle, Calendar, ExternalLink, Loader2, User as UserIcon, ArrowRight } from 'lucide-react';
-import { toast } from 'sonner';
-import FileUploadZone from '@/components/FileUploadZone';
-import { useFileUpload } from '@/lib/hooks/useFileUpload';
+import { useAuth } from '@/contexts/AuthContext';
+import { deductCredits } from '@/lib/actions/credits';
 import { useAudioRecording } from '@/lib/hooks/useAudioRecording';
+import { useFileUpload } from '@/lib/hooks/useFileUpload';
+import type { Patient } from '@/lib/services/database';
 import { patientsService, reportsService } from '@/lib/services/database';
 import { googleDriveService } from '@/lib/services/googleDrive';
 import { openRouterService } from '@/lib/services/openrouter';
-import type { Patient } from '@/lib/services/database';
-import { useAuth } from '@/contexts/AuthContext';
-import { createClient } from '@/lib/supabase/client';
-import { deductCredits } from '@/lib/actions/credits';
 import { pricingService } from '@/lib/services/pricing';
-import { transcribeAudioAction } from '@/app/actions/transcribe'; // Server Action
-import { generateReportAction } from '@/app/actions/generate-report'; // Server Action
-import { checkUserCreditsAction } from '@/app/actions/check-credits'; // Server Action
+import { createClient } from '@/lib/supabase/client';
+import { AlertTriangle, ArrowRight, Calendar, ExternalLink, FileText, Loader2, Play, Square, Trash2, User as UserIcon, Wand2 } from 'lucide-react';
+import Link from "next/link"; // Added
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 // Constantes para el "Límite Inteligente"
 const MAX_NOTES_LENGTH = 20000;
@@ -668,6 +668,9 @@ ${aiContent}
       setTranscription('');
       clearFiles();
       if (deleteRecording) deleteRecording();
+      
+      // ✅ Resetear estado de IA después de éxito
+      setAiStatus('idle');
 
     } catch (error: unknown) {
       console.error('❌ Error generando informe:', error);
@@ -1073,30 +1076,6 @@ ${aiContent}
               </AlertDialog>
             </div>
             {/* --- FIN DE BLOQUE --- */}
-
-            {(aiStatus === 'fallback' || driveStatus === 'no-permissions') && (
-              <Card className="border-yellow-200 bg-yellow-50">
-                <CardContent className="p-4">
-        
-                  <div className="flex items-start gap-3">
-                    <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
-                    <div className="text-sm">
-                      <p className="font-medium text-yellow-800">Sistema funcionando en modo híbrido</p>
-             
-                      {aiStatus === 'fallback' && (
-                        <p className="text-yellow-700">• IA no disponible - Usando informes estructurados profesionales</p>
-                      )}
-                      {driveStatus === 'no-permissions' && (
-      
-                        <p className="text-yellow-700">• Google Drive sin permisos - Informes guardados localmente</p>
-                      )}
-                      <p className="text-yellow-600 text-xs mt-1">Los informes se crean correctamente independientemente del estado de los servicios externos.</p>
-               
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
 
           <div className="space-y-8">
