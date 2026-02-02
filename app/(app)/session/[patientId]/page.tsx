@@ -599,9 +599,10 @@ ${aiContent}
       );
 
       if (!driveResult.success) throw new Error(`Fallo Drive: ${driveResult.message}`);
+      console.log('✅ Drive guardado exitosamente. File ID:', driveResult.fileId);
 
       console.log('💽 Guardando en Supabase...');
-      await reportsService.create({
+      const newReport = await reportsService.create({
         user_id: user!.id,
         patient_id: selectedPatient.id,
         title: reportTitle,
@@ -612,6 +613,7 @@ ${aiContent}
         status: 'completed',
         audio_transcription: transcription || undefined
       });
+      console.log('✅ Supabase guardado exitosamente. Report ID:', newReport.id);
 
       // ---------------------------------------------------------
       // FASE 5.5: COBRO DIFERIDO (Solo si todo lo anterior funciona)
@@ -633,10 +635,13 @@ ${aiContent}
       // FASE 6: REFRESCO DE LISTA (Todos los modos)
       // ---------------------------------------------------------
       // Pequeño delay para asegurar consistencia antes de recargar lista
+      console.log('⏳ Esperando 500ms antes de refrescar lista...');
       await new Promise(resolve => setTimeout(resolve, 500));
+      console.log('🔄 Refrescando lista de informes para patient_id:', selectedPatient.id);
       const refreshedReports = await reportsService.getByPatient(selectedPatient.id);
+      console.log('📊 Informes obtenidos de DB:', refreshedReports.length, refreshedReports);
       setPatientReports(refreshedReports);
-      console.log('🔄 Lista de informes actualizada. Total:', refreshedReports.length);
+      console.log('✅ Estado actualizado - patientReports ahora tiene', refreshedReports.length, 'informes');
 
       // ---------------------------------------------------------
       // FASE 7: LIMPIEZA DE DUPLICADOS (Solo Alta)
