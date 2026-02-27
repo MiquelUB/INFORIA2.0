@@ -8,7 +8,9 @@ const supabaseAdmin = createClient(
 
 export const claimService = {
   async redeemToken(userId: string, token: string) {
-    console.log(`[Claim] Intentando canjear token: ${token} para usuario: ${userId}`);
+    // Security: Mask token in logs to prevent exposure
+    const maskedToken = token ? `${token.substring(0, 8)}...${token.substring(token.length - 4)}` : 'unknown';
+    console.log(`[Claim] Intentando canjear token: ${maskedToken} para usuario: ${userId}`);
 
     // 1. Buscar la invitación pendiente
     const { data: invitation, error: fetchError } = await supabaseAdmin
